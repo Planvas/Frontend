@@ -22,7 +22,7 @@
 
 ## 🔎 기술 스택
 
-### Envrionment
+### Environment
 
 <div align="left">
 <img src="https://img.shields.io/badge/git-%23F05033.svg?style=for-the-badge&logo=git&logoColor=white" />
@@ -128,6 +128,6 @@ main ← 작업 브랜치
 - App - 앱의 진입점과 전반적인 앱 흐름 담당
 - Core - 공통으로 사용되는 핵심 도메인 레이어
 - Features - 사용자에게 노출되는 실제 기능 단위
-- Resouce - 앱에서 사용되는 정적 리소스
+- Resource - 앱에서 사용되는 정적 리소스
 - Service - 외부 시스템과의 상호작용을 담당하는 레이어
 - Utilities - 전역에서 사용되는 보조 기능 함수
