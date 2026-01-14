@@ -81,13 +81,13 @@ extension TextStyle {
     )
     
     static let bold22 = TextStyle(
-        weight: .semibold,
+        weight: .bold,
         size: 22,
         letterSpacing: nil
     )
     
     static let bold20 = TextStyle(
-        weight: .semibold,
+        weight: .bold,
         size: 20,
         letterSpacing: nil
     )
