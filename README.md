@@ -50,7 +50,7 @@
 
 <br>
 
-## 🎉Git Convention
+## 🎉 Git Convention
 
 ### 📌 Git Flow
 
