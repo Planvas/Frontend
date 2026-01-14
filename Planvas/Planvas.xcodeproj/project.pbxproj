@@ -16,7 +16,6 @@
 			membershipExceptions = (
 				Core/.gitkeep,
 				Service/.gitkeep,
-				Utilities/.gitkeep,
 			);
 			target = 44E8D7712F16996B00E95F8E /* Planvas */;
 		};
