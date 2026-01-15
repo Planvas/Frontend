@@ -2,7 +2,7 @@
 
 # Planvas
 
-**UMC 9기 데모 프로젝트**
+**💻 UMC 9기 데모 프로젝트 💻**
 
 </div>
 
@@ -120,6 +120,79 @@ main ← 작업 브랜치
 - **예시**:
   - [Init] 프로젝트 초기 세팅
   - [Feat] Header 컴포넌트 구현
+
+
+<br>
+
+### 📁 PR Convention
+* PR 시, 템플릿이 등장한다. 해당 템플릿에서 작성해야할 부분은 아래와 같다.
+    1. `PR 제목`, '[태그] 작업 요약' 형식에 맞춰 작성한다.
+    2. `이슈 번호`, PR과 관련된 이슈 번호를 표기한다.
+    3. `작업 내용`, 작업 내용에 대해 간략히 작성한다.
+    4. `코멘트`, 코드 리뷰가 필요한 부분이나 팀원들에게 공지가 필요한 내용에 대해 작성한다.
+    5. `구현 결과`, 구현한 기능을 보여줄 수 있는 파일을 첨부한다.
+
+#### 태그 종류
+| 태그        | 설명                                                   |
+|-------------|--------------------------------------------------------|
+| [Feat]      | 새로운 기능 추가                                       |
+| [Fix]       | 버그 수정                                              |
+| [Refactor]  | 코드 리팩토링 (기능 변경 없이 구조 개선)              |
+| [Style]     | 코드 포맷팅, 들여쓰기 수정 등                         |
+| [Docs]      | 문서 관련 수정                                         |
+| [Test]      | 테스트 코드 추가 또는 수정                            |
+| [Chore]     | 빌드/설정 관련 작업                                    |
+| [Design]    | UI 디자인 수정                                         |
+| [Hotfix]    | 운영 중 긴급 수정                                      |
+| [CI/CD]     | 배포 및 워크플로우 관련 작업                          |
+
+- **PR 예시**:
+  - [Init] 프로젝트 초기 세팅
+  - [Feat] 메인페이지 개발
+    
+<br>
+
+## ⌨️ Code Styling
+**줄바꿈**
+
+- 파라미터가 2개 이상일 경우 파라미터 이름을 기준으로 줄바꿈 한다.
+
+```swift
+let actionSheet = UIActionSheet(
+  title: "정말 계정을 삭제하실 건가요?",
+  delegate: self,
+  cancelButtonTitle: "취소",
+  destructiveButtonTitle: "삭제해주세요"
+)
+
+```
+
+- if let 구문이 길 경우에 줄바꿈 한다
+
+```swift
+if let user = self.veryLongFunctionNameWhichReturnsOptionalUser(),
+   let name = user.veryLongFunctionNameWhichReturnsOptionalName(),
+  user.gender == .female {
+  // ...
+}
+
+```
+
+**주석**
+
+- 나중에 추가로 작업해야 할 부분에 대해서는 `// TODO: - xxx` 주석을 남기도록 한다.
+- 코드의 섹션을 분리할 때는 `// MARK: - xxx` 주석을 남기도록 한다.
+- 함수에 대해 전부 주석을 남기도록 하여 무슨 액션을 하는지 알 수 있도록 한다.
+
+**색상, 폰트**
+
+- 색상은 Color 등록 후 사용한다. (rgb코드 사용 금지)
+- 폰트는 Font extension 선언 후 사용한다.
+
+**컴포넌트**
+
+- 2개 이상의 View에서 사용하는 컴포넌트는 Components 폴더 내부에 생성한다.
+- 1개의 View에서 사용하는 컴포넌트는 해당 View 하단에 작성한다.
 
 <br>
 
