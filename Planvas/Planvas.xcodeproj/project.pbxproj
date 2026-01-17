@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		DBB843222F1B9B9800676F3F /* Moya in Frameworks */ = {isa = PBXBuildFile; productRef = DBB843212F1B9B9800676F3F /* Moya */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		44E8D7722F16996B00E95F8E /* Planvas.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Planvas.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -38,6 +42,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DBB843222F1B9B9800676F3F /* Moya in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,6 +85,7 @@
 			);
 			name = Planvas;
 			packageProductDependencies = (
+				DBB843212F1B9B9800676F3F /* Moya */,
 			);
 			productName = Planvas;
 			productReference = 44E8D7722F16996B00E95F8E /* Planvas.app */;
@@ -109,6 +115,9 @@
 			);
 			mainGroup = 44E8D7692F16996B00E95F8E;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				DBB843202F1B9B9800676F3F /* XCRemoteSwiftPackageReference "Moya" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 44E8D7732F16996B00E95F8E /* Products */;
 			projectDirPath = "";
@@ -345,6 +354,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DBB843202F1B9B9800676F3F /* XCRemoteSwiftPackageReference "Moya" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Moya/Moya";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 15.0.3;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DBB843212F1B9B9800676F3F /* Moya */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DBB843202F1B9B9800676F3F /* XCRemoteSwiftPackageReference "Moya" */;
+			productName = Moya;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 44E8D76A2F16996B00E95F8E /* Project object */;
 }
