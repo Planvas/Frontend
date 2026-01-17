@@ -5,7 +5,7 @@ protocol APITargetType: TargetType {}
 
 extension APITargetType {
     var baseURL: URL {
-        return URL(string: "https://~~.com")!
+        guard let url = URL(string:)
     }
     
     var headers: [String : String]? {
