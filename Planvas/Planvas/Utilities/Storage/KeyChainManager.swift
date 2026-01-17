@@ -4,12 +4,14 @@ import Security
 class KeychainManager {
     static let shared = KeychainManager()
     private init() {}
+    private let service = Bundle.main.bundleIdentifier ?? "Planvas"
     
     // 불러오기
     func load(key: String) -> String? {
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrAccount: key,
+            kSecAttrService: service,
             kSecReturnData: true,
             kSecMatchLimit: kSecMatchLimitOne
         ]
@@ -30,13 +32,15 @@ class KeychainManager {
         
         let deleteQuery: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
-            kSecAttrAccount: key
+            kSecAttrAccount: key,
+            kSecAttrService: service
         ]
         SecItemDelete(deleteQuery as CFDictionary)
         
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrAccount: key,
+            kSecAttrService: service,
             kSecValueData: data,
             kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         ]
@@ -53,7 +57,8 @@ class KeychainManager {
     func delete(key: String) {
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
-            kSecAttrAccount: key
+            kSecAttrAccount: key,
+            kSecAttrService: service
         ]
         
         let status = SecItemDelete(query as CFDictionary)
