@@ -27,15 +27,21 @@ class KeychainManager {
     // 저장하기
     func save(key: String, value: String) {
         guard let data = value.data(using: .utf8) else { return }
+        
+        let deleteQuery: [CFString: Any] = [
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrAccount: key
+        ]
+        SecItemDelete(deleteQuery as CFDictionary)
+        
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrAccount: key,
             kSecValueData: data,
             kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         ]
-        SecItemDelete(query as CFDictionary)
-        
         let status = SecItemAdd(query as CFDictionary, nil)
+        
         if status == errSecSuccess {
             print("KeyChain: \(key)저장 완료")
         } else {
