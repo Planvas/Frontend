@@ -10,12 +10,18 @@ final class TokenProvider<Target: APITargetType> {
         provider.request(target) { result in
             switch result {
             case .success(let response):
+                guard (200..<300).contains(response.statusCode) else {
+                    completion(.failure(MoyaError.statusCode(response)))
+                    return
+                }
+                
                 do {
                     let decodedData = try response.map(T.self)
                     completion(.success(decodedData))
                 } catch {
                     completion(.failure(error))
                 }
+                
             case .failure(let error):
                 completion(.failure(error))
             }
