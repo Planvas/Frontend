@@ -1,9 +1,3 @@
-//
-//  KeyChain.swift
-//  palnBas_mango
-//
-//  Created by 송민교 on 1/15/26.
-//
 import Foundation
 import Security
 
@@ -30,7 +24,7 @@ class KeychainManager {
         }
     }
     
-    // 저장
+    // 저장하기
     func save(key: String, value: String) {
         guard let data = value.data(using: .utf8) else { return }
         let query: [CFString: Any] = [
@@ -49,7 +43,7 @@ class KeychainManager {
         }
     }
     
-    // 삭제
+    // 삭제하기
     func delete(key: String) {
         let query: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
