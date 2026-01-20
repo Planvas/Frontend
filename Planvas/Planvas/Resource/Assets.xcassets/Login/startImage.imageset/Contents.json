@@ -2,22 +2,14 @@
   "images" : [
     {
       "filename" : "ChatGPT Image 2026년 1월 7일 오전 01_59_06 2.pdf",
-      "idiom" : "universal",
-      "scale" : "1x"
-    },
-    {
-      "filename" : "ChatGPT Image 2026년 1월 7일 오전 01_59_06 3.pdf",
-      "idiom" : "universal",
-      "scale" : "2x"
-    },
-    {
-      "filename" : "ChatGPT Image 2026년 1월 7일 오전 01_59_06 4.pdf",
-      "idiom" : "universal",
-      "scale" : "3x"
+      "idiom" : "universal"
     }
   ],
   "info" : {
     "author" : "xcode",
     "version" : 1
+  },
+  "properties" : {
+    "preserves-vector-representation" : true
   }
 }
