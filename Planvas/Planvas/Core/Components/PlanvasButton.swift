@@ -28,5 +28,6 @@ struct PlanvasButton: View {
                     .fill(Color.black.opacity(0.3))
             }
         }
+        .disabled(isDisabled)
     }
 }
