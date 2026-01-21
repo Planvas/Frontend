@@ -96,7 +96,7 @@ struct CalendarView: View {
         let isToday = viewModel.isDateToday(date)
         let displayEvents = viewModel.getDisplayEvents(for: date, isSelected: isSelected)
         
-        let dateTextColor = viewModel.dayTextColor(
+        let dateTextColor = CalendarViewHelper.dayTextColor(
             isSelected: isSelected,
             isCurrentMonth: isCurrentMonth
         )
@@ -126,13 +126,13 @@ struct CalendarView: View {
                         ForEach(displayEvents) { event in
                             HStack(spacing: 4) {
                                 Rectangle()
-                                    .foregroundColor(viewModel.eventColor(for: event))
+                                    .foregroundColor(event.color.uiColor)
                                     .frame(width: 2.5, height: 9)
                                     .cornerRadius(1.25)
                                 
                                 Text(event.title)
                                     .textStyle(.medium10)
-                                    .foregroundColor(viewModel.eventColor(for: event))
+                                    .foregroundColor(event.color.uiColor)
                                     .lineLimit(1)
                                 
                                 Spacer()
@@ -181,7 +181,7 @@ struct CalendarView: View {
     private func eventCardView(event: Event) -> some View {
         HStack(alignment: .center, spacing: 12) {
             Rectangle()
-                .fill(viewModel.eventColor(for: event))
+                .fill(event.color.uiColor)
                 .frame(width: 3, height: 33)
                 .cornerRadius(1.25)
             

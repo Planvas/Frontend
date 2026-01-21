@@ -33,7 +33,7 @@ protocol CalendarRepositoryProtocol {
 }
 
 /// TODO : 현재는 샘플 데이터를 사용
-nonisolated class CalendarRepository: CalendarRepositoryProtocol {
+final class CalendarRepository: CalendarRepositoryProtocol {
     // 샘플 데이터 (API 연동 전까지)
     private var sampleEvents: [String: [Event]] = [
         "2026-01-02": [
