@@ -126,6 +126,7 @@ struct AddEventView: View {
                 DatePicker(
                     "",
                     selection: $viewModel.endDate,
+                    in: viewModel.startDate...,
                     displayedComponents: viewModel.isAllDay ? [.date] : [.date, .hourAndMinute]
                 )
                 .datePickerStyle(.graphical)
@@ -145,7 +146,7 @@ struct AddEventView: View {
         HStack(spacing: 0) {
             // 네모? 저거 이름이 뭐지 아무튼 앞에 있는 바
             Rectangle()
-                .fill(.calRed)
+                .fill(viewModel.selectedColor.uiColor)
                 .frame(width: 4, height: 28)
                 .cornerRadius(5)
             
@@ -173,11 +174,11 @@ struct AddEventView: View {
                     }
                 } label: {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(viewModel.formatDate(viewModel.startDate))
+                        Text(viewModel.startDate.dateString())
                             .textStyle(.semibold14)
                             .foregroundColor(.gray444)
                         
-                        Text(viewModel.formatTime(viewModel.startDate))
+                        Text(viewModel.startDate.timeString())
                             .textStyle(.semibold20)
                             .foregroundColor(.gray444)
                     }
@@ -196,11 +197,11 @@ struct AddEventView: View {
                     }
                 } label: {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(viewModel.formatDate(viewModel.endDate))
+                        Text(viewModel.endDate.dateString())
                             .textStyle(.semibold14)
                             .foregroundColor(.gray444)
                         
-                        Text(viewModel.formatTime(viewModel.endDate))
+                        Text(viewModel.endDate.timeString())
                             .textStyle(.semibold20)
                             .foregroundColor(.gray444)
                     }
@@ -308,7 +309,7 @@ struct AddEventView: View {
 
     
     private func colorSwatch(colorType: EventColorType) -> some View {
-        let color = viewModel.eventColor(for: colorType)
+        let color = colorType.uiColor
 
         return Button {
             viewModel.selectedColor = colorType
