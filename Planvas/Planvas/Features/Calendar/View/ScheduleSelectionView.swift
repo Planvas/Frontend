@@ -50,13 +50,23 @@ struct ScheduleSelectionView: View {
    
     // MARK: - Schedule List
     private var scheduleListView: some View {
-        ScrollView {
-            VStack(spacing: 12) {
-                ForEach(viewModel.schedules) { schedule in
-                    scheduleCardView(schedule: schedule)
+        Group {
+            if viewModel.isLoading {
+                ProgressView()
+            } else if let error = viewModel.errorMessage {
+                Text(error)
+                    .textStyle(.regular14)
+                    .foregroundColor(.calRed)
+            } else {
+                ScrollView {
+                    VStack(spacing: 12) {
+                        ForEach(viewModel.schedules) { schedule in
+                            scheduleCardView(schedule: schedule)
+                        }
+                    }
+                    .padding(1)
                 }
             }
-            .padding(1)
         }
     }
     
