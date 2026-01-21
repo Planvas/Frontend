@@ -203,3 +203,11 @@ extension TextStyle {
         letterSpacing: 14 * (-0.02)
     )
 }
+
+//캘린더 연동 뷰에서 사용합니다!
+extension TextStyle {
+    var swiftUIFont: Font {
+        .pretend(type: weight, size: size)
+    }
+}
+
