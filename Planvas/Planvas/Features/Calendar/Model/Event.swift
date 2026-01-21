@@ -5,26 +5,29 @@
 //  Created by 백지은 on 1/17/26.
 //
 
-import SwiftUI
+import Foundation
 
-struct Event: Identifiable {
-    let id = UUID()
+struct Event: Identifiable, Codable {
+    let id: UUID
     let title: String
     let time: String
-    var isFixed: Bool = false
-    var isAllDay: Bool = false
+    var isFixed: Bool
+    var isAllDay: Bool
     let color: EventColorType
-}
 
-enum EventColorType: String, Codable {
-    case red
-    case yellow
-    case pink
-    case purple1
-    case purple2
-    case blue1
-    case blue2
-    case blue3
-    case green
-    case ccc
+    init(
+        id: UUID = UUID(),
+        title: String,
+        time: String,
+        isFixed: Bool = false,
+        isAllDay: Bool = false,
+        color: EventColorType
+    ) {
+        self.id = id
+        self.title = title
+        self.time = time
+        self.isFixed = isFixed
+        self.isAllDay = isAllDay
+        self.color = color
+    }
 }
