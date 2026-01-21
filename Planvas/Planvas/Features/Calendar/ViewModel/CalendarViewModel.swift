@@ -5,7 +5,7 @@
 //  Created by 백지은 on 1/17/26.
 //
 
-import SwiftUI
+import Foundation
 import Combine
 
 @MainActor
@@ -71,24 +71,15 @@ class CalendarViewModel: ObservableObject {
     
     // MARK: - Computed Properties
     var monthString: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "M월"
-        return formatter.string(from: currentMonth)
+        currentMonth.monthString()
     }
     
     var yearString: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "yyyy"
-        return formatter.string(from: currentMonth)
+        currentMonth.yearString()
     }
     
     var selectedDateFullString: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "yyyy년 M월 d일 EEEE"
-        return formatter.string(from: selectedDate)
+        selectedDate.fullDateString()
     }
     
     var daysInMonth: [Date] {
@@ -103,8 +94,10 @@ class CalendarViewModel: ObservableObject {
             return []
         }
         
+        let weeks = calendar.range(of: .weekOfMonth, in: .month, for: currentMonth)?.count ?? 6
+        let totalDays = weeks * 7
         var days: [Date] = []
-        for i in 0..<35 {
+        for i in 0..<totalDays {
             if let date = calendar.date(byAdding: .day, value: i, to: startDate) {
                 days.append(date)
             }
@@ -132,41 +125,6 @@ class CalendarViewModel: ObservableObject {
         let isCurrentMonth = calendar.isDate(date, equalTo: currentMonth, toGranularity: .month)
         if isCurrentMonth {
             selectedDate = date
-        }
-    }
-    
-    func dayTextColor(isSelected: Bool, isCurrentMonth: Bool) -> Color {
-        if isSelected {
-            return .white
-        } else if isCurrentMonth {
-            return Color(.black1)
-        } else {
-            return Color(.calTypo80)
-        }
-    }
-    
-    func eventColor(for event: Event) -> Color {
-        switch event.color {
-        case .red:
-            return .calRed
-        case .yellow:
-            return .calYellow
-        case .pink:
-            return .calPink
-        case .purple1:
-            return .calPurple1
-        case .purple2:
-            return .calPurple2
-        case .blue1:
-            return .calBlue1
-        case .blue2:
-            return .calBlue2
-        case .blue3:
-            return .calBlue3
-        case .green:
-            return .calGreen
-        case .ccc:
-            return .ccc
         }
     }
     

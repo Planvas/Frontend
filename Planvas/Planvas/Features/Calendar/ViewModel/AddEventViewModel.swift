@@ -5,7 +5,7 @@
 //  Created on 1/21/26.
 //
 
-import SwiftUI
+import Foundation
 import Combine
 
 @MainActor
@@ -68,47 +68,8 @@ class AddEventViewModel: ObservableObject {
         Array(7..<availableColors.count)
     }
     
-    func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "M/d, EEEE"
-        return formatter.string(from: date)
-    }
-    
-    func formatTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_EN")
-        formatter.dateFormat = "h:mm a"
-        return formatter.string(from: date)
-    }
-    
-    func eventColor(for colorType: EventColorType) -> Color {
-        switch colorType {
-        case .red:
-            return .calRed
-        case .yellow:
-            return .calYellow
-        case .pink:
-            return .calPink
-        case .purple1:
-            return .calPurple1
-        case .purple2:
-            return .calPurple2
-        case .blue1:
-            return .calBlue1
-        case .blue2:
-            return .calBlue2
-        case .blue3:
-            return .calBlue3
-        case .green:
-            return .calGreen
-        case .ccc:
-            return .ccc
-        }
-    }
-    
     func createEvent() -> Event {
-        let timeString = isAllDay ? "하루종일" : "\(formatTime(startDate)) - \(formatTime(endDate))"
+        let timeString = isAllDay ? "하루종일" : "\(startDate.timeString()) - \(endDate.timeString())"
         return Event(
             title: eventName.isEmpty ? "이름 없음" : eventName,
             time: timeString,
