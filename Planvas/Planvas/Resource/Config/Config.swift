@@ -22,4 +22,11 @@ enum Config {
         }
         return ClientId
     }()
+    
+    static let ServerClientId: String = {
+        guard let ServerClientId = Config.infoDictionary["SERVER_CLIENT_ID"] as? String else {
+            fatalError()
+        }
+        return ServerClientId
+    }()
 }

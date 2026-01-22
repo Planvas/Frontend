@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>SERVER_CLIENT_ID</key>
+	<string>$(SERVER_CLIENT_ID)</string>
 	<key>BASE_URL</key>
 	<string>$(BASE_URL)</string>
 	<key>CLIENT_ID</key>
@@ -15,7 +17,7 @@
 			<string>Google Login</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.184142894398-ujiqolgd6o0mv2ga6r86la98ll9gk7lo</string>
+				<string>$(CLIENT_ID_REVERSE)</string>
 			</array>
 		</dict>
 	</array>
