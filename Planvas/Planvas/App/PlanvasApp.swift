@@ -6,12 +6,18 @@
 //
 
 import SwiftUI
+import GoogleSignIn
 
 @main
 struct PlanvasApp: App {
+    init() {
+        let config = GIDConfiguration(clientID: Config.ClientId)
+        GIDSignIn.sharedInstance.configuration = config
+    }
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LoginView()
         }
     }
 }
