@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		DBB843222F1B9B9800676F3F /* Moya in Frameworks */ = {isa = PBXBuildFile; productRef = DBB843212F1B9B9800676F3F /* Moya */; };
+		DBB847052F21DD9A00676F3F /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = DBB847042F21DD9A00676F3F /* GoogleSignIn */; };
+		DBB847072F21DD9A00676F3F /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = DBB847062F21DD9A00676F3F /* GoogleSignInSwift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		44E8D7722F16996B00E95F8E /* Planvas.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Planvas.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -14,7 +20,6 @@
 		44B0ED962F179E7B0028111F /* Exceptions for "Planvas" folder in "Planvas" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Core/.gitkeep,
 				Info.plist,
 				Service/.gitkeep,
 			);
@@ -38,6 +43,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DBB847072F21DD9A00676F3F /* GoogleSignInSwift in Frameworks */,
+				DBB843222F1B9B9800676F3F /* Moya in Frameworks */,
+				DBB847052F21DD9A00676F3F /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -80,6 +88,9 @@
 			);
 			name = Planvas;
 			packageProductDependencies = (
+				DBB843212F1B9B9800676F3F /* Moya */,
+				DBB847042F21DD9A00676F3F /* GoogleSignIn */,
+				DBB847062F21DD9A00676F3F /* GoogleSignInSwift */,
 			);
 			productName = Planvas;
 			productReference = 44E8D7722F16996B00E95F8E /* Planvas.app */;
@@ -109,6 +120,10 @@
 			);
 			mainGroup = 44E8D7692F16996B00E95F8E;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				DBB843202F1B9B9800676F3F /* XCRemoteSwiftPackageReference "Moya" */,
+				DBB847032F21DD9A00676F3F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 44E8D7732F16996B00E95F8E /* Products */;
 			projectDirPath = "";
@@ -192,7 +207,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -200,6 +215,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -249,12 +265,13 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 5.0;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -347,6 +364,43 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DBB843202F1B9B9800676F3F /* XCRemoteSwiftPackageReference "Moya" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Moya/Moya";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 15.0.3;
+			};
+		};
+		DBB847032F21DD9A00676F3F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DBB843212F1B9B9800676F3F /* Moya */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DBB843202F1B9B9800676F3F /* XCRemoteSwiftPackageReference "Moya" */;
+			productName = Moya;
+		};
+		DBB847042F21DD9A00676F3F /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DBB847032F21DD9A00676F3F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		DBB847062F21DD9A00676F3F /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DBB847032F21DD9A00676F3F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 44E8D76A2F16996B00E95F8E /* Project object */;
 }
