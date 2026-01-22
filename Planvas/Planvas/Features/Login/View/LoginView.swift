@@ -12,7 +12,7 @@ struct LoginView: View {
     
     var body: some View {
         ZStack {
-            Image(.background)
+            Image("background")
                 .resizable()
                 .frame(width: 404, height: 404)
                 .offset(y: -80)
@@ -21,7 +21,7 @@ struct LoginView: View {
                 Spacer()
                     .frame(height: 100)
                 
-                Image(.start)
+                Image("startImage")
                     .resizable()
                     .frame(width: 185, height: 185)
                 
