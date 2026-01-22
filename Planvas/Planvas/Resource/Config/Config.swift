@@ -15,4 +15,18 @@ enum Config {
         }
         return baseURL
     }()
+    
+    static let ClientId: String = {
+        guard let ClientId = Config.infoDictionary["CLIENT_ID"] as? String else {
+            fatalError()
+        }
+        return ClientId
+    }()
+    
+    static let ServerClientId: String = {
+        guard let ServerClientId = Config.infoDictionary["SERVER_CLIENT_ID"] as? String else {
+            fatalError()
+        }
+        return ServerClientId
+    }()
 }
