@@ -28,7 +28,7 @@ struct TabBar: View {
                 }
 
         }
-        .accentColor(.purple1)
+        .accentColor(.primary1)
     }
 }
 
