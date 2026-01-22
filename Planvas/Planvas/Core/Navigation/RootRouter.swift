@@ -19,6 +19,7 @@ final class RootRouter: ObservableObject {
         self.appState = appState
         // 로그인 상태 확인
         appState.$isLoggedIn
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] isLoggedIn in
                 self?.root = isLoggedIn ? .main : .login
             }
