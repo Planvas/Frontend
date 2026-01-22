@@ -45,7 +45,7 @@ struct GoalInfoSetupView: View {
             HStack(spacing: 0) {
                 Text("목표 이름")
                     .textStyle(.semibold30)
-                    .foregroundStyle(.purple1)
+                    .foregroundStyle(.primary1)
 
                 Text("을 설정해주세요")
                     .textStyle(.semibold30)
