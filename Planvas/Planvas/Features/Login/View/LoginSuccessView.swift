@@ -6,7 +6,7 @@ struct LoginSuccessView: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                gradient: Gradient(colors: [Color.purple1.opacity(0.2), Color.white]),
+                gradient: Gradient(colors: [Color.gradprimary1.opacity(0.2), Color.white]),
                 startPoint: .bottom,
                 endPoint: .top)
             .ignoresSafeArea()
@@ -19,7 +19,7 @@ struct LoginSuccessView: View {
                 
                 VStack {
                     Text("로그인 완료!")
-                        .foregroundStyle(Color.gray2)
+                        .foregroundStyle(Color.gray444)
                         .textStyle(.medium20)
                         .padding()
                     Group {

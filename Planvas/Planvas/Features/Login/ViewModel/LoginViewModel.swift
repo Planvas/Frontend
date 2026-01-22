@@ -26,6 +26,7 @@ class LoginViewModel: ObservableObject {
         
         /// 로그인 설정
         let config = GIDConfiguration(clientID: Config.ClientId, serverClientID: Config.ServerClientId)
+        GIDSignIn.sharedInstance.configuration = config
         
         // MARK: - 로그인 요청
         GIDSignIn.sharedInstance.signIn(withPresenting: rootVC, hint: nil, additionalScopes: [calendarScope]) { [weak self] GIDSignInResult, error in
