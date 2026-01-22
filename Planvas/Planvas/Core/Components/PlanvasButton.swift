@@ -21,7 +21,7 @@ struct PlanvasButton: View {
         }
         .buttonStyle(.glassProminent)
         .glassEffect(.regular.interactive())
-        .tint(Color.purple1)
+        .tint(Color.primary1)
         .overlay{
             if isDisabled {
                 Capsule()
