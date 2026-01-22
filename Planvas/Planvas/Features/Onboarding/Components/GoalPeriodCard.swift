@@ -33,7 +33,7 @@ struct GoalPeriodCard: View {
                 HStack {
                     Text("날짜")
                         .textStyle(.medium14)
-                        .foregroundStyle(.gray2)
+                        .foregroundStyle(.gray888)
                         .padding(.leading, 2)
 
                     Spacer()
@@ -79,9 +79,9 @@ struct GoalPeriodCard: View {
         .cornerRadius(currentCornerRadius)
         .overlay(
             RoundedRectangle(cornerRadius: currentCornerRadius)
-                .stroke(.gray.opacity(1), lineWidth: 0.6)
+                .stroke(.ccc, lineWidth: 0.6)
         )
-        .shadow(color: .black.opacity(0.05), radius: 4, x:0, y: 2)
+        .shadow(color: .black20, radius: 4, x:0, y: 2)
         .padding(.horizontal, 20)
         .onChange(of: isFocused) { oldValue, focused in
             if !focused && isExpanded {
@@ -137,7 +137,7 @@ struct GoalPeriodCard: View {
             ForEach(vm.daysInWeek, id: \.self) { day in
                 Text(day)
                     .textStyle(.regular14)
-                    .foregroundStyle(.gray2)
+                    .foregroundStyle(.gray888)
             }
         }
     }
@@ -169,11 +169,11 @@ struct GoalPeriodCard: View {
         return Text("\(vm.calendar.component(.day, from: date))")
             .textStyle(.medium16)
             .foregroundStyle(isPast ? .gray : (isSelected ? .white : .black1))
-            .strikethrough(isPast, color: .gray)
+            .strikethrough(isPast, color: .gray888)
             .frame(maxWidth: .infinity, minHeight: 35)
             .background(
                 Circle()
-                    .fill(isSelected ? .purple1 : .clear)
+                    .fill(isSelected ? .primary1 : .clear)
                     .frame(width: 39, height: 39)
             )
             .onTapGesture {
@@ -191,12 +191,12 @@ struct GoalPeriodCard: View {
         }) {
             ZStack {
                 RoundedRectangle(cornerRadius: 100)
-                    .fill(Color.gray.opacity(0.6))
+                    .fill(.ccc60)
                     .frame(width: 111, height: 40)
                 
                 RoundedRectangle(cornerRadius: 100)
-                    .fill(Color.white)
-                    .overlay(RoundedRectangle(cornerRadius: 100).stroke(Color.gray.opacity(0.2), lineWidth: 1))
+                    .fill(.white)
+                    .overlay(RoundedRectangle(cornerRadius: 100).stroke(.gray88850, lineWidth: 1))
                     .frame(width: 105, height: 34)
                 
                 Text("날짜 지정")

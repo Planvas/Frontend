@@ -24,7 +24,7 @@ struct GoalNameCard: View {
                 HStack {
                     Text("이름")
                         .textStyle(.medium14)
-                        .foregroundStyle(.gray2)
+                        .foregroundStyle(.gray888)
                         .padding(.leading, 2)
 
                     Spacer()
@@ -52,14 +52,14 @@ struct GoalNameCard: View {
                     
                     Text("목표 기간의 이름을 입력해주세요")
                         .textStyle(.medium14)
-                        .foregroundStyle(.gray2)
+                        .foregroundStyle(.gray888)
                         .padding(.bottom, 5)
                     
                     TextField("기간의 이름을 적어주세요", text: $vm.goalName)
                         .textStyle(.medium16)
                         .focused($isFocused)
                         .padding()
-                        .background(Color.white)
+                        .background(.white)
                         .cornerRadius(10)
                         .onSubmit {
                             close()
@@ -69,9 +69,8 @@ struct GoalNameCard: View {
                                 .stroke(
                                     LinearGradient(
                                         stops: [
-                                            // TODO: 색상 변경
-                                            .init(color: Color(uiColor: UIColor(red: 224/255, green: 215/255, blue: 234/255, alpha: 1)), location: 0),
-                                            .init(color: Color(uiColor: UIColor(red: 129/255, green: 71/255,  blue: 237/255, alpha: 1)), location: 0.15)
+                                            .init(color: .gradprimary2, location: 0.0),
+                                            .init(color: .primary1, location: 0.15)
                                         ],
                                         startPoint: UnitPoint(x: 0.02, y: 0.02),
                                         endPoint: UnitPoint(x: 1.6, y: 12.0)
@@ -87,7 +86,7 @@ struct GoalNameCard: View {
                     if vm.isOverLimit {
                         Text("*이름은 최대 20자까지 입력할 수 있어요")
                             .textStyle(.medium14)
-                            .foregroundStyle(.purple1)
+                            .foregroundStyle(.primary1)
                             .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
@@ -100,9 +99,9 @@ struct GoalNameCard: View {
         .cornerRadius(currentCornerRadius)
         .overlay(
             RoundedRectangle(cornerRadius: currentCornerRadius)
-                .stroke(.gray.opacity(1), lineWidth: 0.6)
+                .stroke(.ccc, lineWidth: 0.6)
         )
-        .shadow(color: .black.opacity(0.05), radius: 4, x:0, y: 2)
+        .shadow(color: .black20, radius: 4, x:0, y: 2)
         .padding(.horizontal, 20)
         .animation(.easeInOut(duration: 0.2), value: vm.isOverLimit) // 에러 메시지 애니메이션
         .onChange(of: isFocused) { oldValue, focused in
