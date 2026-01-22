@@ -6,9 +6,9 @@
 //
 
 import Foundation
+import Combine
 
-final class DIContainer {
-
+final class DIContainer: ObservableObject {
     // MARK: - Global States
     let appState: AppState
 
