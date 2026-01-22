@@ -10,14 +10,17 @@ import GoogleSignIn
 
 @main
 struct PlanvasApp: App {
-    init() {
-        let config = GIDConfiguration(clientID: Config.ClientId)
-        GIDSignIn.sharedInstance.configuration = config
-    }
+    @StateObject private var container = DIContainer()
     
     var body: some Scene {
         WindowGroup {
-            LoginView()
+            RootView()
+                .environmentObject(container)
         }
+    }
+    
+    init() {
+        let config = GIDConfiguration(clientID: Config.ClientId)
+        GIDSignIn.sharedInstance.configuration = config
     }
 }
