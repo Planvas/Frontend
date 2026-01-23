@@ -20,6 +20,13 @@ class GoalSetupViewModel: ObservableObject {
     @Published var endDate: Date?
     
     @Published var currentMonthIndex: Int = 0
+        
+    // 현재 열려있는 섹션을 추적 (없으면 nil) <- 이름 / 기간 카드 동시에 열리지 않게 하기 위해
+    enum ExpandedSection {
+        case name, period
+    }
+    
+    @Published var expandedSection: ExpandedSection? = nil
     
     let daysInWeek = ["일", "월", "화", "수", "목", "금", "토"]
     let today = Calendar.current.startOfDay(for: Date())

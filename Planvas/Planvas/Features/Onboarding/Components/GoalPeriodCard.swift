@@ -9,10 +9,11 @@ import SwiftUI
 
 struct GoalPeriodCard: View {
     @ObservedObject var vm: GoalSetupViewModel
-
-    @State private var isExpanded: Bool = false
     @FocusState private var isFocused: Bool
     
+    private var isExpanded: Bool {
+        vm.expandedSection == .period
+    }
     
     private var currentCornerRadius: CGFloat {
         isExpanded ? 25 : 15
@@ -273,6 +274,12 @@ struct GoalPeriodCard: View {
 
     // MARK: - 카드 열고 닫기
     private func open() {
+        // 이름이 설정되지 않았거나 공백이면 카드 열기 방지
+        if vm.goalName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            print("이름이 없어 기간을 설정할 수 없습니다.")
+            return // 함수 종료 (카드가 열리지 않음)
+        }
+        
         // 시작일과 종료일이 '모두' 있을 때만 시작일 달로 이동
         if let start = vm.startDate, let _ = vm.endDate {
             let diff = vm.calendar.dateComponents([.month], from: vm.startOfCurrentMonth(), to: start)
@@ -287,14 +294,16 @@ struct GoalPeriodCard: View {
         }
         
         withAnimation(.easeInOut) {
-            isExpanded = true
+            vm.expandedSection = .period
         }
         isFocused = true
     }
 
     private func close() {
         withAnimation(.easeInOut) {
-            isExpanded = false
+            if vm.expandedSection == .period {
+                vm.expandedSection = nil
+            }
         }
         isFocused = false
     }
