@@ -29,7 +29,7 @@ struct GoalNameCard: View {
 
                     Spacer()
 
-                    Text(!vm.goalName.isEmpty ? vm.goalName : "이름 추가")
+                    Text(!vm.goalName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? vm.goalName : "이름 추가")
                         .textStyle(.medium14)
                         .foregroundStyle(.black1)
                         .padding(.trailing, 2)
@@ -111,6 +111,7 @@ struct GoalNameCard: View {
         }
     }
 
+    // MARK: - 카드 열고 닫기
     private func open() {
         withAnimation(.easeInOut) {
             isExpanded = true
@@ -119,6 +120,11 @@ struct GoalNameCard: View {
     }
 
     private func close() {
+        // 목표 이름이 공백/줄바꿈만 있다면 데이터를 빈 문자열로 초기화
+        if vm.goalName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            vm.goalName = ""
+        }
+        
         withAnimation(.easeInOut) {
             isExpanded = false
         }
