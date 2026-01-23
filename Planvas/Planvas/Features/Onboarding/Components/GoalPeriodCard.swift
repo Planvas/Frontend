@@ -94,8 +94,9 @@ struct GoalPeriodCard: View {
     private var calendarContent: some View {
         VStack(alignment: .leading, spacing: 0) {
 
-            // 0000년 0월
-            Text(vm.formatYearMonth(vm.currentMonth))
+            let displayMonth = vm.calendar.date(byAdding: .month, value: vm.currentMonthIndex, to: vm.startOfCurrentMonth()) ?? Date()
+
+            Text(vm.formatYearMonth(displayMonth))
                 .textStyle(.semibold14)
                 .foregroundStyle(.black1)
                 .padding(.bottom, 20)
@@ -108,7 +109,7 @@ struct GoalPeriodCard: View {
             Spacer().frame(height: 37.75)
 
             // 날짜
-            TabView(selection: $vm.currentMonth) {
+            TabView(selection: $vm.currentMonthIndex) {
                 ForEach(0..<12, id: \.self) { index in
                     let month = vm.calendar.date(
                         byAdding: .month,
@@ -117,7 +118,7 @@ struct GoalPeriodCard: View {
                     ) ?? Date()
 
                     monthGridView(for: month)
-                        .tag(month)
+                        .tag(index)
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
@@ -146,20 +147,79 @@ struct GoalPeriodCard: View {
     // MARK: - 날짜 뷰
     private func monthGridView(for month: Date) -> some View {
         let days = vm.makeDays(for: month)
-        let columns = Array(repeating: GridItem(.flexible()), count: 7)
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 7)
 
         return LazyVGrid(columns: columns, spacing: 10) {
             ForEach(days.indices, id: \.self) { index in
                 if let date = days[index] {
                     dayCell(for: date)
+                        .background(
+                            GeometryReader { proxy in
+                                Color.clear.preference(
+                                    key: DatePreferenceKey.self,
+                                    value: [date: proxy.frame(in: .named("calendarGrid"))]
+                                )
+                            }
+                        )
                 } else {
-                    Color.clear
-                        .frame(height: 35)
+                    Color.clear.frame(height: 35)
+                }
+            }
+        }
+        .coordinateSpace(name: "calendarGrid")
+        .backgroundPreferenceValue(DatePreferenceKey.self) { preferences in
+            if let start = vm.startDate, let end = vm.endDate {
+
+                let monthStart = vm.calendar.startOfDay(for: month)
+                let monthEnd = vm.calendar.date(
+                    byAdding: DateComponents(month: 1, day: -1),
+                    to: monthStart
+                )!
+
+                let rangeStart = max(start, monthStart)
+                let rangeEnd = min(end, monthEnd)
+
+                let visibleFrames = preferences
+                    .filter { date, _ in
+                        date >= rangeStart && date <= rangeEnd
+                    }
+
+                let rows = Dictionary(grouping: visibleFrames) { (_, frame) in
+                    // 같은 줄 판별용 key
+                    Int(frame.midY / 10)
+                }
+
+                ZStack {
+                    ForEach(rows.keys.sorted(), id: \.self) { key in
+                        if let row = rows[key] {
+                            let frames = row.map { $0.value }
+                            let minX = frames.map { $0.minX }.min()!
+                            let maxX = frames.map { $0.maxX }.max()!
+                            let midY = frames.first!.midY
+
+                            Capsule()
+                            .fill(
+                                    LinearGradient(
+                                        gradient: Gradient(stops: [
+                                            .init(color: .primary1.opacity(0.15), location: 0.0),
+                                            .init(color: .primary1.opacity(0.25), location: 0.5),
+                                            .init(color: .primary1.opacity(0.15), location: 1.0)
+                                        ]),
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                            .frame(width: maxX - minX - 6.5, height: 39)
+                            .position(
+                                x: (minX + maxX) / 2,
+                                y: midY
+                            )
+                        }
+                    }
                 }
             }
         }
     }
-
 
     // MARK: - 날짜 선택
     private func dayCell(for date: Date) -> some View {
@@ -171,11 +231,16 @@ struct GoalPeriodCard: View {
             .foregroundStyle(isPast ? .gray : (isSelected ? .white : .black1))
             .strikethrough(isPast, color: .gray888)
             .frame(maxWidth: .infinity, minHeight: 35)
+            .zIndex(1) // 텍스트가 동그라미랑 둥근 네모(선) 위로 오게 함
             .background(
-                Circle()
-                    .fill(isSelected ? .primary1 : .clear)
-                    .frame(width: 39, height: 39)
-            )
+                        Circle()
+                            .fill(isSelected ? .primary1 : .clear)
+                            .overlay(
+                                // 선택된 날짜(시작일꽈 마지막일)에만 흰색 테두리 추가
+                                isSelected ? Circle().stroke(Color.white, lineWidth: 0.6) : nil
+                            )
+                            .frame(width: 39, height: 39)
+                    )
             .onTapGesture {
                 if !isPast {
                     vm.handleDateSelection(date)
@@ -206,19 +271,17 @@ struct GoalPeriodCard: View {
         }
     }
 
+    // MARK: - 카드 열고 닫기
     private func open() {
-        // startDate가 있다면 그 달로 캘린더 열기
-        if let start = vm.startDate {
-            // startDate가 속한 달의 1일로 맞춰서 currentMonth 세팅
-            let comps = vm.calendar.dateComponents([.year, .month], from: start)
-            vm.currentMonth = vm.calendar.date(from: comps) ?? start
+        // 시작일과 종료일이 '모두' 있을 때만 시작일 달로 이동
+        if let start = vm.startDate, let _ = vm.endDate {
+            let diff = vm.calendar.dateComponents([.month], from: vm.startOfCurrentMonth(), to: start)
+            vm.currentMonthIndex = diff.month ?? 0
         } else {
-            // startDate 없으면 오늘 달
-            let comps = vm.calendar.dateComponents([.year, .month], from: Date())
-            vm.currentMonth = vm.calendar.date(from: comps) ?? Date()
-        }
-        
-        if vm.startDate == nil || vm.endDate == nil {
+            // 날짜가 하나만 선택됐거나 아예 없으면 무조건 이번 달로 초기화
+            vm.currentMonthIndex = 0
+            
+            // 하나만 선택된 불완전한 상태라면 선택 취소
             vm.startDate = nil
             vm.endDate = nil
         }
@@ -234,6 +297,15 @@ struct GoalPeriodCard: View {
             isExpanded = false
         }
         isFocused = false
+    }
+}
+
+// MARK: - 캘린더 어디 보고 있는지
+struct DatePreferenceKey: PreferenceKey {
+    static var defaultValue: [Date: CGRect] = [:]
+    
+    static func reduce(value: inout [Date: CGRect], nextValue: () -> [Date: CGRect]) {
+        value.merge(nextValue()) { $1 }
     }
 }
 
