@@ -7,10 +7,14 @@
 
 import SwiftUI
 
-// TODO: 이름 설정 전 캘린더 접근 제한 로직 추가, 색상 변경, 이름/날짜 작성하다가 허공/엔터 클릭하면 닫히기, 캘린더 날짜 사이 선 추가
-
 struct GoalInfoSetupView: View {
     @StateObject private var viewModel = GoalSetupViewModel()
+    
+    // 버튼 활성화 조건: 이름이 있고 + 시작일이 있고 + 종료일이 있을 때
+    private var isSetupCompleted: Bool {
+        let isNameValid = !viewModel.goalName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        return isNameValid && viewModel.startDate != nil && viewModel.endDate != nil
+    }
     
     var body: some View {
         ZStack {
@@ -28,6 +32,14 @@ struct GoalInfoSetupView: View {
                 
                 Spacer()
                 
+                if isSetupCompleted && viewModel.expandedSection == nil {
+                    PrimaryButton(title: "설정하기") {
+                        print("설정 완료: \(viewModel.goalName), \(viewModel.formatDate(viewModel.startDate)) ~ \(viewModel.formatDate(viewModel.endDate))")
+                        // TODO: 다음 화면 이동 로직
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 89)
+                }
             }
             .padding(.top, 125)
         }
