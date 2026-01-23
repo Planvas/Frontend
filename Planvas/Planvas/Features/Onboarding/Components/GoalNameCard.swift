@@ -9,8 +9,11 @@ import SwiftUI
 
 struct GoalNameCard: View {
     @ObservedObject var vm: GoalSetupViewModel
-    @State private var isExpanded: Bool = false
     @FocusState private var isFocused: Bool
+    
+    private var isExpanded: Bool {
+        vm.expandedSection == .name
+    }
     
     private var currentCornerRadius: CGFloat {
         isExpanded ? 25 : 15
@@ -114,7 +117,7 @@ struct GoalNameCard: View {
     // MARK: - 카드 열고 닫기
     private func open() {
         withAnimation(.easeInOut) {
-            isExpanded = true
+            vm.expandedSection = .name
         }
         isFocused = true
     }
@@ -126,7 +129,9 @@ struct GoalNameCard: View {
         }
         
         withAnimation(.easeInOut) {
-            isExpanded = false
+            if vm.expandedSection == .name {
+                vm.expandedSection = nil
+            }
         }
         isFocused = false
     }
