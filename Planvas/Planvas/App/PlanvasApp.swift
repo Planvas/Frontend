@@ -10,6 +10,8 @@ import GoogleSignIn
 
 @main
 struct PlanvasApp: App {
+    @AppStorage("hasSeenOnboarding") var hasSeenOnboarding: Bool = false
+    
     init() {
         let config = GIDConfiguration(clientID: Config.ClientId)
         GIDSignIn.sharedInstance.configuration = config
@@ -17,7 +19,11 @@ struct PlanvasApp: App {
     
     var body: some Scene {
         WindowGroup {
-            LoginView()
+            if hasSeenOnboarding {
+                LoginView()
+            } else {
+                InitOnboardingView()
+            }
         }
     }
 }
