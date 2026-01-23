@@ -19,8 +19,7 @@ class GoalSetupViewModel: ObservableObject {
     @Published var startDate: Date?
     @Published var endDate: Date?
     
-    // 현재 보고 있는 달 (오늘)
-    @Published var currentMonth: Date = Date()
+    @Published var currentMonthIndex: Int = 0
     
     let daysInWeek = ["일", "월", "화", "수", "목", "금", "토"]
     let today = Calendar.current.startOfDay(for: Date())
@@ -32,7 +31,9 @@ class GoalSetupViewModel: ObservableObject {
     
     // 월 단위 시작일 계산
     func startOfCurrentMonth() -> Date {
-        calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth)) ?? currentMonth
+        // 실제 오늘(Date())을 기준으로 1일을 계산
+        let components = calendar.dateComponents([.year, .month], from: Date())
+        return calendar.date(from: components) ?? Date()
     }
 
     // 날짜 선택
