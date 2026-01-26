@@ -326,14 +326,26 @@ class CalendarViewModel: ObservableObject {
     
     func deleteEvent(_ event: Event) {
         // TODO: API 연동 시 이 부분 수정
-        let dateKey = dateKeyString(from: selectedDate)
-        sampleEvents[dateKey]?.removeAll { $0.id == event.id }
+        // 모든 날짜 키에서 해당 이벤트 삭제 (다중 날짜 이벤트 대응)
+        for dateKey in sampleEvents.keys {
+            sampleEvents[dateKey]?.removeAll { $0.id == event.id }
+        }
+        // 빈 배열인 키 제거
+        sampleEvents = sampleEvents.filter { !$0.value.isEmpty }
     }
     
-    func getTargetPeriod() -> String? {
-        // TODO: 실제 목표 기간 데이터에서 가져오기
-        // 현재는 샘플 데이터
-        return "11/15 ~ 12/3"
+    func getTargetPeriod(for event: Event) -> String? {
+        // 이벤트의 시작/종료일로 목표 기간 계산
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M/d"
+        let start = formatter.string(from: event.startDate)
+        let end = formatter.string(from: event.endDate)
+        
+        // 같은 날이면 nil 반환
+        if calendar.isDate(event.startDate, inSameDayAs: event.endDate) {
+            return nil
+        }
+        return "\(start) ~ \(end)"
     }
     
     func importSchedules(_ schedules: [ImportableSchedule]) {
