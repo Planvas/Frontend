@@ -48,25 +48,166 @@ class CalendarViewModel: ObservableObject {
         // 현재는 샘플 데이터를 로드
         sampleEvents = [
             "2026-01-02": [
-                Event(title: "이벤트", time: "하루종일", color: .purple1)
+                Event(
+                    title: "독서 모임",
+                    time: "14:00 - 16:00",
+                    color: .purple1,
+                    startDate: makeDate(year: 2026, month: 1, day: 2, hour: 14),
+                    endDate: makeDate(year: 2026, month: 1, day: 2, hour: 16),
+                    category: .growth,
+                    isCompleted: true
+                )
+            ],
+            "2026-01-08": [
+                Event(
+                    title: "헬스장 PT",
+                    time: "매주 월요일 10:00 - 11:00",
+                    isFixed: true,
+                    color: .green,
+                    startDate: makeDate(year: 2026, month: 1, day: 8, hour: 10),
+                    endDate: makeDate(year: 2026, month: 1, day: 8, hour: 11),
+                    category: .rest,
+                    isRepeating: true
+                )
             ],
             "2026-01-13": [
-                Event(title: "카페 알바", time: "매주 수요일 18:00 - 22:00", isFixed: true, color: .red),
-                Event(title: "엄마생신", time: "하루종일", isAllDay: true, color: .purple2)
+                Event(
+                    title: "카페 알바",
+                    time: "매주 수요일 18:00 - 22:00",
+                    isFixed: true,
+                    color: .red,
+                    startDate: makeDate(year: 2026, month: 1, day: 13, hour: 18),
+                    endDate: makeDate(year: 2026, month: 1, day: 13, hour: 22),
+                    category: .growth,
+                    isRepeating: true
+                ),
+                Event(
+                    title: "엄마 생신",
+                    time: "하루종일",
+                    isAllDay: true,
+                    color: .purple2,
+                    startDate: makeDate(year: 2026, month: 1, day: 13),
+                    endDate: makeDate(year: 2026, month: 1, day: 13),
+                    category: .none
+                )
             ],
             "2026-01-15": [
-                Event(title: "베트남 여행", time: "하루종일", color: .blue1)
+                Event(
+                    title: "베트남 여행",
+                    time: "1/15 - 1/18",
+                    isAllDay: true,
+                    color: .blue1,
+                    startDate: makeDate(year: 2026, month: 1, day: 15),
+                    endDate: makeDate(year: 2026, month: 1, day: 18),
+                    category: .rest
+                )
             ],
             "2026-01-16": [
-                Event(title: "베트남 여행", time: "10:00 - 20:00", color: .blue2)
+                Event(
+                    title: "베트남 여행",
+                    time: "1/15 - 1/18",
+                    isAllDay: true,
+                    color: .blue1,
+                    startDate: makeDate(year: 2026, month: 1, day: 15),
+                    endDate: makeDate(year: 2026, month: 1, day: 18),
+                    category: .rest
+                )
+            ],
+            "2026-01-17": [
+                Event(
+                    title: "베트남 여행",
+                    time: "1/15 - 1/18",
+                    isAllDay: true,
+                    color: .blue1,
+                    startDate: makeDate(year: 2026, month: 1, day: 15),
+                    endDate: makeDate(year: 2026, month: 1, day: 18),
+                    category: .rest
+                )
             ],
             "2026-01-18": [
-                Event(title: "동아리송별", time: "하루종일", color: .blue3)
+                Event(
+                    title: "베트남 여행",
+                    time: "1/15 - 1/18",
+                    isAllDay: true,
+                    color: .blue1,
+                    startDate: makeDate(year: 2026, month: 1, day: 15),
+                    endDate: makeDate(year: 2026, month: 1, day: 18),
+                    category: .rest
+                ),
+                Event(
+                    title: "동아리 송별회",
+                    time: "19:00 - 22:00",
+                    color: .blue3,
+                    startDate: makeDate(year: 2026, month: 1, day: 18, hour: 19),
+                    endDate: makeDate(year: 2026, month: 1, day: 18, hour: 22),
+                    category: .rest
+                )
             ],
             "2026-01-20": [
-                Event(title: "이벤트", time: "하루종일", isFixed: true, color: .pink)
+                Event(
+                    title: "토익 시험",
+                    time: "09:00 - 12:00",
+                    isFixed: true,
+                    color: .pink,
+                    startDate: makeDate(year: 2026, month: 1, day: 20, hour: 9),
+                    endDate: makeDate(year: 2026, month: 1, day: 20, hour: 12),
+                    category: .growth,
+                    isCompleted: true
+                )
+            ],
+            "2026-01-22": [
+                Event(
+                    title: "공모전 제출",
+                    time: "하루종일",
+                    isAllDay: true,
+                    color: .yellow,
+                    startDate: makeDate(year: 2026, month: 1, day: 22),
+                    endDate: makeDate(year: 2026, month: 1, day: 22),
+                    category: .growth
+                )
+            ],
+            "2026-01-25": [
+                Event(
+                    title: "요가 클래스",
+                    time: "매주 토요일 08:00 - 09:00",
+                    isFixed: true,
+                    color: .green,
+                    startDate: makeDate(year: 2026, month: 1, day: 25, hour: 8),
+                    endDate: makeDate(year: 2026, month: 1, day: 25, hour: 9),
+                    category: .rest,
+                    isRepeating: true
+                ),
+                Event(
+                    title: "친구 만남",
+                    time: "14:00 - 18:00",
+                    color: .blue2,
+                    startDate: makeDate(year: 2026, month: 1, day: 25, hour: 14),
+                    endDate: makeDate(year: 2026, month: 1, day: 25, hour: 18),
+                    category: .rest
+                )
+            ],
+            "2026-01-28": [
+                Event(
+                    title: "프로젝트 미팅",
+                    time: "15:00 - 17:00",
+                    color: .red,
+                    startDate: makeDate(year: 2026, month: 1, day: 28, hour: 15),
+                    endDate: makeDate(year: 2026, month: 1, day: 28, hour: 17),
+                    category: .growth
+                )
             ]
         ]
+    }
+    
+    /// 날짜 생성 헬퍼
+    private func makeDate(year: Int, month: Int, day: Int, hour: Int = 0, minute: Int = 0) -> Date {
+        var components = DateComponents()
+        components.year = year
+        components.month = month
+        components.day = day
+        components.hour = hour
+        components.minute = minute
+        return calendar.date(from: components) ?? Date()
     }
     
     // MARK: - Computed Properties
@@ -167,21 +308,19 @@ class CalendarViewModel: ObservableObject {
     }
     
     func getStartDate(for event: Event) -> Date {
-        // TODO: Event 모델에 startDate가 추가되면 그걸 사용
-        // 현재는 선택된 날짜를 사용
-        return selectedDate
+        return event.startDate
     }
     
     func getEndDate(for event: Event) -> Date {
-        // TODO: Event 모델에 endDate가 추가되면 그걸 사용
-        // 현재는 선택된 날짜를 사용 (하루종일인 경우)
-        return selectedDate
+        return event.endDate
     }
     
     func getDaysUntil(for event: Event) -> Int? {
         let startDate = getStartDate(for: event)
-        let today = Date()
-        let days = calendar.dateComponents([.day], from: today, to: startDate).day ?? 0
+        // 시간대 오차 방지를 위해 startOfDay로 정규화
+        let todayStart = calendar.startOfDay(for: Date())
+        let eventStart = calendar.startOfDay(for: startDate)
+        let days = calendar.dateComponents([.day], from: todayStart, to: eventStart).day ?? 0
         return days >= 0 ? days : nil
     }
     
