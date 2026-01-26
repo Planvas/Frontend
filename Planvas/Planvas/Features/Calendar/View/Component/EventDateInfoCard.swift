@@ -59,7 +59,7 @@ struct EventDateInfoCard: View {
                             .foregroundColor(.white)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(isAllDay == true ? .primary1 : .primary20)
+                            .background(.primary1)
                             .cornerRadius(100)
                     }
                 }
