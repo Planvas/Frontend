@@ -98,6 +98,12 @@ extension TextStyle {
         letterSpacing: nil
     )
     
+    static let bold12_5 = TextStyle(
+        weight: .bold,
+        size: 12.5,
+        letterSpacing: nil
+    )
+    
     // semibold
     static let semibold30 = TextStyle(
         weight: .semibold,
