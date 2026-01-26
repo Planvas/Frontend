@@ -7,6 +7,7 @@
 import SwiftUI
 
 struct GoalRatioSetupView: View {
+    @Environment(NavigationRouter<OnboardingRoute>.self) private var router
     @ObservedObject var viewModel: GoalSetupViewModel
     
     var body: some View {
@@ -107,8 +108,10 @@ struct GoalRatioSetupView: View {
                 .padding(.bottom, 7)
             
             Button(action: {
-                // TODO: 유형별 추천 비율 선택 화면 연결
                 print("유형별 추천 비율 선택 버튼 클릭")
+                
+                // 유형별 추천 비율 선택 화면 연결
+                router.push(.recommendation)
             }) {
                 Text("유형별 추천 비율 선택하기")
                     .textStyle(.semibold18)
@@ -169,5 +172,9 @@ struct GoalRatioSetupView: View {
 
 // MARK: - 프리부
 #Preview {
-    GoalRatioSetupView(viewModel: GoalSetupViewModel())
+    let router = NavigationRouter<OnboardingRoute>()
+    NavigationStack(path: .constant(router.path)) {
+        GoalRatioSetupView(viewModel: GoalSetupViewModel())
+    }
+    .environment(router)
 }
