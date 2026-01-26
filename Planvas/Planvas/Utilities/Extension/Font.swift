@@ -49,7 +49,7 @@ struct TextStyle: ViewModifier {
         content
             .font(font)
             .kerning(letterSpacing ?? size * 0.01)
-            .lineSpacing(size * 0.25)
+            .lineSpacing(size * 0.1)
     }
 }
 
