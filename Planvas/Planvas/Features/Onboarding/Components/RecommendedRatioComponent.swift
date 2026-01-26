@@ -14,13 +14,10 @@ struct RecommendedRatioComponent: View {
     let shortDesc: String
     let targetText: String
     
-    // TODO: 이런거 다 뷰 모델이랑 연관지어야 함
-    // 선택 관련 프로퍼티 추가
-    let isSelected: Bool
-    let action: () -> Void
+    let onSelect: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        Button(action: onSelect) {
             VStack(alignment: .leading, spacing: 0) {
                 // 유형 이름
                 Text(title)
@@ -87,7 +84,7 @@ struct RecommendedRatioComponent: View {
             .background(
                 RoundedRectangle(cornerRadius: 25)
                     // TODO: 변경 사항 어케 되는지 디자인 고쳐야 함
-                    .fill(isSelected ? Color.black1 : Color.primary1)
+                    .fill(.primary1)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 25)
@@ -112,8 +109,7 @@ struct RecommendedRatioComponent: View {
                         description: "잠은 죽어서 잔다!\n이번 시즌, 후회 없이 모든 걸 쏟아붓습니다\n\n지금 편안하게 쉬는 것보다,\n미래의 압도적인 성취를 위해",
                         shortDesc: "성장에 올인(All-in)하는 유형",
                         targetText: "학점 관리와 대외활동을 병행하는\n프로 N잡러",
-                        isSelected: selectedType == "파워 갓생러🔥",
-                        action: { toggleSelection("파워 갓생러🔥") }
+                        onSelect: { print("선택: 파워 갓생러🔥 (step 9)") }
                     )
                     
                     RecommendedRatioComponent(
@@ -122,8 +118,7 @@ struct RecommendedRatioComponent: View {
                         description: "이번 시즌의 목표는 경험!\n마음껏 놀고, 보고, 느끼는 게 나의 스펙\n\n단순한 휴식이 아니라\n여행이나 새로운 경험을 통한",
                         shortDesc: "'적극적인 휴식'으로 청춘을 즐기려는 유형",
                         targetText: "장배낭 여행, 워킹 홀리데이, 휴학 후\n자아를 찾는 여행자",
-                        isSelected: selectedType == "갭이어 탐험가 ✈️",
-                        action: { toggleSelection("갭이어 탐험가 ✈️") }
+                        onSelect: { print("선택: 갭이어 탐험가 ✈️ (step 1)") }
                     )
                 }
                 .padding(.horizontal, 20)
