@@ -20,6 +20,17 @@ struct EventSummaryView: View {
     var onDelete: (() -> Void)?
     var onEdit: (() -> Void)?
     
+    /// 목표 기간 계산 (시작일과 종료일이 다른 경우에만 표시)
+    private var targetPeriod: String? {
+        let calendar = Calendar.current
+        guard !calendar.isDate(event.startDate, inSameDayAs: event.endDate) else {
+            return nil
+        }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M/d"
+        return "\(formatter.string(from: event.startDate)) ~ \(formatter.string(from: event.endDate))"
+    }
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -57,7 +68,7 @@ struct EventSummaryView: View {
                 startDate: startDate,
                 endDate: endDate,
                 daysUntil: daysUntil,
-                targetPeriod: nil,
+                targetPeriod: targetPeriod,
                 onEdit: nil,
                 onDelete: onDelete,
                 onSave: {
