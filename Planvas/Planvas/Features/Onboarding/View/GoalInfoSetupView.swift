@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct GoalInfoSetupView: View {
-    @StateObject private var viewModel = GoalSetupViewModel()
+    @ObservedObject var viewModel: GoalSetupViewModel
+    @Environment(NavigationRouter<OnboardingRoute>.self) private var router
     
     // 버튼 활성화 조건: 이름이 있고 + 시작일이 있고 + 종료일이 있을 때
     private var isSetupCompleted: Bool {
@@ -35,7 +36,9 @@ struct GoalInfoSetupView: View {
                 if isSetupCompleted && viewModel.expandedSection == nil {
                     PrimaryButton(title: "설정하기") {
                         print("설정 완료: \(viewModel.goalName), \(viewModel.formatDate(viewModel.startDate)) ~ \(viewModel.formatDate(viewModel.endDate))")
-                        // TODO: 다음 화면 이동 로직
+                        
+                        // 목표 비율 설정 화면 이동
+                        router.push(.ratio)
                     }
                     .padding(.horizontal, 20)
                     .padding(.bottom, 89)
@@ -94,5 +97,9 @@ struct GoalInfoSetupView: View {
 }
 
 #Preview {
-    GoalInfoSetupView()
+    let router = NavigationRouter<OnboardingRoute>()
+    NavigationStack(path: .constant(router.path)) {
+        GoalInfoSetupView(viewModel: GoalSetupViewModel())
+    }
+    .environment(router)
 }
