@@ -399,25 +399,6 @@ struct EditEventView: View {
     }
 }
 
-// MARK: - Date Extension for EditEventView
-extension Date {
-    /// 날짜를 "M/d, E요일" 형식으로 포맷팅
-    func shortDateWithWeekday() -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "M/d, E요일"
-        return formatter.string(from: self)
-    }
-    
-    /// 날짜를 "yyyy년" 형식으로 포맷팅
-    func yearStringWithSuffix() -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "yyyy년"
-        return formatter.string(from: self)
-    }
-}
-
 #Preview {
     EditEventView(
         event: Event(
