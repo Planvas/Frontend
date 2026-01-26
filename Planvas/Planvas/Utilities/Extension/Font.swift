@@ -148,6 +148,12 @@ extension TextStyle {
     )
     
     // medium
+    static let medium58 = TextStyle(
+        weight: .medium,
+        size: 58,
+        letterSpacing: nil
+    )
+    
     static let medium20 = TextStyle(
         weight: .medium,
         size: 20,
