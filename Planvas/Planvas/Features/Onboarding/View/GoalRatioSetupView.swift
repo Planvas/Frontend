@@ -15,6 +15,8 @@ struct GoalRatioSetupView: View {
                 VStack(spacing: 0) {
                     // 멘트 그룹
                     InfoGroup
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.leading, 20)
                         .padding(.bottom, 20)
                     
                     // 비율 설정 네모 그룹
@@ -94,7 +96,6 @@ struct GoalRatioSetupView: View {
                 .textStyle(.medium20)
                 .foregroundStyle(.black1)
         }
-        .padding(.horizontal, 20)
     }
     
     // MARK: - 유형별 추천 비율 멘트 그룹
