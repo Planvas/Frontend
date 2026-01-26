@@ -204,6 +204,7 @@ struct AddEventView: View {
         Button {
             withAnimation(.easeInOut(duration: 0.3)) {
                 showRepeatPicker.toggle()
+                viewModel.isRepeatEnabled = showRepeatPicker
             }
         } label: {
             HStack(spacing: 12) {
