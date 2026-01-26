@@ -299,17 +299,6 @@ struct EventDetailView: View {
     }
 }
 
-// MARK: - Date Extension for EventDetailView
-extension Date {
-    /// 날짜를 "M월 d일" 형식으로 포맷팅
-    func monthDayString() -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "M월 d일"
-        return formatter.string(from: self)
-    }
-}
-
 // MARK: - Corner Radius Extension
 extension View {
     func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
