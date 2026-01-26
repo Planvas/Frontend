@@ -93,7 +93,8 @@ class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
     
     /// 진행바 너비 비율 (0.0 ~ 1.0)
     var progressRatio: CGFloat {
-        min(CGFloat(currentAchievement + currentActivityValue) / CGFloat(targetAchievement), 1.0)
+        guard targetAchievement > 0 else { return 0 }
+        return min(CGFloat(currentAchievement + currentActivityValue) / CGFloat(targetAchievement), 1.0)
     }
     
     /// 특정 활동 타입이 선택되었는지 확인
@@ -113,6 +114,19 @@ class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
         self.isAllDay = event.isAllDay
         self.selectedColor = event.color
         self.targetPeriod = targetPeriod ?? "11/15 ~ 12/3"
+        
+        // 이벤트 카테고리에 따라 활동치 설정 초기화
+        switch event.category {
+        case .growth:
+            self.selectedActivityType = .growth
+            self.isActivityEnabled = true
+        case .rest:
+            self.selectedActivityType = .rest
+            self.isActivityEnabled = true
+        case .none:
+            self.selectedActivityType = .growth
+            self.isActivityEnabled = false
+        }
     }
     
     // MARK: - Activity Value Methods
