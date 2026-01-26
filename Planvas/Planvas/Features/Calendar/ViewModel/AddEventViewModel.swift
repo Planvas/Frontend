@@ -14,10 +14,10 @@ class AddEventViewModel: ObservableObject, RepeatOptionConfigurable {
     @Published var startDate: Date = Date()
     @Published var endDate: Date = Date()
     @Published var isAllDay: Bool = false
-    @Published var repeatOption: String = "반복하지 않음"
+    @Published var isRepeatEnabled: Bool = false  // 반복 설정 활성화 여부
     @Published var repeatType: RepeatType = .weekly
     @Published var selectedYearDuration: Int = 2
-    @Published var selectedWeekdays: Set<Int> = [1]
+    @Published var selectedWeekdays: Set<Int> = []  // 기본값 빈 집합
     @Published var selectedColor: EventColorType = .red
     
     let weekdays = ["월", "화", "수", "목", "금", "토", "일"]
@@ -51,9 +51,6 @@ class AddEventViewModel: ObservableObject, RepeatOptionConfigurable {
     func createEvent() -> Event {
         let timeString = isAllDay ? "하루종일" : "\(startDate.timeString()) - \(endDate.timeString())"
         
-        // 반복 설정 여부 확인
-        let isRepeating = repeatType != .weekly || !selectedWeekdays.isEmpty
-        
         return Event(
             title: eventName.isEmpty ? "이름 없음" : eventName,
             time: timeString,
@@ -64,7 +61,7 @@ class AddEventViewModel: ObservableObject, RepeatOptionConfigurable {
             endDate: endDate,
             category: .none,  // 새 이벤트는 기본적으로 미분류
             isCompleted: false,
-            isRepeating: isRepeating
+            isRepeating: isRepeatEnabled
         )
     }
     

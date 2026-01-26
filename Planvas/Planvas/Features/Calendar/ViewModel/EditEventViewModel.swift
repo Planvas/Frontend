@@ -221,7 +221,7 @@ class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
             endDate: endDate,
             category: category,
             isCompleted: originalEvent?.isCompleted ?? false,
-            isRepeating: repeatType != .weekly || !selectedWeekdays.isEmpty
+            isRepeating: isRepeating
         )
     }
     

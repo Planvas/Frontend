@@ -71,6 +71,8 @@ struct EditEventView: View {
                 endDate: endDate,
                 targetPeriod: targetPeriod
             )
+            // 반복 설정 상태 초기화
+            showRepeatPicker = event.isRepeating
         }
     }
     
@@ -216,6 +218,7 @@ struct EditEventView: View {
         Button {
             withAnimation(.easeInOut(duration: 0.3)) {
                 showRepeatPicker.toggle()
+                viewModel.isRepeating = showRepeatPicker
             }
         } label: {
             HStack(spacing: 12) {
