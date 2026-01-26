@@ -50,12 +50,21 @@ class AddEventViewModel: ObservableObject, RepeatOptionConfigurable {
     
     func createEvent() -> Event {
         let timeString = isAllDay ? "하루종일" : "\(startDate.timeString()) - \(endDate.timeString())"
+        
+        // 반복 설정 여부 확인
+        let isRepeating = repeatType != .weekly || !selectedWeekdays.isEmpty
+        
         return Event(
             title: eventName.isEmpty ? "이름 없음" : eventName,
             time: timeString,
             isFixed: false,
             isAllDay: isAllDay,
-            color: selectedColor
+            color: selectedColor,
+            startDate: startDate,
+            endDate: endDate,
+            category: .none,  // 새 이벤트는 기본적으로 미분류
+            isCompleted: false,
+            isRepeating: isRepeating
         )
     }
     

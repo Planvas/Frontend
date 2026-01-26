@@ -21,6 +21,7 @@ class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
     @Published var repeatType: RepeatType = .weekly
     @Published var selectedYearDuration: Int = 1
     @Published var selectedWeekdays: Set<Int> = []
+    @Published var isRepeating: Bool = false
     
     // MARK: - 활동치 설정
     @Published var isActivityEnabled: Bool = false
@@ -113,7 +114,14 @@ class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
         self.endDate = endDate
         self.isAllDay = event.isAllDay
         self.selectedColor = event.color
-        self.targetPeriod = targetPeriod ?? "11/15 ~ 12/3"
+        self.isRepeating = event.isRepeating
+        
+        // targetPeriod 계산: 전달받은 값 사용하거나 이벤트 날짜로 계산
+        if let period = targetPeriod {
+            self.targetPeriod = period
+        } else {
+            self.targetPeriod = calculateTargetPeriod(from: event.startDate, to: event.endDate)
+        }
         
         // 이벤트 카테고리에 따라 활동치 설정 초기화
         switch event.category {
@@ -127,6 +135,18 @@ class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
             self.selectedActivityType = .growth
             self.isActivityEnabled = false
         }
+    }
+    
+    /// 시작일과 종료일로 목표 기간 문자열 생성
+    private func calculateTargetPeriod(from startDate: Date, to endDate: Date) -> String {
+        let calendar = Calendar.current
+        // 같은 날이면 빈 문자열
+        guard !calendar.isDate(startDate, inSameDayAs: endDate) else {
+            return ""
+        }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M/d"
+        return "\(formatter.string(from: startDate)) ~ \(formatter.string(from: endDate))"
     }
     
     // MARK: - Activity Value Methods
@@ -181,13 +201,27 @@ class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
     // MARK: - Save Event
     func createUpdatedEvent() -> Event {
         let timeString = isAllDay ? "하루종일" : "\(startDate.timeString()) - \(endDate.timeString())"
+        
+        // 활동치 설정에 따른 카테고리 결정
+        let category: EventCategory
+        if isActivityEnabled {
+            category = selectedActivityType == .growth ? .growth : .rest
+        } else {
+            category = .none
+        }
+        
         return Event(
             id: originalEvent?.id ?? UUID(),
             title: eventName.isEmpty ? "이름 없음" : eventName,
             time: timeString,
             isFixed: originalEvent?.isFixed ?? false,
             isAllDay: isAllDay,
-            color: selectedColor
+            color: selectedColor,
+            startDate: startDate,
+            endDate: endDate,
+            category: category,
+            isCompleted: originalEvent?.isCompleted ?? false,
+            isRepeating: repeatType != .weekly || !selectedWeekdays.isEmpty
         )
     }
     
