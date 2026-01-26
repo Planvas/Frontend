@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct MainView: View {
+    @StateObject private var viewModel = MainViewModel()
+    
     var body: some View {
         ScrollView{
             VStack{
@@ -27,16 +29,19 @@ struct MainView: View {
                     .resizable()
                     .frame(width: 180, height: 43)
                     .padding(.top, 60)
-                Group{
-                    Text("지수님, 반가워요!")
+                    Text(viewModel.StateTitle)
                         .textStyle(.semibold30)
-                        .padding(.bottom)
-                    Text("바라는 모습대로 만든 균형에 맞춰 일상을 채워보세요  그 시도만으로도 확실한 성취입니다")
-                        .textStyle(.semibold16)
-                }
-                .foregroundStyle(.black1)
+                        .padding(.bottom, 15)
+                        .foregroundStyle(viewModel.goalSetting == .ing ?  .black1 : .fff)
+                    Text(viewModel.StateDescription)
+                    .textStyle(viewModel.goalSetting == .ing ? .semibold16 : .semibold20)
+                        .foregroundStyle(.black1)
                 
-                PresentGoalGroup
+                if viewModel.goalSetting == .ing {
+                    PresentGoalGroup
+                } else {
+                    HeaderButtonGroup
+                }
             }
             .padding()
         }
@@ -54,6 +59,7 @@ struct MainView: View {
                     RoundedRectangle(cornerRadius: 5)
                         .foregroundStyle(.primary1)
                 )
+                .padding(.top, 33)
             
             Text("시험 기간 전 갓생")
                 .textStyle(.medium14)
@@ -64,6 +70,7 @@ struct MainView: View {
                     RoundedRectangle(cornerRadius: 5)
                         .foregroundStyle(.fff20)
                 )
+                .padding(.bottom, 14)
             
             Text("성장")
                 .textStyle(.semibold20)
@@ -75,7 +82,7 @@ struct MainView: View {
                 startColor: .primary1,
                 endColor: .primary2
             )
-                .padding(.bottom, 35)
+                .padding(.bottom, 10)
             
             Text("휴식")
                 .textStyle(.semibold20)
@@ -87,10 +94,27 @@ struct MainView: View {
                 startColor: .gradprimary2,
                 endColor: .primary1
             )
+            .padding(.bottom, 50)
         }
     }
     
-
+    // MARK: - 헤더 / 버튼 그룹
+    private var HeaderButtonGroup: some View {
+        Button(action: {
+            print(viewModel.goalSetting == .end ? "최종 리포트 확인하러 가기" : "목표 설정하러 가기")
+        }){
+            Text(viewModel.goalSetting == .end ? "최종 리포트 확인하러 가기" : "목표 설정하러 가기")
+                .textStyle(.semibold20)
+                .foregroundStyle(.black1)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 15)
+                        .foregroundStyle(.subPurple)
+                )
+                .padding(.vertical)
+        }
+    }
 }
 
 #Preview {
