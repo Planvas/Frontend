@@ -50,6 +50,7 @@ struct MainHeaderView: View {
                 }
             }
             .padding()
+            .padding(.bottom, 20)
         }
     }
 }
