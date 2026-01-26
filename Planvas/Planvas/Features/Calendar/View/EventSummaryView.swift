@@ -21,14 +21,15 @@ struct EventSummaryView: View {
     var onEdit: (() -> Void)?
     
     /// 목표 기간 계산 (시작일과 종료일이 다른 경우에만 표시)
+    /// 파라미터로 전달받은 startDate/endDate 기준으로 계산
     private var targetPeriod: String? {
         let calendar = Calendar.current
-        guard !calendar.isDate(event.startDate, inSameDayAs: event.endDate) else {
+        guard !calendar.isDate(startDate, inSameDayAs: endDate) else {
             return nil
         }
         let formatter = DateFormatter()
         formatter.dateFormat = "M/d"
-        return "\(formatter.string(from: event.startDate)) ~ \(formatter.string(from: event.endDate))"
+        return "\(formatter.string(from: startDate)) ~ \(formatter.string(from: endDate))"
     }
     
     var body: some View {
