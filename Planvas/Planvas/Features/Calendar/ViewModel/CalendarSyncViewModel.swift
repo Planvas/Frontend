@@ -5,24 +5,12 @@
 //  Created on 1/22/26.
 //
 
-import SwiftUI
+import Foundation
 import Combine
 
 @MainActor
 class CalendarSyncViewModel: ObservableObject {
-    var calendarTitle: AttributedString {
-        var attributed = AttributedString("캘린더 연동으로")
-
-        if let range = attributed.range(of: "캘린더 연동") {
-            attributed[range].foregroundColor = .primary1
-            attributed[range].font = TextStyle.bold30.swiftUIFont
-        }
-
-        if let range = attributed.range(of: "으로") {
-            attributed[range].foregroundColor = .black1
-            attributed[range].font = TextStyle.bold30.swiftUIFont
-        }
-
-        return attributed
-    }
+    // 캘린더 타이틀 텍스트 (View에서 스타일 적용)
+    let calendarTitleText = "캘린더 연동으로"
+    let highlightedText = "캘린더 연동"
 }

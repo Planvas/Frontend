@@ -45,7 +45,7 @@ struct CalendarSyncView: View {
     private var titleView: some View {
         VStack(alignment: .leading, spacing: 15){
             VStack(alignment: .leading, spacing: 3) {
-                Text(viewModel.calendarTitle)
+                Text(calendarTitleAttributed)
                 
                 Text("고정 일정 불러오기")
                     .textStyle(.bold30)
@@ -56,6 +56,23 @@ struct CalendarSyncView: View {
                 .textStyle(.medium20)
                 .foregroundColor(.black1)
         }
+    }
+    
+    /// 캘린더 타이틀 AttributedString 생성
+    private var calendarTitleAttributed: AttributedString {
+        var attributed = AttributedString(viewModel.calendarTitleText)
+        
+        if let range = attributed.range(of: viewModel.highlightedText) {
+            attributed[range].foregroundColor = .primary1
+            attributed[range].font = TextStyle.bold30.swiftUIFont
+        }
+        
+        if let range = attributed.range(of: "으로") {
+            attributed[range].foregroundColor = .black1
+            attributed[range].font = TextStyle.bold30.swiftUIFont
+        }
+        
+        return attributed
     }
 
    
