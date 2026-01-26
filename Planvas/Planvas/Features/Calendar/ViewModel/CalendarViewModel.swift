@@ -128,6 +128,28 @@ class CalendarViewModel: ObservableObject {
         }
     }
     
+    /// 이전 달로 이동
+    func goToPreviousMonth() {
+        if let newMonth = calendar.date(byAdding: .month, value: -1, to: currentMonth) {
+            currentMonth = newMonth
+            // 선택된 날짜도 해당 월의 1일로 변경
+            if let firstDayOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: newMonth)) {
+                selectedDate = firstDayOfMonth
+            }
+        }
+    }
+    
+    /// 다음 달로 이동
+    func goToNextMonth() {
+        if let newMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth) {
+            currentMonth = newMonth
+            // 선택된 날짜도 해당 월의 1일로 변경
+            if let firstDayOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: newMonth)) {
+                selectedDate = firstDayOfMonth
+            }
+        }
+    }
+    
     func isDateInCurrentMonth(_ date: Date) -> Bool {
         return calendar.isDate(date, equalTo: currentMonth, toGranularity: .month)
     }
@@ -142,6 +164,37 @@ class CalendarViewModel: ObservableObject {
     
     func dayNumber(from date: Date) -> Int {
         return calendar.component(.day, from: date)
+    }
+    
+    func getStartDate(for event: Event) -> Date {
+        // TODO: Event 모델에 startDate가 추가되면 그걸 사용
+        // 현재는 선택된 날짜를 사용
+        return selectedDate
+    }
+    
+    func getEndDate(for event: Event) -> Date {
+        // TODO: Event 모델에 endDate가 추가되면 그걸 사용
+        // 현재는 선택된 날짜를 사용 (하루종일인 경우)
+        return selectedDate
+    }
+    
+    func getDaysUntil(for event: Event) -> Int? {
+        let startDate = getStartDate(for: event)
+        let today = Date()
+        let days = calendar.dateComponents([.day], from: today, to: startDate).day ?? 0
+        return days >= 0 ? days : nil
+    }
+    
+    func deleteEvent(_ event: Event) {
+        // TODO: API 연동 시 이 부분 수정
+        let dateKey = dateKeyString(from: selectedDate)
+        sampleEvents[dateKey]?.removeAll { $0.id == event.id }
+    }
+    
+    func getTargetPeriod() -> String? {
+        // TODO: 실제 목표 기간 데이터에서 가져오기
+        // 현재는 샘플 데이터
+        return "11/15 ~ 12/3"
     }
     
     func importSchedules(_ schedules: [ImportableSchedule]) {
