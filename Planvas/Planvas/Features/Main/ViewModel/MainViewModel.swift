@@ -9,9 +9,9 @@ import SwiftUI
 import Combine
 
 class MainViewModel: ObservableObject {
-    
+    // MARK: - 메인 페이지 목표 세팅 상태별 메세지
     // ing: 진행 중인 목표 존재, end: 활동 기간 종료, none: 목표 없음
-    @Published var goalSetting: GoalSetting = .ing
+    @Published var goalSetting: GoalSetting = .end
     
     var StateTitle: String {
         switch goalSetting {
@@ -33,5 +33,24 @@ class MainViewModel: ObservableObject {
         case .none:
             return "이번 시즌,\n지수님이 바라는 모습은 무엇인가요?"
         }
+    }
+    
+    // MARK: - 위클리 캘린더
+    @Published var centerDate: Date = Date()
+    @Published var selectedDate: Date = Date()
+    
+    // 오늘 기준 7일 만들기
+    var weekDates: [Date] {
+        let calendar = Calendar.current
+        return (-3...3).compactMap {
+            calendar.date(byAdding: .day, value: $0, to: centerDate)
+        }
+    }
+    // 오늘에 해당하는 월 한글 표시
+    var monthText: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "M월"
+        return formatter.string(from: centerDate)
     }
 }
