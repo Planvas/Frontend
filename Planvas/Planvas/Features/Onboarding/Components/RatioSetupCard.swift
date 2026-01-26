@@ -87,22 +87,6 @@ struct RatioSetupCard: View {
                             .zIndex(999)
                             .allowsHitTesting(false)
                     }
-                    
-                    // MARK: - 쉐브론/삼각형 인디케이터
-                    // TODO: 디자인 바뀔 예정
-                    let barH: CGFloat = 24
-                    let size: CGFloat = 24
-                    let lineX = snapToPixel(purpleWidth)
-
-                    let clampedX = min(max(lineX, size / 2), totalWidth - size / 2)
-
-                    Image(systemName: "arrowtriangle.up.fill")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: size, height: size)
-                        .foregroundStyle(.primary1)
-                        .position(x: clampedX, y: barH + (size / 2))
-                        .allowsHitTesting(false)
                 }
                 .contentShape(Rectangle())
                 .gesture(
@@ -122,8 +106,7 @@ struct RatioSetupCard: View {
             }
             .frame(height: 25)
             .padding(.horizontal, 11)
-            .padding(.bottom, 40)
-            
+            .padding(.bottom, 30)
         }
         .background(.white)
         .cornerRadius(25)
