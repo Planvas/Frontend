@@ -64,6 +64,20 @@ class GoalSetupViewModel: ObservableObject {
     var growthPercent: Int { ratioStep * 10 }
     var restPercent: Int { 100 - (ratioStep * 10) }
     
+    // 관심 분야 목록 저장
+    @Published var selectedInterestIds: Set<UUID> = []
+    
+    // 관심 분야
+    let interestActivityTypes: [InterestActivityType] = [
+        .init(emoji: "🖥️", title: "개발/IT"),
+        .init(emoji: "📊", title: "마케팅"),
+        .init(emoji: "🎨", title: "디자인"),
+        .init(emoji: "📋", title: "경영/사무"),
+        .init(emoji: "🧬", title: "과학/공학"),
+        .init(emoji: "💰", title: "경제/금융"),
+        .init(emoji: "🎬", title: "영상/콘텐츠"),
+        .init(emoji: "📝", title: "기획/마케팅/광고"),
+    ]
 
     // MARK: - 로직 함수
     
@@ -135,4 +149,20 @@ class GoalSetupViewModel: ObservableObject {
         }
     }
     
+    // 관심 분야 목록에 추가하느냐 마느냐
+    func toggleInterest(_ id: UUID) {
+        if selectedInterestIds.contains(id) {
+            selectedInterestIds.remove(id)
+            return
+        }
+
+        // 최대 3개 제한
+        guard selectedInterestIds.count < 3 else { return }
+        selectedInterestIds.insert(id)
+    }
+
+    // 선택 상태
+    func isInterestSelected(_ id: UUID) -> Bool {
+        selectedInterestIds.contains(id)
+    }
 }
