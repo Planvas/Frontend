@@ -8,5 +8,6 @@
 import Foundation
 
 enum OnboardingRoute {
-    case onboarding
+    case info   // 목표 이름, 기간 설정
+    case ratio  // 목표 비율 설정
 }

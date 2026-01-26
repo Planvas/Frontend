@@ -7,62 +7,67 @@
 import SwiftUI
 
 struct GoalRatioSetupView: View {
-    @StateObject private var viewModel = GoalSetupViewModel()
+    @ObservedObject var viewModel: GoalSetupViewModel
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                // 멘트 그룹
-                InfoGroup
-                    .padding(.top, 125)
-                    .padding(.bottom, 20)
-                
-                // 비율 설정 네모 그룹
-                RatioSetupCard(vm: viewModel)
-                    .padding(.bottom, 30)
-                
-                // 유형별 추천 비율 그룹
-                RecommendedRatiosGroup
-                
-                // 회색 라인
-                Rectangle()
-                    .fill(.line)
-                    .frame(height: 10)
-                    .frame(maxWidth: .infinity)
-                    .padding(.bottom, 30)
-                
-                // 이런 활동들이 있어요! 그룹
-                 ActivityListGroup
-                    .padding(.bottom, 48.78)
-                
-                // 다음 버튼
-                PrimaryButton(title: "다음") {
-                    print("성장: \(viewModel.growthPercent)% / 휴식: \(viewModel.restPercent)%")
-
-                    // TODO: 목표 이름, 기간, 비율 설정 내용 저장하는 API 호출
+        ZStack {
+            ScrollView {
+                VStack(spacing: 0) {
+                    // 멘트 그룹
+                    InfoGroup
+                        .padding(.bottom, 20)
                     
-                    // TODO: 다음 화면 이동 로직
+                    // 비율 설정 네모 그룹
+                    RatioSetupCard(vm: viewModel)
+                        .padding(.bottom, 30)
+                    
+                    // 유형별 추천 비율 그룹
+                    RecommendedRatiosGroup
+                    
+                    // 회색 라인
+                    Rectangle()
+                        .fill(.line)
+                        .frame(height: 10)
+                        .frame(maxWidth: .infinity)
+                        .padding(.bottom, 30)
+                    
+                    // 이런 활동들이 있어요! 그룹
+                    ActivityListGroup
+                        .padding(.bottom, 48.78)
+                    
+                    // 다음 버튼
+                    PrimaryButton(title: "다음") {
+                        print("성장: \(viewModel.growthPercent)% / 휴식: \(viewModel.restPercent)%")
+                        
+                        // TODO: 목표 이름, 기간, 비율 설정 내용 저장하는 API 호출
+                        
+                        // TODO: 다음 화면 이동 로직
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 66)
+                    .zIndex(1)
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 66)
-                .zIndex(1)
+                
+                // 바닥 그라데이션
+                .background(
+                    VStack {
+                        Spacer()
+                        LinearGradient(
+                            gradient: Gradient(colors: [.primary20, Color.white.opacity(0)]),
+                            startPoint: .bottom,
+                            endPoint: .top
+                        )
+                        .frame(height: 200)
+                    },
+                    alignment: .bottom
+                )
             }
-            // 바닥 그라데이션
-            .background(
-                VStack {
-                    Spacer()
-                    LinearGradient(
-                        gradient: Gradient(colors: [.primary20, Color.white.opacity(0)]),
-                        startPoint: .bottom,
-                        endPoint: .top
-                    )
-                    .frame(height: 200)
-                },
-                alignment: .bottom
-            )
+            .navigationBarBackButtonHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
+            .scrollIndicators(.hidden)
         }
-        .scrollIndicators(.hidden)
-        .ignoresSafeArea(edges: .bottom)
+        .padding(.top, 125)
+        .ignoresSafeArea()
     }
     
     // MARK: - 맨 위 멘트 그룹
@@ -163,5 +168,5 @@ struct GoalRatioSetupView: View {
 
 // MARK: - 프리부
 #Preview {
-    GoalRatioSetupView()
+    GoalRatioSetupView(viewModel: GoalSetupViewModel())
 }
