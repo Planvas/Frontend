@@ -62,7 +62,8 @@ class EventDetailViewModel: ObservableObject {
     
     /// 진행바 너비 비율 (0.0 ~ 1.0)
     var progressRatio: CGFloat {
-        min(CGFloat(currentAchievement + currentActivityValue) / CGFloat(targetAchievement), 1.0)
+        guard targetAchievement > 0 else { return 0 }
+        return min(CGFloat(currentAchievement + currentActivityValue) / CGFloat(targetAchievement), 1.0)
     }
     
     // MARK: - Initialization
@@ -79,6 +80,19 @@ class EventDetailViewModel: ObservableObject {
         self.endDate = endDate
         self.daysUntil = daysUntil
         self.targetPeriod = targetPeriod
+        
+        // 이벤트 카테고리에 따라 초기 상태 설정
+        switch event.category {
+        case .growth:
+            self.selectedActivityType = .growth
+            self.showActivitySettings = true
+        case .rest:
+            self.selectedActivityType = .rest
+            self.showActivitySettings = true
+        case .none:
+            self.selectedActivityType = .growth
+            self.showActivitySettings = false
+        }
     }
     
     // MARK: - Activity Value Methods
