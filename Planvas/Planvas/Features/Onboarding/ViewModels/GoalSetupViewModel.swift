@@ -32,6 +32,37 @@ class GoalSetupViewModel: ObservableObject {
     let today = Calendar.current.startOfDay(for: Date())
     let calendar = Calendar.current
     
+    // 성장 활동
+    let growthActivityTypes: [ActivityType] = [
+        .init(emoji: "🏆", title: "공모전"),
+        .init(emoji: "📚", title: "스터디"),
+        .init(emoji: "🎤", title: "진로특강"),
+        .init(emoji: "💼", title: "인턴십"),
+        .init(emoji: "👥", title: "학회/동아리"),
+        .init(emoji: "💻", title: "웨비나"),
+        .init(emoji: "📂", title: "장기프로젝트"),
+        .init(emoji: "📝", title: "자격증"),
+        .init(emoji: "📖", title: "관련 독서"),
+    ]
+    
+    // 휴식 활동
+    let restActivityTypes: [ActivityType] = [
+        .init(emoji: "✈️", title: "여행"),
+        .init(emoji: "🎶", title: "축제/콘서트"),
+        .init(emoji: "🖼️", title: "전시/미술관"),
+        .init(emoji: "🎨", title: "취미 레슨"),
+        .init(emoji: "🛠️", title: "원데이클래스"),
+        .init(emoji: "🎭", title: "연극/뮤지컬"),
+        .init(emoji: "🧠", title: "심리 상담"),
+        .init(emoji: "🏟️", title: "스포츠 관람"),
+        .init(emoji: "🕶️", title: "방탈출/VR"),
+    ]
+    
+    // 비율(0~10 step) 저장
+    @Published var ratioStep: Int = 5
+    
+    var growthPercent: Int { ratioStep * 10 }
+    var restPercent: Int { 100 - (ratioStep * 10) }
     
 
     // MARK: - 로직 함수
