@@ -54,21 +54,21 @@ class ReportViewModel:ObservableObject {
         provider.requestPublisher(.getReport(goalId: goalId))
             .receive(on: DispatchQueue.main)
             .handleEvents(
-                receiveSubscription: { _ in self.isLoading = true },
-                receiveCompletion: { _ in self.isLoading = false },
-                receiveCancel: { self.isLoading = false }
+                receiveSubscription: { [weak self] _ in self?.isLoading = true },
+                receiveCompletion: { [weak self] _ in self?.isLoading = false },
+                receiveCancel: { [weak self] in self?.isLoading = false }
             )
-            .sink(receiveCompletion: { completion in
+            .sink(receiveCompletion: { [weak self] completion in
                 if case let .failure(error) = completion {
-                    self.errorMessage = error.localizedDescription
+                    self?.errorMessage = error.localizedDescription
                     print("Network Error: \(error)")
                 }
-            }, receiveValue: { (response: ReportResponse) in
+            }, receiveValue: { [weak self] (response: ReportResponse) in
                 print("응답 데이터:\(response)")
                 if response.resultType == "SUCCESS", let successData = response.success {
-                    self.reportData = successData
+                    self?.reportData = successData
                 } else {
-                    self.errorMessage = response.error?.reason ?? "알 수 없는 오류가 발생했습니다."
+                    self?.errorMessage = response.error?.reason ?? "알 수 없는 오류가 발생했습니다."
                 }
             })
             .store(in: &cancellables)
