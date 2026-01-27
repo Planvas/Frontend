@@ -9,42 +9,22 @@ import Foundation
 import Combine
 
 @MainActor
-class AddEventViewModel: ObservableObject {
+class AddEventViewModel: ObservableObject, RepeatOptionConfigurable {
     @Published var eventName: String = ""
     @Published var startDate: Date = Date()
     @Published var endDate: Date = Date()
     @Published var isAllDay: Bool = false
-    @Published var repeatOption: String = "반복하지 않음"
+    @Published var isRepeatEnabled: Bool = false  // 반복 설정 활성화 여부
     @Published var repeatType: RepeatType = .weekly
     @Published var selectedYearDuration: Int = 2
-    @Published var selectedWeekdays: Set<Int> = [1] // 월요일 기본 선택
+    @Published var selectedWeekdays: Set<Int> = []  // 기본값 빈 집합
     @Published var selectedColor: EventColorType = .red
-    
-    enum RepeatType: String, CaseIterable {
-        case daily = "매일"
-        case weekly = "매주"
-        case monthly = "매달"
-        case yearly = "매년"
-    }
     
     let weekdays = ["월", "화", "수", "목", "금", "토", "일"]
     let yearDurations = [1, 2, 3, 4]
     
     var repeatOptionDisplay: String {
-        switch repeatType {
-        case .daily:
-            return "매일"
-        case .weekly:
-            if selectedWeekdays.isEmpty {
-                return "반복하지 않음"
-            }
-            let weekdayNames = selectedWeekdays.sorted().map { weekdays[$0] }.joined(separator: ", ")
-            return "매주 \(weekdayNames)"
-        case .monthly:
-            return "매달"
-        case .yearly:
-            return "\(selectedYearDuration)년"
-        }
+        repeatType.rawValue
     }
     
     let availableColors: [EventColorType] = [
@@ -70,12 +50,18 @@ class AddEventViewModel: ObservableObject {
     
     func createEvent() -> Event {
         let timeString = isAllDay ? "하루종일" : "\(startDate.timeString()) - \(endDate.timeString())"
+        
         return Event(
             title: eventName.isEmpty ? "이름 없음" : eventName,
             time: timeString,
             isFixed: false,
             isAllDay: isAllDay,
-            color: selectedColor
+            color: selectedColor,
+            startDate: startDate,
+            endDate: endDate,
+            category: .none,  // 새 이벤트는 기본적으로 미분류
+            isCompleted: false,
+            isRepeating: isRepeatEnabled
         )
     }
     

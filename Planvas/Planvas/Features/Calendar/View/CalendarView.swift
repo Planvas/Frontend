@@ -13,6 +13,13 @@ struct CalendarView: View {
     @StateObject private var viewModel = CalendarViewModel()
     @State private var showScheduleSelection = false
     @State private var showAddEvent = false
+    @State private var selectedEvent: Event?
+    @State private var showEventDetail = false
+    @State private var slideDirection: SlideDirection = .none
+    
+    enum SlideDirection {
+        case none, left, right
+    }
     
     var body: some View {
         ScrollView{
@@ -51,6 +58,26 @@ struct CalendarView: View {
             .presentationDetents([.large])
             .presentationDragIndicator(.visible)
         }
+        .sheet(isPresented: $showEventDetail) {
+            if let event = selectedEvent {
+                EventSummaryView(
+                    event: event,
+                    startDate: viewModel.getStartDate(for: event),
+                    endDate: viewModel.getEndDate(for: event),
+                    daysUntil: viewModel.getDaysUntil(for: event),
+                    onDelete: {
+                        // 삭제하기 액션
+                        viewModel.deleteEvent(event)
+                        showEventDetail = false
+                    },
+                    onEdit: {
+                        // 수정하기 버튼 클릭 시 EventDetailView로 이동 (EventSummaryView 내부에서 처리)
+                    }
+                )
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+            }
+        }
     }
     
     // MARK: - 상단 헤더 표시
@@ -86,6 +113,64 @@ struct CalendarView: View {
                     dayView(for: date)
                 }
             }
+            .id(viewModel.currentMonth)
+            .transition(slideTransition)
+        }
+        .clipped()
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture(minimumDistance: 50)
+                .onEnded { value in
+                    let horizontalDistance = value.translation.width
+                    
+                    // 좌우 스와이프 감지 (수평 이동이 수직 이동보다 클 때만)
+                    if abs(horizontalDistance) > abs(value.translation.height) {
+                        if horizontalDistance > 0 {
+                            // 오른쪽으로 스와이프 → 이전 달
+                            slideDirection = .right
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                viewModel.goToPreviousMonth()
+                            }
+                        } else {
+                            // 왼쪽으로 스와이프 → 다음 달
+                            slideDirection = .left
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                viewModel.goToNextMonth()
+                            }
+                        }
+                    }
+                }
+        )
+    }
+    
+    // 슬라이드 방향에 따른 트랜지션
+    private var slideTransition: AnyTransition {
+        switch slideDirection {
+        case .left:
+            return .asymmetric(
+                insertion: .move(edge: .trailing),
+                removal: .move(edge: .leading)
+            )
+        case .right:
+            return .asymmetric(
+                insertion: .move(edge: .leading),
+                removal: .move(edge: .trailing)
+            )
+        case .none:
+            return .opacity
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    /// 날짜 텍스트 색상 결정
+    private func dayTextColor(isSelected: Bool, isCurrentMonth: Bool) -> Color {
+        if isSelected {
+            return .white
+        } else if isCurrentMonth {
+            return Color(.black1)
+        } else {
+            return Color(.calTypo80)
         }
     }
     
@@ -96,10 +181,7 @@ struct CalendarView: View {
         let isToday = viewModel.isDateToday(date)
         let displayEvents = viewModel.getDisplayEvents(for: date, isSelected: isSelected)
         
-        let dateTextColor = CalendarViewHelper.dayTextColor(
-            isSelected: isSelected,
-            isCurrentMonth: isCurrentMonth
-        )
+        let dateTextColor = dayTextColor(isSelected: isSelected, isCurrentMonth: isCurrentMonth)
         
         return ZStack(alignment: .top) {
             // 배경
@@ -179,47 +261,53 @@ struct CalendarView: View {
     }
     
     private func eventCardView(event: Event) -> some View {
-        HStack(alignment: .center, spacing: 12) {
-            Rectangle()
-                .fill(event.color.uiColor)
-                .frame(width: 3, height: 33)
-                .cornerRadius(1.25)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(event.title)
-                    .textStyle(.regular18)
-                    .foregroundColor(.black1)
+        Button {
+            selectedEvent = event
+            showEventDetail = true
+        } label: {
+            HStack(alignment: .center, spacing: 12) {
+                Rectangle()
+                    .fill(event.color.uiColor)
+                    .frame(width: 3, height: 33)
+                    .cornerRadius(1.25)
                 
-                Text(event.time)
-                    .textStyle(.regular14)
-                    .foregroundColor(.gray888)
-            }
-            
-            Spacer()
-            
-            if event.isFixed {
-                Text("고정")
-                    .textStyle(.semibold14spacing)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(
-                        LinearGradient(
-                            colors: [.gradprimary1, .primary1],
-                            startPoint: .leading,
-                            endPoint: .trailing
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(event.title)
+                        .textStyle(.regular18)
+                        .foregroundColor(.black1)
+                    
+                    Text(event.time)
+                        .textStyle(.regular14)
+                        .foregroundColor(.gray888)
+                }
+                
+                Spacer()
+                
+                if event.isFixed {
+                    Text("고정")
+                        .textStyle(.semibold14spacing)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            LinearGradient(
+                                colors: [.gradprimary1, .primary1],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
                         )
-                    )
-                    .cornerRadius(20)
+                        .cornerRadius(20)
+                }
             }
+            .padding(16)
+            .background(Color.white)
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(event.isFixed == true ? .primary1 : .ccc60, lineWidth: 1)
+            )
         }
-        .padding(16)
-        .background(Color.white)
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(event.isFixed == true ? .primary1 : .ccc60, lineWidth: 1)
-        )
+        .buttonStyle(.plain)
     }
     
     private var addEventCardView: some View {
