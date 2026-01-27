@@ -7,12 +7,15 @@
 import SwiftUI
 
 struct GoalRatioSetupView: View {
+    @Environment(NavigationRouter<OnboardingRoute>.self) private var router
     @ObservedObject var viewModel: GoalSetupViewModel
     
     var body: some View {
         ZStack {
             ScrollView {
                 VStack(spacing: 0) {
+                    Spacer().frame(height: 125)
+                    
                     // 멘트 그룹
                     InfoGroup
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -66,9 +69,9 @@ struct GoalRatioSetupView: View {
             }
             .navigationBarBackButtonHidden(true)
             .toolbar(.hidden, for: .navigationBar)
-            .scrollIndicators(.hidden)
+            
         }
-        .padding(.top, 125)
+        .scrollIndicators(.hidden)
         .ignoresSafeArea()
     }
     
@@ -107,8 +110,10 @@ struct GoalRatioSetupView: View {
                 .padding(.bottom, 7)
             
             Button(action: {
-                // TODO: 유형별 추천 비율 선택 화면 연결
                 print("유형별 추천 비율 선택 버튼 클릭")
+                
+                // TODO: 유형별 추천 비율 선택 화면 연결
+                router.push(.recommendation)
             }) {
                 Text("유형별 추천 비율 선택하기")
                     .textStyle(.semibold18)
@@ -169,5 +174,9 @@ struct GoalRatioSetupView: View {
 
 // MARK: - 프리부
 #Preview {
-    GoalRatioSetupView(viewModel: GoalSetupViewModel())
+    let router = NavigationRouter<OnboardingRoute>()
+    NavigationStack {
+        GoalRatioSetupView(viewModel: GoalSetupViewModel())
+    }
+    .environment(router)
 }
