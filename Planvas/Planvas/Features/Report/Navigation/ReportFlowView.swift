@@ -10,13 +10,14 @@ import SwiftUI
 struct ReportFlowView: View {
     @State private var router = NavigationRouter<ReportRoute>()
     
+    // TODO: - 서버 연동 시 실제 goalID를 주입받도록 수정
     var body: some View {
         NavigationStack(path: $router.path) {
-            ReportView()
+            ReportView(goalId: 12)
                 .navigationDestination(for: ReportRoute.self) { route in
                     switch route {
                     case .report:
-                        ReportView()
+                        ReportView(goalId: 12)
                     }
                 }
         }
