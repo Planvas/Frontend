@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ReportView: View {
+    let goalId: Int
     @StateObject private var viewModel = ReportViewModel()
     
     var body: some View {
@@ -9,7 +10,10 @@ struct ReportView: View {
                 .ignoresSafeArea()
             
             VStack {
-                if let reportData = viewModel.reportData {
+                if let errorMessage = viewModel.errorMessage {
+                    Text(errorMessage)
+                        .foregroundStyle(Color.red)
+                } else if let reportData = viewModel.reportData {
                     HeaderSection(goal: reportData.goal)
                     
                     MainSection(
@@ -18,17 +22,17 @@ struct ReportView: View {
                         themeColor: viewModel.themeColor,
                         comment: viewModel.comment
                     )
-                } else {
+                } else if viewModel.isLoading {
                     ProgressView().tint(.white)
                 }
             }
         }
         .task {
-            viewModel.fetchReport(goalId: 12)
+            viewModel.fetchReport(goalId: goalId)
         }
     }
 }
 
 #Preview {
-    ReportView()
+    ReportView(goalId: 12)
 }
