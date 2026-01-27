@@ -14,6 +14,8 @@ struct GoalRatioSetupView: View {
         ZStack {
             ScrollView {
                 VStack(spacing: 0) {
+                    Spacer().frame(height: 125)
+                    
                     // 멘트 그룹
                     InfoGroup
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -70,7 +72,6 @@ struct GoalRatioSetupView: View {
             
         }
         .scrollIndicators(.hidden)
-        .padding(.top, 125)
         .ignoresSafeArea()
     }
     
