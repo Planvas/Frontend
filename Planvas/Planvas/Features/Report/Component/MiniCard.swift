@@ -21,7 +21,7 @@ struct MiniCard: View {
     
     private var progress: CGFloat {
         guard target > 0 else { return 0 }
-        return CGFloat((Double(actual) / Double(target)))
+        return min(1.0, CGFloat(Double(actual) / Double(target)))
     }
     
     var body: some View {
