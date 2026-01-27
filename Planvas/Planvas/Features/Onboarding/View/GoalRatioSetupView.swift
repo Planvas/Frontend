@@ -67,8 +67,9 @@ struct GoalRatioSetupView: View {
             }
             .navigationBarBackButtonHidden(true)
             .toolbar(.hidden, for: .navigationBar)
-            .scrollIndicators(.hidden)
+            
         }
+        .scrollIndicators(.hidden)
         .padding(.top, 125)
         .ignoresSafeArea()
     }
@@ -110,7 +111,7 @@ struct GoalRatioSetupView: View {
             Button(action: {
                 print("유형별 추천 비율 선택 버튼 클릭")
                 
-                // 유형별 추천 비율 선택 화면 연결
+                // TODO: 유형별 추천 비율 선택 화면 연결
                 router.push(.recommendation)
             }) {
                 Text("유형별 추천 비율 선택하기")
@@ -173,7 +174,7 @@ struct GoalRatioSetupView: View {
 // MARK: - 프리부
 #Preview {
     let router = NavigationRouter<OnboardingRoute>()
-    NavigationStack(path: .constant(router.path)) {
+    NavigationStack {
         GoalRatioSetupView(viewModel: GoalSetupViewModel())
     }
     .environment(router)
