@@ -51,7 +51,7 @@ struct MainSection: View {
                         type: .rest,
                         iconName: "rest",
                         actual: reportData.ratio.actual.restRatio,
-                        target: reportData.ratio.actual.restRatio)
+                        target: reportData.ratio.target.restRatio)
                 }
                 
                 ImageSection(data: statusImage)
