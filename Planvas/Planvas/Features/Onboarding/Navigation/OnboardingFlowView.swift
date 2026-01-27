@@ -17,13 +17,17 @@ struct OnboardingFlowView: View {
                 .navigationDestination(for: OnboardingRoute.self) { route in
                     switch route {
                         
-                    // 목표 이름, 기간 설정
-                    case .info:
-                        GoalInfoSetupView(viewModel: viewModel)
-                    
-                    // 목표 비율 설정
-                    case .ratio:
-                        GoalRatioSetupView(viewModel: viewModel)
+                        // 목표 이름, 기간 설정
+                        case .info:
+                            GoalInfoSetupView(viewModel: viewModel)
+                        
+                        // 목표 비율 설정
+                        case .ratio:
+                            GoalRatioSetupView(viewModel: viewModel)
+                        
+                        // 유형별 비율 추천 선택
+                        case .recommendation:
+                            RecommendedRatioSelectionView(viewModel: viewModel)
                     }
                 }
         }
