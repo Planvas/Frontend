@@ -53,4 +53,30 @@ class MainViewModel: ObservableObject {
         formatter.dateFormat = "M월"
         return formatter.string(from: centerDate)
     }
+    
+    // MARK: - 오늘의 할 일
+    @Published var todayTodos: [ToDo] = [
+        ToDo(
+            typeColor: .calRed,
+            title: "카페 알바",
+            isFixed: true,
+            todoInfo: "매주 수요일 18:00 - 22:00",
+            startTime: "18:00",
+            isCompleted: false
+        ),
+        ToDo(
+            typeColor: .calRed,
+            title: "방탈출 카페",
+            isFixed: false,
+            todoInfo: "휴식 +20",
+            startTime: "17:00",
+            isCompleted: true
+        )
+    ]
+    
+    // 체크 토글
+    func toggleTodo(_ todo: ToDo) {
+        guard let index = todayTodos.firstIndex(where: { $0.id == todo.id }) else { return }
+        todayTodos[index].isCompleted.toggle()
+    }
 }
