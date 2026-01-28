@@ -38,7 +38,7 @@ struct MainProgressView: View {
                 
                 ZStack(alignment: .trailing){
                     Capsule()
-                        .frame(width: geometry.size.width * ratio)
+                        .frame(width: max(geometry.size.width * ratio, 60))
                         .modifier(GradientModifier(startColor: startColor, endColor: endColor))
                     Text("\(progress)%")
                         .textStyle(.medium20)
