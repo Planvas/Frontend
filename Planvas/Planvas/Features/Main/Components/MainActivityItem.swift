@@ -38,7 +38,10 @@ struct MainActivityItem: View {
             
             HStack{
                 Spacer()
-                Button(action:{}) {
+                // TODO: 상세 페이지 네비게이션 연결
+                Button(action: {
+                    // Navigate to detail
+                }) {
                     Text("더 알아보기 >")
                         .textStyle(.medium14)
                         .foregroundStyle(.primary1)
