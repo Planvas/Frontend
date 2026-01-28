@@ -14,6 +14,8 @@ struct MainBodyView: View {
     var body: some View {
         VStack {
             CalendarGroup(monthText: viewModel.monthText, weekDates: viewModel.weekDates, selectedDate: $viewModel.selectedDate)
+            
+            ToDoGroup(viewModel: viewModel)
         }
     }
 }
