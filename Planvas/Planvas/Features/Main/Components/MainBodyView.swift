@@ -16,6 +16,13 @@ struct MainBodyView: View {
             CalendarGroup(monthText: viewModel.monthText, weekDates: viewModel.weekDates, selectedDate: $viewModel.selectedDate)
             
             ToDoGroup(viewModel: viewModel)
+            
+            Rectangle()
+                .frame(height: 10)
+                .foregroundStyle(.line)
+                .padding(.vertical, 22)
+            
+            ActivityGroup(viewModel: viewModel)
         }
     }
 }
