@@ -27,7 +27,7 @@ struct MainView: View {
         }
         .ignoresSafeArea()
     }
-}
+}  
 
 #Preview {
     MainView()

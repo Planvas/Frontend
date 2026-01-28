@@ -11,7 +11,7 @@ import Combine
 class MainViewModel: ObservableObject {
     // MARK: - 메인 페이지 목표 세팅 상태별 메세지
     // ing: 진행 중인 목표 존재, end: 활동 기간 종료, none: 목표 없음
-    @Published var goalSetting: GoalSetting = .end
+    @Published var goalSetting: GoalSetting = .ing
     
     var StateTitle: String {
         switch goalSetting {
@@ -79,4 +79,28 @@ class MainViewModel: ObservableObject {
         guard let index = todayTodos.firstIndex(where: { $0.id == todo.id }) else { return }
         todayTodos[index].isCompleted.toggle()
     }
+    
+    // MARK: - 오늘의 인기 성장 활동
+    @Published var items: [ActivityItem] = [
+        ActivityItem(
+            title: "SK 하이닉스 2025 하반기 \n청년 Hy-Five 14기 모집",
+            subtitle: "고품질의 반도체 직무 교육 \n& SK 하이닉스 협력사 ",
+            imageName: "banner1"
+        ),
+        ActivityItem(
+            title: "SK 하이닉스",
+            subtitle: "청년 Hy-Five",
+            imageName: "banner2"
+        ),
+        ActivityItem(
+            title: "추천 공고 3",
+            subtitle: "설명 3",
+            imageName: "banner3"
+        ),
+        ActivityItem(
+            title: "추천 공고 4",
+            subtitle: "설명 4",
+            imageName: "banner4"
+        )
+    ]
 }

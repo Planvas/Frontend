@@ -7,12 +7,14 @@
 
 import SwiftUI
 
+// MARK: - 목표 설정 상태
 enum GoalSetting {
     case ing
     case end
     case none
 }
 
+// MARK: - 할 일
 struct ToDo: Identifiable {
     let id = UUID()
     let typeColor: ToDoTypeColor
@@ -22,7 +24,7 @@ struct ToDo: Identifiable {
     let startTime: String
     var isCompleted: Bool
 }
-
+// 할 일 타입별 색상 정리
 enum ToDoTypeColor: String, Codable {
     case calRed
     case calPurple
@@ -41,4 +43,12 @@ enum ToDoTypeColor: String, Codable {
             return Color("calGreen")
         }
     }
+}
+
+// MARK: - 오늘의 인기 성장 활동
+struct ActivityItem: Identifiable {
+    let id = UUID()
+    let title: String
+    let subtitle: String
+    let imageName: String
 }
