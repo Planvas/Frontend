@@ -33,9 +33,6 @@ class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
     @Published var targetGrowthAchievement: Int = 40
     @Published var targetRestAchievement: Int = 40
     
-    // MARK: - 목표 기간
-    @Published var targetPeriod: String = ""
-    
     // MARK: - 원본 이벤트 (수정 대상)
     private var originalEvent: Event?
     
@@ -85,6 +82,11 @@ class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
         repeatType.rawValue
     }
     
+    /// 목표 기간: 진행기간(시작일~종료일)에 따라 항상 동기화
+    var targetPeriod: String {
+        calculateTargetPeriod(from: startDate, to: endDate)
+    }
+    
     // MARK: - UI Display Computed Properties
     
     /// 진행바에 표시할 퍼센트 값
@@ -107,7 +109,7 @@ class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
     init() {}
     
     /// 수정할 이벤트로 초기화
-    func configure(with event: Event, startDate: Date, endDate: Date, targetPeriod: String?) {
+    func configure(with event: Event, startDate: Date, endDate: Date) {
         self.originalEvent = event
         self.eventName = event.title
         self.startDate = startDate
@@ -115,13 +117,6 @@ class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
         self.isAllDay = event.isAllDay
         self.selectedColor = event.color
         self.isRepeating = event.isRepeating
-        
-        // targetPeriod 계산: 전달받은 값 사용하거나 이벤트 날짜로 계산
-        if let period = targetPeriod {
-            self.targetPeriod = period
-        } else {
-            self.targetPeriod = calculateTargetPeriod(from: event.startDate, to: event.endDate)
-        }
         
         // 이벤트 카테고리에 따라 활동치 설정 초기화
         switch event.category {
@@ -137,15 +132,14 @@ class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
         }
     }
     
-    /// 시작일과 종료일로 목표 기간 문자열 생성
+    /// 시작일과 종료일로 목표 기간 문자열 생성 (시작일~종료일)
     private func calculateTargetPeriod(from startDate: Date, to endDate: Date) -> String {
-        let calendar = Calendar.current
-        // 같은 날이면 빈 문자열
-        guard !calendar.isDate(startDate, inSameDayAs: endDate) else {
-            return ""
-        }
         let formatter = DateFormatter()
         formatter.dateFormat = "M/d"
+        let calendar = Calendar.current
+        if calendar.isDate(startDate, inSameDayAs: endDate) {
+            return formatter.string(from: startDate)
+        }
         return "\(formatter.string(from: startDate)) ~ \(formatter.string(from: endDate))"
     }
     
@@ -225,11 +219,8 @@ class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
         )
     }
     
-    /// 수정된 이벤트 저장
+    /// 수정된 이벤트 저장 (실제 반영은 onSave 콜백 → CalendarViewModel.updateEvent + Repository)
     func saveEvent() {
-        let updatedEvent = createUpdatedEvent()
-        // TODO: Repository를 통해 이벤트 저장
-        // repository.updateEvent(updatedEvent)
-        print("이벤트 저장됨: \(updatedEvent.title)")
+        // UI 저장 액션; 낙관적 업데이트는 CalendarView onUpdateEvent → viewModel.updateEvent에서 처리
     }
 }
