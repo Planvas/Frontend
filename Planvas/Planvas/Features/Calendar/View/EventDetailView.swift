@@ -2,7 +2,7 @@
 //  EventDetailView.swift
 //  Planvas
 //
-//  Created on 1/22/26.
+//  Created by 백지은 on 1/24/26.
 //
 
 import SwiftUI
@@ -21,6 +21,8 @@ struct EventDetailView: View {
     var onEdit: (() -> Void)?
     var onDelete: (() -> Void)?
     var onSave: (() -> Void)?
+    /// 수정된 이벤트 저장 시 호출 (낙관적 업데이트용)
+    var onUpdateEvent: ((Event) -> Void)?
     
     var body: some View {
         ScrollView {
@@ -292,7 +294,9 @@ struct EventDetailView: View {
                     event: event,
                     startDate: startDate,
                     endDate: endDate,
-                    targetPeriod: targetPeriod
+                    onSave: { updatedEvent in
+                        onUpdateEvent?(updatedEvent)
+                    }
                 )
                 .presentationDragIndicator(.visible)
             }
