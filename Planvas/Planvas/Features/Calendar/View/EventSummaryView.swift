@@ -2,7 +2,7 @@
 //  EventSummaryView.swift
 //  Planvas
 //
-//  Created on 1/24/26.
+//  Created by 백지은 on 1/24/26.
 //
 
 import SwiftUI
@@ -19,6 +19,8 @@ struct EventSummaryView: View {
     
     var onDelete: (() -> Void)?
     var onEdit: (() -> Void)?
+    /// 수정 저장 시 호출 (CalendarViewModel.updateEvent 연결용)
+    var onUpdateEvent: ((Event) -> Void)?
     
     /// 목표 기간 계산 (시작일과 종료일이 다른 경우에만 표시)
     /// 파라미터로 전달받은 startDate/endDate 기준으로 계산
@@ -72,7 +74,9 @@ struct EventSummaryView: View {
                 targetPeriod: targetPeriod,
                 onEdit: nil,
                 onDelete: onDelete,
-                onSave: {
+                onSave: { showEventDetailView = false },
+                onUpdateEvent: { updatedEvent in
+                    onUpdateEvent?(updatedEvent)
                     showEventDetailView = false
                 }
             )
@@ -134,36 +138,38 @@ struct EventSummaryView: View {
         var body: some View {
             VStack(alignment: .leading, spacing: 10) {
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack(spacing: 20) {
+                    HStack(spacing: 15) {
 
-                        // 시작 날짜
+                        // 시작 날짜 (한 줄 유지)
                         VStack(alignment: .leading, spacing: 8) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("\(startDate.yearString())년")
-                                    .textStyle(.semibold14)
-                                    .foregroundColor(.gray444)
+                            Text("\(startDate.yearString())년")
+                                .textStyle(.semibold14)
+                                .foregroundColor(.gray444)
+                                .lineLimit(1)
 
-                                Text(startDate.monthDayString())
-                                    .textStyle(.semibold20)
-                                    .foregroundColor(.black1)
-                            }
+                            Text(startDate.monthDayString())
+                                .textStyle(.semibold20)
+                                .foregroundColor(.black1)
+                                .lineLimit(1)
+                                .fixedSize(horizontal: true, vertical: false)
                         }
 
                         Image(systemName: "chevron.right")
                             .font(.system(size: 18))
                             .foregroundColor(.black1)
 
-                        // 종료 날짜
+                        // 종료 날짜 (한 줄 유지)
                         VStack(alignment: .leading, spacing: 8) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("\(endDate.yearString())년")
-                                    .textStyle(.semibold14)
-                                    .foregroundColor(.gray444)
+                            Text("\(endDate.yearString())년")
+                                .textStyle(.semibold14)
+                                .foregroundColor(.gray444)
+                                .lineLimit(1)
 
-                                Text(endDate.monthDayString())
-                                    .textStyle(.semibold20)
-                                    .foregroundColor(.black1)
-                            }
+                            Text(endDate.monthDayString())
+                                .textStyle(.semibold20)
+                                .foregroundColor(.black1)
+                                .lineLimit(1)
+                                .fixedSize(horizontal: true, vertical: false)
                         }
                         
                         Spacer()
