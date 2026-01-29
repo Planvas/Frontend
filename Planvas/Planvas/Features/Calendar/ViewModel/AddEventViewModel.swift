@@ -2,7 +2,7 @@
 //  AddEventViewModel.swift
 //  Planvas
 //
-//  Created on 1/21/26.
+//  Created by 백지은 on 1/21/26.
 //
 
 import Foundation
