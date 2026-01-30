@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct OnboardingSplashView: View {
+    @Environment(NavigationRouter<OnboardingRoute>.self) private var router
     @State private var currentPage = 0
-    
     
     var body: some View {
         ZStack {
@@ -41,8 +41,8 @@ struct OnboardingSplashView: View {
                         PrimaryButton(title: "목표 설정하러 가기") {
                             print("목표 설정하러 가기 버튼 클릭")
                             
-                            
-                            // TODO: 다음 화면 이동 로직
+                            // 온보딩 스플래시 두번째 화면 이동 로직
+                            router.push(.onboardingSplashSuccess)
                         }
                         
                         // 비활성화 처리
@@ -142,4 +142,5 @@ struct OnboardingSplashView: View {
 
 #Preview {
     OnboardingSplashView()
+        .environment(NavigationRouter<OnboardingRoute>())
 }
