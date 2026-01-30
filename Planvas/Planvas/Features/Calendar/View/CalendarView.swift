@@ -5,13 +5,15 @@
 //  Created by 백지은 on 1/18/26.
 //
 
-// TODO: 반복 일정 표시, 2일 이상 일정 표시 해야함
+// TODO: 여러 날에 걸쳐있는 일정 이름 표시가 첫 날 셀을 기준으로 잘림
 
 import SwiftUI
+import UIKit
 
 struct CalendarView: View {
-    @StateObject private var viewModel = CalendarViewModel()
+    @EnvironmentObject private var viewModel: CalendarViewModel
     @State private var showScheduleSelection = false
+    @State private var showImportAlert = false
     @State private var showAddEvent = false
     @State private var selectedEvent: Event?
     @State private var showEventDetail = false
@@ -66,16 +68,59 @@ struct CalendarView: View {
                     endDate: viewModel.getEndDate(for: event),
                     daysUntil: viewModel.getDaysUntil(for: event),
                     onDelete: {
-                        // 삭제하기 액션
                         viewModel.deleteEvent(event)
                         showEventDetail = false
                     },
-                    onEdit: {
-                        // 수정하기 버튼 클릭 시 EventDetailView로 이동 (EventSummaryView 내부에서 처리)
+                    onEdit: { /* 수정하기 → EventDetailView 내부에서 처리 */ },
+                    onUpdateEvent: { updatedEvent in
+                        viewModel.updateEvent(updatedEvent)
+                        showEventDetail = false
                     }
                 )
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
+            }
+        }
+        .overlay {
+            if showImportAlert {
+                importAlertView
+            }
+        }
+    }
+    
+    // MARK: - 일정 가져오기 알림 (연동 여부에 따라 문구 분기)
+    private var importAlertView: some View {
+        Group {
+            if viewModel.isCalendarConnected {
+                CustomAlertView(
+                    title: "캘린더를 동기화하고\n새 일정을 불러올까요?",
+                    message: "현재 캘린더가 연동되어 있어요",
+                    messageColor: .gray44450,
+                    primaryButtonTitle: "Google 캘린더 동기화",
+                    secondaryButtonTitle: "취소",
+                    primaryButtonAction: {
+                        showImportAlert = false
+                        showScheduleSelection = true
+                    },
+                    secondaryButtonAction: {
+                        showImportAlert = false
+                    }
+                )
+            } else {
+                CustomAlertView(
+                    title: "캘린더를 연동할까요?",
+                    message: "현재 캘린더가 연동되어 있지 않아요",
+                    messageColor: .primary1,
+                    primaryButtonTitle: "Google 캘린더 연동",
+                    secondaryButtonTitle: "취소",
+                    primaryButtonAction: {
+                        showImportAlert = false
+                        showScheduleSelection = true
+                    },
+                    secondaryButtonAction: {
+                        showImportAlert = false
+                    }
+                )
             }
         }
     }
@@ -134,7 +179,7 @@ struct CalendarView: View {
                         } else {
                             // 왼쪽으로 스와이프 → 다음 달
                             slideDirection = .left
-                            withAnimation(.easeInOut(duration: 0.3)) {
+                            withAnimation(.easeInOut(duration: 0.2)) {
                                 viewModel.goToNextMonth()
                             }
                         }
@@ -174,12 +219,62 @@ struct CalendarView: View {
         }
     }
     
+    /// 여러 날에 걸친 이벤트 막대 한 구간 (시작/중간/끝에 따라 모서리만 둥글게) + 이벤트 표시
+    private func multiDayBarSegment(event: Event, isStart: Bool, isEnd: Bool, isSelected: Bool) -> some View {
+        let barHeight: CGFloat = 11
+        let cornerRadius: CGFloat = 2
+        
+        return ZStack(alignment: .leading) {
+            // 막대 배경: 이벤트 색 투명도 0.3
+            Rectangle()
+                .fill(event.color.uiColor.opacity(0.3))
+                .frame(height: barHeight)
+                .clipShape(
+                    RoundedCorner(
+                        radius: cornerRadius,
+                        corners: barSegmentCorners(isStart: isStart, isEnd: isEnd)
+                    )
+                )
+            
+            // 이벤트 표시는 시작 구간(첫날)에만, 셀 하나 크기로 표시
+            if isStart {
+                HStack(spacing: 3) {
+                    Rectangle()
+                        .foregroundColor(event.color.uiColor)
+                        .frame(width: 2.5, height: 9)
+                        .cornerRadius(1.25)
+                    Text(event.title)
+                        .textStyle(.medium10)
+                        .foregroundColor(isSelected ? .white : .black1)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Spacer(minLength: 0)
+                }
+                .frame(width: 46)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: barHeight)
+    }
+    
+    private func barSegmentCorners(isStart: Bool, isEnd: Bool) -> UIRectCorner {
+        switch (isStart, isEnd) {
+        case (true, true): return .allCorners
+        case (true, false): return [.topLeft, .bottomLeft]
+        case (false, true): return [.topRight, .bottomRight]
+        case (false, false): return []
+        }
+    }
+    
     private func dayView(for date: Date) -> some View {
         let dayNumber = viewModel.dayNumber(from: date)
         let isCurrentMonth = viewModel.isDateInCurrentMonth(date)
         let isSelected = viewModel.isDateSelected(date)
         let isToday = viewModel.isDateToday(date)
         let displayEvents = viewModel.getDisplayEvents(for: date, isSelected: isSelected)
+        let repeatingEvents = viewModel.getRepeatingEvents(for: date)
+        let multiDaySegments = viewModel.getMultiDayEventSegments(for: date)
         
         let dateTextColor = dayTextColor(isSelected: isSelected, isCurrentMonth: isCurrentMonth)
         
@@ -195,18 +290,46 @@ struct CalendarView: View {
             
             // 내용
             VStack(spacing: 0) {
-                // 날짜 (항상 상단 고정)
-                Text("\(dayNumber)")
-                    .textStyle(.medium16)
-                    .foregroundColor(dateTextColor)
+                // 날짜 + 반복 일정 표시 원
+                ZStack{
+                    HStack(spacing: 2) {
+                        Text("\(dayNumber)")
+                            .textStyle(.medium16)
+                            .foregroundColor(dateTextColor)
+                    }
                     .frame(height: 20)
                     .padding(.top, 6)
+                    
+                    if isCurrentMonth && !repeatingEvents.isEmpty {
+                        ForEach(Array(repeatingEvents.prefix(3))) { event in
+                            Circle()
+                                .fill(event.color.uiColor)
+                                .frame(width: 5, height: 5)
+                                .offset(x:13)
+                        }
+                    }
+                }
                 
-                // 이벤트 표시 영역
+                // 여러 날에 걸친 이벤트 막대 (날짜 바로 아래)
+                if isCurrentMonth && !multiDaySegments.isEmpty {
+                    VStack(spacing: 2) {
+                        ForEach(Array(multiDaySegments.prefix(2).enumerated()), id: \.element.event.id) { _, segment in
+                            multiDayBarSegment(
+                                event: segment.event,
+                                isStart: segment.isStart,
+                                isEnd: segment.isEnd,
+                                isSelected: isSelected
+                            )
+                        }
+                    }
+                    .padding(.top, 2)
+                }
+                
+                // 이벤트 표시 영역 (하루 단위만)
                 VStack(spacing: 2) {
                     if !displayEvents.isEmpty && isCurrentMonth {
                         ForEach(displayEvents) { event in
-                            HStack(spacing: 4) {
+                            HStack(spacing: 3) {
                                 Rectangle()
                                     .foregroundColor(event.color.uiColor)
                                     .frame(width: 2.5, height: 9)
@@ -214,12 +337,14 @@ struct CalendarView: View {
                                 
                                 Text(event.title)
                                     .textStyle(.medium10)
-                                    .foregroundColor(event.color.uiColor)
+                                    .foregroundColor(isSelected ? .white : .black1)
                                     .lineLimit(1)
+                                    .truncationMode(.tail)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                                 
-                                Spacer()
+                                Spacer(minLength: 0)
                             }
-                            .frame(width: 46)
+                            .frame(maxWidth: .infinity)
                         }
                     }
                 }
@@ -275,6 +400,9 @@ struct CalendarView: View {
                     Text(event.title)
                         .textStyle(.regular18)
                         .foregroundColor(.black1)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     
                     Text(event.time)
                         .textStyle(.regular14)
@@ -340,7 +468,7 @@ struct CalendarView: View {
     private var bottomButtonsView: some View {
         VStack(spacing: 12) {
             SecondaryButton(title: "일정 가져오기") {
-                showScheduleSelection = true
+                showImportAlert = true
             }
             
             PrimaryButton(title: "완료") {
@@ -352,4 +480,5 @@ struct CalendarView: View {
 
 #Preview {
     CalendarView()
+        .environmentObject(CalendarViewModel())
 }
