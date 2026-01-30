@@ -5,13 +5,16 @@
 //  Created by 백지은 on 1/17/26.
 //
 
-// TODO : 캘린더 이미지 위에 유리? 같은 디자인? 네모? 그거 아직 안 넣었음 (근데 넣으면 흐려질텐데 애니메이션이 있나?)
-
 import SwiftUI
 
 struct CalendarSyncView: View {
     @StateObject private var viewModel = CalendarSyncViewModel()
     @State private var showScheduleSelection = false
+    
+    /// 직접 입력 시 캘린더 화면으로 이동
+    var onDirectInput: (() -> Void)?
+    /// 가져오기 완료 시 선택 일정 전달 후 캘린더 화면으로 이동 (API 연동 시 서버 전달은 호출측에서 처리?)
+    var onImportSchedules: (([ImportableSchedule]) -> Void)?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -34,7 +37,9 @@ struct CalendarSyncView: View {
         .padding(.bottom, 20)
         .sheet(isPresented: $showScheduleSelection) {
             ScheduleSelectionView { selectedSchedules in
-                // 선택된 일정 처리
+                // 시트 닫은 뒤 선택 일정 전달하고 캘린더로 이동
+                showScheduleSelection = false
+                onImportSchedules?(selectedSchedules)
             }
             .presentationDetents([.large])
             .presentationDragIndicator(.visible)
@@ -101,13 +106,13 @@ struct CalendarSyncView: View {
                 showScheduleSelection = true
             }
             
-            // 직접 입력 버튼
+            // 직접 입력 버튼 → 캘린더 화면으로 전환
             PrimaryButton(title: "직접 입력하고 관리할게요") {
-                // TODO : 직접 입력 액션
+                onDirectInput?()
             }
             
             Button{
-                // TODO : 액션 추가하기
+                // TODO: 액션 추가하기... 근데 이거 버튼이 아닌가?봐?...? 일단 놔두고 아니면 text로 빼기
             } label: {
                 Text("언제든 연동할 수 있어요")
                     .textStyle(.regular14)

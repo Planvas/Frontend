@@ -37,6 +37,9 @@ class CalendarViewModel: ObservableObject {
     // TODO : API 연동 시 Repository를 통해 데이터를 가져오므로 이 변수 지울 거임
     @Published private(set) var sampleEvents: [String: [Event]] = [:]
     
+    /// Google 캘린더 연동 여부 (일정 가져오기 알림 문구 분기용)
+    @Published private(set) var isCalendarConnected: Bool = true
+    
     // MARK: - Initialization
     init(repository: CalendarRepositoryProtocol? = nil) {
         self.repository = repository ?? CalendarRepository()
@@ -45,7 +48,16 @@ class CalendarViewModel: ObservableObject {
     
     private func loadSampleEvents() {
         // TODO : API 연동 시 이 메소드 제거하고 Repository를 통해 데이터를 가져올 거임
-        // 현재는 샘플 데이터를 로드
+        // 멀티데이 일정은 동일 id의 한 Event를 여러 날짜에 넣어야 삭제/수정 시 전체 반영됨
+        let vietnamTrip = Event(
+            title: "베트남 여행",
+            time: "1/15 - 1/18",
+            isAllDay: true,
+            color: .blue1,
+            startDate: makeDate(year: 2026, month: 1, day: 15),
+            endDate: makeDate(year: 2026, month: 1, day: 18),
+            category: .rest
+        )
         sampleEvents = [
             "2026-01-02": [
                 Event(
@@ -91,49 +103,11 @@ class CalendarViewModel: ObservableObject {
                     category: .none
                 )
             ],
-            "2026-01-15": [
-                Event(
-                    title: "베트남 여행",
-                    time: "1/15 - 1/18",
-                    isAllDay: true,
-                    color: .blue1,
-                    startDate: makeDate(year: 2026, month: 1, day: 15),
-                    endDate: makeDate(year: 2026, month: 1, day: 18),
-                    category: .rest
-                )
-            ],
-            "2026-01-16": [
-                Event(
-                    title: "베트남 여행",
-                    time: "1/15 - 1/18",
-                    isAllDay: true,
-                    color: .blue1,
-                    startDate: makeDate(year: 2026, month: 1, day: 15),
-                    endDate: makeDate(year: 2026, month: 1, day: 18),
-                    category: .rest
-                )
-            ],
-            "2026-01-17": [
-                Event(
-                    title: "베트남 여행",
-                    time: "1/15 - 1/18",
-                    isAllDay: true,
-                    color: .blue1,
-                    startDate: makeDate(year: 2026, month: 1, day: 15),
-                    endDate: makeDate(year: 2026, month: 1, day: 18),
-                    category: .rest
-                )
-            ],
+            "2026-01-15": [vietnamTrip],
+            "2026-01-16": [vietnamTrip],
+            "2026-01-17": [vietnamTrip],
             "2026-01-18": [
-                Event(
-                    title: "베트남 여행",
-                    time: "1/15 - 1/18",
-                    isAllDay: true,
-                    color: .blue1,
-                    startDate: makeDate(year: 2026, month: 1, day: 15),
-                    endDate: makeDate(year: 2026, month: 1, day: 18),
-                    category: .rest
-                ),
+                vietnamTrip,
                 Event(
                     title: "동아리 송별회",
                     time: "19:00 - 22:00",
@@ -253,9 +227,31 @@ class CalendarViewModel: ObservableObject {
     }
     
     func getDisplayEvents(for date: Date, isSelected: Bool) -> [Event] {
-        let events = getEvents(for: date)
+        let events = getSingleDayEvents(for: date)
         // 있는 일정을 다 표시하되, 4개 이상이면 3개만 표시 (잘림)
         return Array(events.prefix(3))
+    }
+    
+    /// 해당 날짜의 반복 일정 목록 (캘린더 날짜 옆 원 표시용)
+    func getRepeatingEvents(for date: Date) -> [Event] {
+        getEvents(for: date).filter(\.isRepeating)
+    }
+    
+    /// 여러 날에 걸친 이벤트만 해당 날짜 구간으로 반환 (막대 표시용)
+    func getMultiDayEventSegments(for date: Date) -> [(event: Event, isStart: Bool, isEnd: Bool)] {
+        getEvents(for: date)
+            .filter { !calendar.isDate($0.startDate, inSameDayAs: $0.endDate) }
+            .map { event in
+                let isStart = calendar.isDate(date, inSameDayAs: event.startDate)
+                let isEnd = calendar.isDate(date, inSameDayAs: event.endDate)
+                return (event, isStart, isEnd)
+            }
+    }
+    
+    /// 하루 단위 이벤트만 (멀티데이 제외, 리스트 표시용)
+    private func getSingleDayEvents(for date: Date) -> [Event] {
+        getEvents(for: date)
+            .filter { calendar.isDate($0.startDate, inSameDayAs: $0.endDate) }
     }
     
     func hasEvents(for date: Date) -> Bool {
@@ -325,13 +321,78 @@ class CalendarViewModel: ObservableObject {
     }
     
     func deleteEvent(_ event: Event) {
-        // TODO: API 연동 시 이 부분 수정
-        // 모든 날짜 키에서 해당 이벤트 삭제 (다중 날짜 이벤트 대응)
-        for dateKey in sampleEvents.keys {
-            sampleEvents[dateKey]?.removeAll { $0.id == event.id }
+        // 낙관적 업데이트: id 기준으로 모든 날짜에서 제거 (멀티데이 일정 전체 삭제)
+        var newEvents = sampleEvents
+        for dateKey in Array(newEvents.keys) {
+            var list = newEvents[dateKey] ?? []
+            list.removeAll { $0.id == event.id }
+            if list.isEmpty {
+                newEvents.removeValue(forKey: dateKey)
+            } else {
+                newEvents[dateKey] = list
+            }
         }
-        // 빈 배열인 키 제거
-        sampleEvents = sampleEvents.filter { !$0.value.isEmpty }
+        sampleEvents = newEvents
+        
+        Task {
+            do {
+                try await repository.deleteEvent(event)
+            } catch {
+                await MainActor.run { applyEventsFromRepository() }
+                print("이벤트 삭제 실패: \(error)")
+            }
+        }
+    }
+    
+    /// id 기준으로 이벤트 수정 (날짜 변경 시 구간 반영, 막대 다시 그림)
+    func updateEvent(_ event: Event) {
+        // 낙관적 업데이트: 기존 구간에서 제거 후 새 구간에 추가
+        var newEvents = sampleEvents
+        for dateKey in Array(newEvents.keys) {
+            var list = newEvents[dateKey] ?? []
+            list.removeAll { $0.id == event.id }
+            if list.isEmpty {
+                newEvents.removeValue(forKey: dateKey)
+            } else {
+                newEvents[dateKey] = list
+            }
+        }
+        
+        for dateKey in dateKeys(from: event.startDate, to: event.endDate) {
+            var list = newEvents[dateKey] ?? []
+            list.append(event)
+            newEvents[dateKey] = list
+        }
+        sampleEvents = newEvents
+        
+        Task {
+            do {
+                try await repository.updateEvent(event)
+            } catch {
+                await MainActor.run { applyEventsFromRepository() }
+                print("이벤트 수정 실패: \(error)")
+            }
+        }
+    }
+    
+    /// startDate~endDate에 해당하는 날짜 키 목록
+    private func dateKeys(from start: Date, to end: Date) -> [String] {
+        var keys: [String] = []
+        var current = calendar.startOfDay(for: start)
+        let endDay = calendar.startOfDay(for: end)
+        while current <= endDay {
+            keys.append(dateKeyString(from: current))
+            guard let next = calendar.date(byAdding: .day, value: 1, to: current) else { break }
+            current = next
+        }
+        return keys
+    }
+    
+    /// Repository 결과를 sampleEvents에 반영 (API 연동용 / 실패 시 롤백)
+    private func applyEventsFromRepository() {
+        Task {
+            await refreshEvents()
+        }
     }
     
     func getTargetPeriod(for event: Event) -> String? {
@@ -349,63 +410,93 @@ class CalendarViewModel: ObservableObject {
     }
     
     func importSchedules(_ schedules: [ImportableSchedule]) {
-        // ImportableSchedule을 Event로 변환하여 추가
-        // TODO: API 연동 시 이 부분 수정 예정
-        Task {
-            do {
-                try await repository.importSchedules(schedules)
-                // 성공 시 이벤트 목록 새로고침
-                await refreshEvents()
-            } catch {
-                // 에러 처리 (나중에 에러 상태를 @Published로 관리)
-                print("일정 가져오기 실패: \(error)")
+        // TODO: API 연동 시 선택 일정을 서버에 전달 후 refreshEvents() 호출
+        // Task {
+        //     try await repository.importSchedules(schedules)
+        //     await refreshEvents()
+        // }
+        
+        // ImportableSchedule → Event 변환하여 로컬에 추가 (schedule의 startDate/endDate 반영)
+        let selected = schedules.filter(\.isSelected)
+        for schedule in selected {
+            let event = event(from: schedule)
+            for dateKey in dateKeys(from: event.startDate, to: event.endDate) {
+                if sampleEvents[dateKey] == nil {
+                    sampleEvents[dateKey] = []
+                }
+                sampleEvents[dateKey]?.append(event)
             }
         }
-        
-        // 현재는 샘플 데이터에 추가
-        // API 연동 시 없앨 예정
-        for _ in schedules {
-            // 여기서는 샘플로 간단하게 처리
-            // 실제로는 시간 정보를 파싱해서 정확한 날짜에 배치해야 함
+        if !selected.isEmpty {
+            isCalendarConnected = true
         }
+    }
+    
+    /// ImportableSchedule → Event 변환 (schedule의 startDate/endDate 사용)
+    private func event(from schedule: ImportableSchedule) -> Event {
+        Event(
+            id: schedule.id,
+            title: schedule.title,
+            time: schedule.timeDescription,
+            isFixed: true,
+            isAllDay: false,
+            color: .red,
+            startDate: schedule.startDate,
+            endDate: schedule.endDate,
+            category: .none,
+            isCompleted: false,
+            isRepeating: false
+        )
     }
     
     func addEvent(_ event: Event) {
-        // Event를 선택된 날짜에 추가
-        // TODO: API 연동 시 이 부분 수정
+        // 낙관적 업데이트: 먼저 로컬에 추가
+        for dateKey in dateKeys(from: event.startDate, to: event.endDate) {
+            if sampleEvents[dateKey] == nil {
+                sampleEvents[dateKey] = []
+            }
+            sampleEvents[dateKey]?.append(event)
+        }
+        
         Task {
             do {
                 try await repository.addEvent(event)
-                // 성공 시 이벤트 목록 새로고침
-                await refreshEvents()
             } catch {
-                // 에러 처리 (나중에 에러 상태를 @Published로 관리)
+                await MainActor.run { applyEventsFromRepository() }
                 print("이벤트 추가 실패: \(error)")
             }
         }
-        
-        // 현재는 샘플 데이터에 추가
-        let dateKey = dateKeyString(from: selectedDate)
-        if sampleEvents[dateKey] == nil {
-            sampleEvents[dateKey] = []
-        }
-        sampleEvents[dateKey]?.append(event)
     }
     
-    // TODO: API 연동 시 이 메서드를 사용하여 이벤트 목록을 새로고침합니다
+    /// Repository에서 현재 월 이벤트를 가져와 sampleEvents에 반영 (API 연동 / 실패 시 롤백)
     private func refreshEvents() async {
-        // 현재 월의 시작일과 종료일 계산
         guard let monthInterval = calendar.dateInterval(of: .month, for: currentMonth) else {
             return
         }
-        
         do {
-            let _ = try await repository.getEvents(from: monthInterval.start, to: monthInterval.end)
-            // events를 sampleEvents 형식으로 변환
-            // TODO: API 연동 시 이 부분을 구현
+            let events = try await repository.getEvents(from: monthInterval.start, to: monthInterval.end)
+            let fetchedByDate = eventsToDictionary(events)
+            let monthKeys = dateKeys(from: monthInterval.start, to: monthInterval.end)
+            for key in monthKeys {
+                sampleEvents[key] = fetchedByDate[key] ?? []
+            }
+            // 빈 배열이 된 키 제거 (선택)
+            sampleEvents = sampleEvents.filter { !$0.value.isEmpty }
         } catch {
             print("이벤트 새로고침 실패: \(error)")
         }
+    }
+    
+    /// [Event]를 날짜별 [String: [Event]]로 변환 (멀티데이 이벤트는 해당하는 모든 날에 포함)
+    private func eventsToDictionary(_ events: [Event]) -> [String: [Event]] {
+        var result: [String: [Event]] = [:]
+        for event in events {
+            for key in dateKeys(from: event.startDate, to: event.endDate) {
+                if result[key] == nil { result[key] = [] }
+                result[key]?.append(event)
+            }
+        }
+        return result
     }
     
     // MARK: - Helper Methods

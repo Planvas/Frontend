@@ -2,7 +2,7 @@
 //  EditEventView.swift
 //  Planvas
 //
-//  Created on 1/24/26.
+//  Created by 백지은 on 1/24/26.
 //
 
 import SwiftUI
@@ -17,7 +17,8 @@ struct EditEventView: View {
     let event: Event
     let startDate: Date
     let endDate: Date
-    let targetPeriod: String?
+    /// 수정 저장 시 수정된 Event 전달 (낙관적 업데이트용)
+    var onSave: ((Event) -> Void)?
     
     var body: some View {
         ScrollView {
@@ -65,12 +66,7 @@ struct EditEventView: View {
         }
         .background(.white)
         .onAppear {
-            viewModel.configure(
-                with: event,
-                startDate: startDate,
-                endDate: endDate,
-                targetPeriod: targetPeriod
-            )
+            viewModel.configure(with: event, startDate: startDate, endDate: endDate)
             // 반복 설정 상태 초기화
             showRepeatPicker = event.isRepeating
         }
@@ -396,7 +392,9 @@ struct EditEventView: View {
     // MARK: - Save Button
     private var skipButton: some View {
         PrimaryButton(title: "일정 수정하기") {
+            let updatedEvent = viewModel.createUpdatedEvent()
             viewModel.saveEvent()
+            onSave?(updatedEvent)
             dismiss()
         }
     }
@@ -412,6 +410,6 @@ struct EditEventView: View {
         ),
         startDate: Date(),
         endDate: Date(),
-        targetPeriod: "11/15 ~ 12/3"
+        onSave: nil
     )
 }
