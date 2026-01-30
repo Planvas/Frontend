@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct OnboardingSplashSuccessView: View {
+    @Environment(NavigationRouter<OnboardingRoute>.self) private var router
+    
     var body: some View {
         ZStack {
             Color.fff.ignoresSafeArea()
@@ -36,9 +38,14 @@ struct OnboardingSplashSuccessView: View {
             .foregroundStyle(.black1)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            router.push(.info)
+        }
     }
 }
 
 #Preview {
     OnboardingSplashSuccessView()
+        .environment(NavigationRouter<OnboardingRoute>())
 }
