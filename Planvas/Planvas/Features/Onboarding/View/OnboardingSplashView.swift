@@ -66,6 +66,8 @@ struct OnboardingSplashView: View {
                 }
                 .padding(.bottom, 90)
             }
+            .navigationBarBackButtonHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 

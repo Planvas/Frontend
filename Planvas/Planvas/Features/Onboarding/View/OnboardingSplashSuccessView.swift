@@ -42,6 +42,8 @@ struct OnboardingSplashSuccessView: View {
         .onTapGesture {
             router.push(.info)
         }
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 
