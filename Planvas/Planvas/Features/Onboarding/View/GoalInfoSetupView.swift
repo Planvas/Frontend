@@ -47,6 +47,8 @@ struct GoalInfoSetupView: View {
             .padding(.top, 125)
         }
         .ignoresSafeArea()
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
     }
     
     // MARK: - 멘트 그룹
