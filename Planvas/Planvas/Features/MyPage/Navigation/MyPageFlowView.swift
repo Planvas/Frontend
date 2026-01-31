@@ -17,6 +17,14 @@ struct MyPageFlowView: View {
                     switch route {
                     case .mypage:
                         MyPageView()
+                    case .mainPage:
+                        MainView()
+                    case .reportPage:
+                        ReportView(goalId: 12)
+                    case .calenderPage:
+                        CalendarView()
+                    case .alarmPage:
+                        EmptyView()
                     }
                 }
         }
