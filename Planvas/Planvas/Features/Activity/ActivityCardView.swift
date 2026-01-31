@@ -61,7 +61,7 @@ struct ActivityCardView: View {
 
 
                 // 오른쪽 텍스트 영역을 세로로 배치
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 0) {
                     
                     // 성장 수치와 D-Day를 가로로 배치
                     HStack(spacing: 8) {
@@ -93,6 +93,8 @@ struct ActivityCardView: View {
                             )
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
+                    
+                    Spacer().frame(height: 10)
 
                     // 활동 제목 표시
                     Text(item.title)
@@ -101,7 +103,9 @@ struct ActivityCardView: View {
                         // 텍스트 색상 검정
                         .foregroundColor(.black1)
                         .lineLimit(nil)
-                        .fixedSize(horizontal: false, vertical: true) 
+                        .fixedSize(horizontal: false, vertical: true)
+                    
+                    Spacer().frame(height: 3)
                     // 활동 제목 표시
                     Text(item.title2)
                         // 시스템 폰트 크기 16, semibold 굵기
