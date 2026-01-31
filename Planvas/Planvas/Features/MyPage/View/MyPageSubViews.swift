@@ -36,39 +36,39 @@ struct goalCardView: View {
     @ObservedObject var viewModel: MyPageViewModel
     
     var body: some View {
-        let start = viewModel.startDate!
-        let end = viewModel.endDate!
         
-        VStack(alignment: .leading, spacing: 15) {
-            Text("현재 목표 기간").textStyle(.semibold18)
-            
-            // 날짜 섹션
-            HStack(spacing: 20) {
-                dateVStack(year: start.year, month: start.month, day: start.day)
-                Image(systemName: "chevron.right")
-                dateVStack(year: end.year, month: end.month, day: end.day)
-            }
-            
-            Divider().frame(height: 1)
-            
-            // TODO: - 서버에서 목표/현재 성장/휴식률 받아오도록 수정
-            // 성장 & 휴식 섹션
+        if let start = viewModel.startDate, let end = viewModel.endDate  {
             VStack(alignment: .leading, spacing: 15) {
-                progressCapsule(title: "성장", color: Color.green2)
-                progressCapsule(title: "휴식", color: Color.blue1)
+                Text("현재 목표 기간").textStyle(.semibold18)
+                
+                // 날짜 섹션
+                HStack(spacing: 20) {
+                    dateVStack(year: start.year, month: start.month, day: start.day)
+                    Image(systemName: "chevron.right")
+                    dateVStack(year: end.year, month: end.month, day: end.day)
+                }
+                
+                Divider().frame(height: 1)
+                
+                // TODO: - 서버에서 목표/현재 성장/휴식률 받아오도록 수정
+                // 성장 & 휴식 섹션
+                VStack(alignment: .leading, spacing: 15) {
+                    progressCapsule(title: "성장", color: Color.green2)
+                    progressCapsule(title: "휴식", color: Color.blue1)
+                }
             }
+            .padding(24)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.white)
+                    .shadow(color: .gray888.opacity(0.25), radius: 10, x: 2, y: 5)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(Color.gray888, lineWidth: 0.3)
+            )
+            .frame(width: 350)
         }
-        .padding(24)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color.white)
-                .shadow(color: .gray888.opacity(0.25), radius: 10, x: 2, y: 5)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(Color.gray888, lineWidth: 0.3)
-        )
-        .frame(width: 350)
     }
     
     @ViewBuilder
