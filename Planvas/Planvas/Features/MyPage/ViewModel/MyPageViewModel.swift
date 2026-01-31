@@ -29,6 +29,7 @@ class MyPageViewModel: ObservableObject {
                 receiveValue: { [weak self] (response: GoalResponse) in
                     if response.resultType == "SUCCESS" {
                         self?.goalData = response.success
+                        self?.errorMessage = nil
                     } else {
                         self?.errorMessage = response.error?.reason ?? "알 수 없는 오류가 발생했습니다."
                     }
