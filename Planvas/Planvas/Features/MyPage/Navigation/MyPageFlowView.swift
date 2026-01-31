@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MyPageFlowView: View {
     @State private var router = NavigationRouter<MyPageRoute>()
+    let goalId: Int = 12
     
     var body: some View {
         NavigationStack(path: $router.path) {
@@ -20,7 +21,7 @@ struct MyPageFlowView: View {
                     case .mainPage:
                         MainView()
                     case .reportPage:
-                        ReportView(goalId: 12)
+                        ReportView(goalId: goalId)
                     case .calenderPage:
                         CalendarView()
                     case .alarmPage:
