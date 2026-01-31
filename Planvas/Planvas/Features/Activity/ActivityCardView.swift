@@ -100,6 +100,16 @@ struct ActivityCardView: View {
                         .textStyle(.semibold16)
                         // 텍스트 색상 검정
                         .foregroundColor(.black1)
+                        .lineLimit(nil)
+                        .fixedSize(horizontal: false, vertical: true) 
+                    // 활동 제목 표시
+                    Text(item.title2)
+                        // 시스템 폰트 크기 16, semibold 굵기
+                        .textStyle(.semibold16)
+                        // 텍스트 색상 검정
+                        .foregroundColor(.black1)
+                        .lineLimit(nil)
+                        .fixedSize(horizontal: false, vertical: true)
                         
                 }
             }

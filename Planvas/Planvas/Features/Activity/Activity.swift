@@ -11,6 +11,7 @@ import SwiftUI
 struct Activity: Identifiable, Hashable {
     let id: UUID
     let title: String
+    let title2: String
     let growth: Int
     let dday: String
 
@@ -40,6 +41,7 @@ struct Activity: Identifiable, Hashable {
     init(
         id: UUID = UUID(),
         title: String,
+        title2: String,
         growth: Int,
         dday: String,
         badgeText: String,
@@ -52,6 +54,7 @@ struct Activity: Identifiable, Hashable {
     ) {
         self.id = id
         self.title = title
+        self.title2 = title2
         self.growth = growth
         self.dday = dday
         self.badgeText = badgeText

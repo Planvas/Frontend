@@ -39,6 +39,7 @@ struct RestActivityView: View {
     private let restDummyActivities: [Activity] = [
         Activity(
             title: "도자기 공방\n원데이 클래스",  // 활동 제목
+            title2: "도자기 공방\n원데이 클래스",  // 활동 제목
             growth: 10,                          // 성장 포인트
             dday: "상시",                             // D-Day 값
             badgeText: "일정 가능",              // 뱃지 텍스트
@@ -49,6 +50,7 @@ struct RestActivityView: View {
         ),
         Activity(
             title: "서울 민속 박물관\n겨울 특별전",
+            title2: "서울 민속 박물관\n겨울 특별전",
             growth: 10,
             dday: "1/1~3/31",
             badgeText: "일정 가능",
@@ -59,6 +61,7 @@ struct RestActivityView: View {
         ),
         Activity(
             title: "템플스테이 일주일 살기\n청년 여행비 지원\n힐링 프로그램",
+            title2: "템플스테이 일주일 살기\n청년 여행비 지원\n힐링 프로그램",
             growth: 30,
             dday: "1/5~1/12",
             badgeText: "일정 겹침",
@@ -70,6 +73,7 @@ struct RestActivityView: View {
         ),
         Activity(
             title: "템플스테이 일주일 살기\n청년 여행비 지원\n힐링 프로그램",
+            title2: "템플스테이 일주일 살기\n청년 여행비 지원\n힐링 프로그램",
             growth: 30,
             dday: "1/21~1/28",
             badgeText: "일정 주의",

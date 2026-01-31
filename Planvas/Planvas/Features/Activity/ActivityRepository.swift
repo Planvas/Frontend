@@ -15,7 +15,8 @@ struct ActivityRepository: ActivityRepositoryProtocol {
     func fetchActivities() -> [Activity] {
         [
             Activity(
-                title: "패스트캠퍼스\n2025 AI 대전환\n오픈 세미나",
+                title: "패스트캠퍼스",
+                title2: "2025 AI 대전환 오픈 세미나",
                 growth: 10,
                 dday: "9",
                 badgeText: "일정 가능",
@@ -23,7 +24,8 @@ struct ActivityRepository: ActivityRepositoryProtocol {
                 imageName: "성장활동사진1"
             ),
             Activity(
-                title: "SK 하이닉스\n2025 하반기 청년\nHy-Five 14기 모집",
+                title: "SK 하이닉스",
+                title2: "2025 하반기 청년 Hy-Five 14기 모집",
                 growth: 30,
                 dday: "16",
                 badgeText: "일정 주의",
@@ -33,7 +35,8 @@ struct ActivityRepository: ActivityRepositoryProtocol {
                 tipText: "일정이 있어요! 시간을 쪼개서 계획해 보세요"
             ),
             Activity(
-                title: "드림 온 아카데미\n마스터 스킬 - 엑셀 활용법 단기 특강",
+                title: "드림 온 아카데미",
+                title2: "마스터 스킬 - 엑셀 활용법 단기 특강",
                 growth: 10,
                 dday: "15",
                 badgeText: "일정 겹침",
@@ -43,7 +46,8 @@ struct ActivityRepository: ActivityRepositoryProtocol {
                 tipText: "일정과 겹쳐요!"
             ),
             Activity(
-                title: "SK 하이닉스\n2025 하반기 청년\nHy-Five 14기 모집",
+                title: "SK 하이닉스",
+                title2: "2025 하반기 청년 Hy-Five 14기 모집",
                 growth: 30,
                 dday: "16",
                 badgeText: "일정 겹침",

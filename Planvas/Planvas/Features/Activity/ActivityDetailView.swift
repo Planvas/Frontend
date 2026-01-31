@@ -19,6 +19,8 @@ struct ActivityDetailView: View {
     @State private var currentPercent: Int = 10        // 왼쪽 10%
     @State private var addedPercent: Int = 20          // +20%
     @State private var targetPercent: Int = 60         // 오른쪽 60% (표시용)
+    
+    @State private var bodyText: String? = nil //본문 테스트용 변수
 
 
     var body: some View {
@@ -32,8 +34,6 @@ struct ActivityDetailView: View {
                     Image(systemName: "chevron.left")
                         .foregroundColor(.black1)
                         .frame(width: 44, height: 44)
-                        .background(Color.fff.opacity(0.9))
-                        .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
 
@@ -51,64 +51,85 @@ struct ActivityDetailView: View {
                     .frame(width: 44, height: 44)
                     .opacity(0.0) // 일단 자리만 맞추기. 나중에 버튼으로 바꾸면 됨.
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
-            .padding(.bottom, 12)
+            .padding(.horizontal, 10)
+            
+            Spacer().frame(height: 41)
 
             // 본문 스크롤
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 0) {
 
                     Text(item.title)
-                        .textStyle(.bold25)
+                        .textStyle(.semibold22)
                         .foregroundColor(.black1)
+                    Text(item.title2)
+                        .textStyle(.semibold22)
+                        .foregroundColor(.black1)
+                    
+                    Spacer().frame(height: 8)
 
-                    HStack(spacing: 10) {
-                        Text(item.dday) // "D-9" 같은 값 그대로
-                            .textStyle(.semibold14)
+                    HStack(spacing: 9) {
+                        Text("D-\(item.dday)") // "D-9" 같은 값 그대로
+                            .textStyle(.medium14)
                             .foregroundColor(.fff)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
+                            .frame(height: 27)
+                            .padding(.horizontal, 8)
                             .background(Color.primary1)
                             .clipShape(RoundedRectangle(cornerRadius: 10))
 
                         Text("성장 +\(item.growth)")
-                            .textStyle(.semibold14)
+                            .textStyle(.semibold18)
                             .foregroundColor(.primary1)
                     }
+                    Spacer().frame(height: 12)
 
-                    Group {
+                    ZStack {
+                        // 항상 깔리는 검은 배경
+                        Color.black1
+
+                        // 이미지가 있을 때만 중앙에 표시
                         if let imageName = item.imageName, !imageName.isEmpty {
                             Image(imageName)
                                 .resizable()
-                                .scaledToFit()
-                        } else {
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.ccc)
-                                .frame(height: 260)
+                                .scaledToFit()          // 비율 유지
+                                .frame(maxWidth: 353, maxHeight: 353)
                         }
                     }
+                    .frame(width: 353, height: 353)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
+
+                    Spacer().frame(height: 25)
 
                     // 아래는 “본문/설명” 자리
                     Text(item.title) // 임시. 나중에 description 필드 있으면 그걸로 교체
-                        .textStyle(.semibold16)
+                        .textStyle(.semibold18)
                         .foregroundColor(.black1)
+                    
+                    Spacer().frame(height: 9)
 
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.ccc, lineWidth: 1)
-                        .frame(height: 56)
-                        .overlay(
-                            Text("본문")
-                                .textStyle(.medium16)
-                                .foregroundColor(.gray44450)
-                        )
 
-                    Spacer().frame(height: 90) // 하단 고정 버튼에 가려지지 않게 여유
+                    ZStack {
+                        // 배경
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.fff)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.ccc, lineWidth: 1)
+                            )
+
+                        // 텍스트
+                        Text(bodyText ?? "본문")
+                            .textStyle(.medium16)
+                            .foregroundColor(.gray44450)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 16)
+                    }
+                    .frame(width: 353, height: 82)
+
+
+                    Spacer().frame(height: 25)
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 10)
-                .padding(.bottom, 20)
             }
         }
         .background(Color.fff)
@@ -117,7 +138,7 @@ struct ActivityDetailView: View {
 
         // 하단 고정 버튼 영역
         .safeAreaInset(edge: .bottom) {
-            HStack(spacing: 12) {
+            HStack(spacing: 5.43) {
                 Button {
                     // 장바구니 담기
                 } label: {
@@ -125,7 +146,7 @@ struct ActivityDetailView: View {
                         .textStyle(.semibold18)
                         .foregroundColor(.fff)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 54)
+                        .frame(height: 51)
                         .background(Color.primary1)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
@@ -138,8 +159,8 @@ struct ActivityDetailView: View {
                         .textStyle(.semibold18)
                         .foregroundColor(.black1)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 54)
-                        .background(Color.primary20)
+                        .frame(height: 51)
+                        .background(Color.primary20) //15프로가 없던데요..?
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
                 .buttonStyle(.plain)
@@ -151,8 +172,8 @@ struct ActivityDetailView: View {
             .background(Color.fff)
             
         }
+        //MARK: 일정 추가하기 클릭했을때 뷰
         .sheet(isPresented: $showAddScheduleSheet) {
-            // 🔽 여기 안에 바로 오른쪽 화면 디자인 작성
             VStack(spacing: 0) {
 
                 // 손잡이
