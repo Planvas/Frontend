@@ -100,14 +100,6 @@ struct RestActivityView: View {
                     
                     Spacer()    // 좌우 여백 확보
                     
-//                    HStack(spacing: 6) {   // 타이틀과 드롭다운 아이콘
-//                        Text("휴식 활동") // 화면 타이틀
-//                            .textStyle(.semibold22)
-//                            .foregroundColor(.black1)
-//                        Image(systemName: "chevron.down") // 드롭다운 아이콘
-//                            .font(.system(size: 14, weight: .semibold))
-//                            .foregroundColor(.black1)
-//                    }
                     Button {
                         showActivitySheet = true
                     } label: {
@@ -281,16 +273,75 @@ struct RestActivityView: View {
         .navigationDestination(isPresented: $goGrowth) { ActivityView() }
         .navigationBarHidden(true)
         .navigationBarBackButtonHidden(true)
+//        .sheet(isPresented: $showActivitySheet) {
+//            VStack(spacing: 0) {
+//
+//                Capsule()
+//                    .fill(Color.gray.opacity(0.35))
+//                    .frame(width: 44, height: 5)
+//                    .padding(.top, 10)
+//                    .padding(.bottom, 14)
+//
+//                // 성장 활동 -> ActivityView로 이동
+//                Button {
+//                    showActivitySheet = false
+//                    goGrowth = true
+//                } label: {
+//                    HStack {
+//                        Text("성장 활동")
+//                            .textStyle(.semibold20)
+//                            .foregroundColor(.black1)
+//                        Spacer()
+//                    }
+//                    .padding(.horizontal, 20)
+//                    .frame(height: 78)
+//                }
+//                .buttonStyle(.plain)
+//
+//                Rectangle()
+//                    .fill(Color.line)
+//                    .frame(height: 1)
+//
+//                // 휴식 활동 -> 현재 화면이니까 닫기만
+//                Button {
+//                    showActivitySheet = false
+//                } label: {
+//                    HStack {
+//                        Text("휴식 활동")
+//                            .textStyle(.semibold20)
+//                            .foregroundColor(.black1)
+//                        Spacer()
+//                    }
+//                    .padding(.horizontal, 20)
+//                    .frame(height: 78)
+//                }
+//                .buttonStyle(.plain)
+//
+//                Rectangle()
+//                    .fill(Color.line)
+//                    .frame(height: 1)
+//
+//                Spacer(minLength: 0)
+//            }
+//            .frame(maxWidth: .infinity)
+//            .background(Color.fff)
+//            .presentationDetents([.height(248)])
+//            .presentationDragIndicator(.hidden)
+//            .presentationCornerRadius(0)
+//            .presentationBackground(Color.fff)
+//            .ignoresSafeArea(.container, edges: .horizontal)
+//        }
         .sheet(isPresented: $showActivitySheet) {
             VStack(spacing: 0) {
 
                 Capsule()
-                    .fill(Color.gray.opacity(0.35))
-                    .frame(width: 44, height: 5)
-                    .padding(.top, 10)
-                    .padding(.bottom, 14)
+                    .fill(Color.black1)
+                    .frame(width: 50, height: 3)
+                    .padding(.top, 17)
+                    
+                Spacer().frame(height: 26)
 
-                // 성장 활동 -> ActivityView로 이동
+                // 성장 활동
                 Button {
                     showActivitySheet = false
                     goGrowth = true
@@ -302,15 +353,19 @@ struct RestActivityView: View {
                         Spacer()
                     }
                     .padding(.horizontal, 20)
-                    .frame(height: 78)
                 }
                 .buttonStyle(.plain)
+                
+                Spacer().frame(height: 20)
 
                 Rectangle()
                     .fill(Color.line)
                     .frame(height: 1)
+                    .padding(.horizontal, 10)
+                
+                Spacer().frame(height: 20)
 
-                // 휴식 활동 -> 현재 화면이니까 닫기만
+                // 휴식 활동
                 Button {
                     showActivitySheet = false
                 } label: {
@@ -321,24 +376,23 @@ struct RestActivityView: View {
                         Spacer()
                     }
                     .padding(.horizontal, 20)
-                    .frame(height: 78)
                 }
                 .buttonStyle(.plain)
+                
+                Spacer().frame(height: 20)
 
                 Rectangle()
                     .fill(Color.line)
                     .frame(height: 1)
 
-                Spacer(minLength: 0)
+                Spacer()
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity)                 // 좌우 꽉
             .background(Color.fff)
-            .presentationDetents([.height(248)])
-            .presentationDragIndicator(.hidden)
-            .presentationCornerRadius(0)
-            .presentationBackground(Color.fff)
-            .ignoresSafeArea(.container, edges: .horizontal)
+            
+            
         }
+
 
     }
 

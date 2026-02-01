@@ -283,14 +283,14 @@ struct ActivityView: View {
             .navigationDestination(isPresented: $goRest) { RestActivityView() }
             .sheet(isPresented: $showActivitySheet) {
                 VStack(spacing: 0) {
-                    
-                    // 손잡이
+
                     Capsule()
-                        .fill(Color.gray.opacity(0.35))
-                        .frame(width: 44, height: 5)
-                        .padding(.top, 10)
-                        .padding(.bottom, 14)
-                    
+                        .fill(Color.black1)
+                        .frame(width: 50, height: 3)
+                        .padding(.top, 17)
+                        
+                    Spacer().frame(height: 26)
+
                     // 성장 활동
                     Button {
                         showActivitySheet = false
@@ -302,15 +302,18 @@ struct ActivityView: View {
                             Spacer()
                         }
                         .padding(.horizontal, 20)
-                        .frame(height: 78)
                     }
                     .buttonStyle(.plain)
                     
-                    // 구분선 1px
+                    Spacer().frame(height: 20)
+
                     Rectangle()
                         .fill(Color.line)
                         .frame(height: 1)
+                        .padding(.horizontal, 10)
                     
+                    Spacer().frame(height: 20)
+
                     // 휴식 활동
                     Button {
                         showActivitySheet = false
@@ -323,22 +326,24 @@ struct ActivityView: View {
                             Spacer()
                         }
                         .padding(.horizontal, 20)
-                        .frame(height: 78)
                     }
                     .buttonStyle(.plain)
                     
-                    // 아래 구분선 1px (두번째 사진처럼)
+                    Spacer().frame(height: 20)
+
                     Rectangle()
                         .fill(Color.line)
                         .frame(height: 1)
-                    
-                    Spacer(minLength: 0)
+
+                    Spacer()
                 }
-                .frame(maxWidth: .infinity)
+                .frame(maxWidth: .infinity)                 // 좌우 꽉
                 .background(Color.fff)
-                .presentationDetents([.height(248)])
-                .presentationDragIndicator(.hidden)
+                
+                
             }
+
+            
             .sheet(isPresented: $showInterestSheet) {
 
                 VStack(spacing: 0) {
