@@ -14,18 +14,11 @@ struct OnboardingSplashSuccessView: View {
         ZStack {
             Color.fff.ignoresSafeArea()
 
-            RadialGradient(
-                gradient: Gradient(stops: [
-                    .init(color: .goal178CC9.opacity(0.85), location: 0.00),
-                    .init(color: .primary1.opacity(0.63), location: 0.35),
-                    .init(color: .goal883AE1.opacity(0.52), location: 0.5),
-                    
-                    .init(color: .fff.opacity(0.0), location: 1.00)
-                ]),
-                center: .bottomLeading,
-                startRadius: 0,
-                endRadius: 750
-            )
+            Image("BackgroundGradientShape")
+            .renderingMode(.original)
+            .resizable()
+            .scaledToFill()
+            .offset(y: 60) 
             .ignoresSafeArea()
 
             
@@ -40,6 +33,7 @@ struct OnboardingSplashSuccessView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
+            print("다음 화면으로 이동")
             router.push(.info)
         }
         .navigationBarBackButtonHidden(true)
