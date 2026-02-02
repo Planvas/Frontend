@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import Moya
 
 final class DIContainer: ObservableObject {
     // MARK: - Global States
@@ -15,8 +16,15 @@ final class DIContainer: ObservableObject {
     // MARK: - Router
     let rootRouter: RootRouter
 
+    // MARK: - Network
+    let apiManager: APIManager
+    let calendarProvider: MoyaProvider<CalendarAPI>
+    
     init() {
         self.appState = AppState()
         self.rootRouter = RootRouter(appState: appState)
+        
+        self.apiManager = APIManager.shared
+        self.calendarProvider = apiManager.createProvider(for: CalendarAPI.self)
     }
 }
