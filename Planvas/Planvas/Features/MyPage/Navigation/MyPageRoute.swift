@@ -9,4 +9,8 @@ import Foundation
 
 enum MyPageRoute {
     case mypage
+    case mainPage
+    case reportPage
+    case calenderPage
+    case alarmPage
 }

@@ -5,8 +5,6 @@
 //  Created by 백지은 on 1/21/26.
 //
 
-// TODO: 반복 요일에 뱃지 추가하고 추후 디자인 수정된다고 하니까 그거 반영해서 수정 필요
-
 import SwiftUI
 
 struct AddEventView: View {

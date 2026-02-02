@@ -2,7 +2,7 @@
 //  EventDateInfoCard.swift
 //  Planvas
 //
-//  Created on 1/24/26.
+//  Created by 백지은 on 1/24/26.
 //
 
 import SwiftUI
@@ -23,15 +23,18 @@ struct EventDateInfoCard: View {
             
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 20) {
-                    // 시작 날짜
+                    // 시작 날짜 (한 줄 유지)
                     VStack(alignment: .leading, spacing: 4) {
                         Text("\(startDate.yearString())년")
                             .textStyle(.semibold14)
                             .foregroundColor(.gray444)
+                            .lineLimit(1)
                         
                         Text(startDate.monthDayString())
                             .textStyle(.semibold20)
                             .foregroundColor(.black1)
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
                     }
                     
                     // 화살표
@@ -39,15 +42,18 @@ struct EventDateInfoCard: View {
                         .font(.system(size: 18))
                         .foregroundColor(.black1)
                     
-                    // 종료 날짜
+                    // 종료 날짜 (한 줄 유지)
                     VStack(alignment: .leading, spacing: 4) {
                         Text("\(endDate.yearString())년")
                             .textStyle(.semibold14)
                             .foregroundColor(.gray444)
+                            .lineLimit(1)
                         
                         Text(endDate.monthDayString())
                             .textStyle(.semibold20)
                             .foregroundColor(.black1)
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
                     }
                     
                     Spacer()

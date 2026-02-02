@@ -2,7 +2,7 @@
 //  TargetPeriodPill.swift
 //  Planvas
 //
-//  Created on 1/24/26.
+//  Created by 백지은 on 1/24/26.
 //
 
 import SwiftUI
