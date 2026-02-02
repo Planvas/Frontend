@@ -13,9 +13,16 @@ struct OnboardingFlowView: View {
     
     var body: some View {
         NavigationStack(path: $router.path) {
-            GoalInfoSetupView(viewModel: viewModel)
+            OnboardingSplashView()
                 .navigationDestination(for: OnboardingRoute.self) { route in
                     switch route {
+                        // 온보딩 스플래시 첫 화면
+                        case .onboardingSplash:
+                            OnboardingSplashView()
+                        
+                        // 온보딩 스플래시 두번째 화면
+                        case .onboardingSplashSuccess:
+                            OnboardingSplashSuccessView()
                         
                         // 목표 이름, 기간 설정
                         case .info:
