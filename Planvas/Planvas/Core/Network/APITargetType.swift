@@ -5,19 +5,19 @@ protocol APITargetType: TargetType {}
 
 extension APITargetType {
     var baseURL: URL {
-        guard let url = URL(string: Config.baseURL) else {
-            fatalError("유효하지 않은 BASE_URL: \(Config.baseURL)")
+        return URL(string: Config.baseURL)!
+    }
+
+    var headers: [String: String]? {
+        switch task {
+        case .requestJSONEncodable, .requestParameters:
+            return ["Content-Type": "application/json"]
+        case .uploadMultipart:
+            return ["Content-Type": "multipart/form-data"]
+        default:
+            return nil
         }
-        return url
     }
     
-    var headers: [String : String]? {
-        var header = ["Content-Type": "application/json"]
-        
-        if let token = KeychainManager.shared.load(key: "accessToken") {
-            header["Authorization"] = "Bearer \(token)"
-        }
-        return header
-    }
+    var validationType: ValidationType { .successCodes }
 }
-
