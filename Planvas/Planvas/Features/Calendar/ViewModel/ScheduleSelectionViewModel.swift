@@ -32,35 +32,72 @@ class ScheduleSelectionViewModel: ObservableObject {
     
     // MARK: - Methods
     func loadSchedules() {
-        // TODO: API 연동 시 이 부분을 수정
-        Task {
-            isLoading = true
-            errorMessage = nil
-            
-            do {
-                let fetchedSchedules = try await repository.getImportableSchedules()
-                schedules = fetchedSchedules
-            } catch {
-                errorMessage = "일정을 불러오는데 실패했습니다."
-                print("일정 로드 실패: \(error)")
-                // 에러 발생 시 샘플 데이터 사용
-                loadSampleSchedules()
-            }
-            
-            isLoading = false
-        }
+        // TODO: API 연동 시 repository.getImportableSchedules() 호출로 교체
+        isLoading = true
+        errorMessage = nil
+        // API 연동 전: ScheduleSelectionViewModel 샘플 데이터 표시
+        loadSampleSchedules()
+        isLoading = false
     }
     
+    /// API 연동 전: 일정 가져오기 시 이 샘플 데이터가 표시됨 (API 연동 시 제거)
     private func loadSampleSchedules() {
-        // TODO: 샘플 데이터 (API 연동 시 제거)
         schedules = [
-            ImportableSchedule(title: "카페 알바", timeDescription: "매주 수요일 18:00 - 22:00", isSelected: true),
-            ImportableSchedule(title: "토익 학원", timeDescription: "매주 목요일 9:00 - 13:00", isSelected: false),
-            ImportableSchedule(title: "헬스장 PT", timeDescription: "매주 토요일 17:00 - 18:00", isSelected: false),
-            ImportableSchedule(title: "엄마 생신", timeDescription: "2025년 12월 13일", isSelected: true),
-            ImportableSchedule(title: "베트남 여행", timeDescription: "2025년 12월 15일 - 2025년 12월 18일", isSelected: true),
-            ImportableSchedule(title: "동아리 송년회", timeDescription: "2025년 12월 25일", isSelected: false)
+            ImportableSchedule(
+                title: "편의점 알바",
+                timeDescription: "매주 수요일 18:00 - 22:00",
+                startDate: Self.makeDate(year: 2026, month: 2, day: 4, hour: 18),
+                endDate: Self.makeDate(year: 2026, month: 2, day: 4, hour: 22),
+                isSelected: true
+            ),
+            ImportableSchedule(
+                title: "컴퓨터활용능력 학원",
+                timeDescription: "매주 목요일 9:00 - 13:00",
+                startDate: Self.makeDate(year: 2026, month: 2, day: 5, hour: 9),
+                endDate: Self.makeDate(year: 2026, month: 2, day: 5, hour: 13),
+                isSelected: false
+            ),
+            ImportableSchedule(
+                title: "헬스장 PT",
+                timeDescription: "매주 토요일 17:00 - 18:00",
+                startDate: Self.makeDate(year: 2026, month: 2, day: 7, hour: 17),
+                endDate: Self.makeDate(year: 2026, month: 2, day: 7, hour: 18),
+                isSelected: false
+            ),
+            ImportableSchedule(
+                title: "아빠 생신",
+                timeDescription: "2026년 2월 7일",
+                startDate: Self.makeDate(year: 2026, month: 2, day: 7),
+                endDate: Self.makeDate(year: 2026, month: 2, day: 7),
+                isSelected: true
+            ),
+            ImportableSchedule(
+                title: "겨울 국내 여행",
+                timeDescription: "2/15 - 2/18",
+                startDate: Self.makeDate(year: 2026, month: 2, day: 15),
+                endDate: Self.makeDate(year: 2026, month: 2, day: 18),
+                isSelected: true
+            ),
+            ImportableSchedule(
+                title: "개강 전 친구 모임",
+                timeDescription: "2026년 2월 25일",
+                startDate: Self.makeDate(year: 2026, month: 2, day: 25),
+                endDate: Self.makeDate(year: 2026, month: 2, day: 25),
+                isSelected: false
+            )
         ]
+    }
+    
+    private static func makeDate(year: Int, month: Int, day: Int, hour: Int? = nil) -> Date {
+        var components = DateComponents()
+        components.year = year
+        components.month = month
+        components.day = day
+        if let hour = hour {
+            components.hour = hour
+            components.minute = 0
+        }
+        return Calendar.current.date(from: components) ?? Date()
     }
     
     func toggleSelection(for schedule: ImportableSchedule) {
