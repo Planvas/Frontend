@@ -18,7 +18,7 @@ class APIManager: @unchecked Sendable {
     private let loggerPlugin: PluginType
     
     private init() {
-        tokenProvider = TokenStore()
+        tokenProvider = TokenStore.shared
         accessTokenRefresher = AccessTokenRefresher(tokenProviding: tokenProvider)
         session = Session(interceptor: accessTokenRefresher)
         
