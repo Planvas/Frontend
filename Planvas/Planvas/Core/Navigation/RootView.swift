@@ -13,7 +13,7 @@ struct RootView: View {
     var body: some View {
         switch container.rootRouter.root {
         case .splash:
-            SplashView()
+            InitOnboardingView()
         case .login:
             LoginView()
         case .main:
