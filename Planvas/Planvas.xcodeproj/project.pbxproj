@@ -22,7 +22,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				Service/.gitkeep,
 			);
 			target = 44E8D7712F16996B00E95F8E /* Planvas */;
 		};
