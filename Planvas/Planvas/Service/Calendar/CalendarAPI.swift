@@ -31,9 +31,9 @@ extension CalendarAPI: APITargetType {
         case .getGoogleSchedulesCalendar:
             return "/api/integrations/google-calendar/events"
         case .getMonthCalendar:
-            return "/api/calendar/month?year=&month="
+            return "/api/calendar/month"
         case .getDateCalendar:
-            return "/api/calendar/day?date="
+            return "/api/calendar/day"
         }
     }
     
