@@ -10,7 +10,7 @@ struct TokenPlugin: PluginType {
         var request = request
         
         if let token = TokenStore.shared.accessToken {
-            request.addValue(
+            request.setValue(
                 "Bearer \(token)",
                 forHTTPHeaderField: "Authorization"
             )
