@@ -16,7 +16,7 @@ final class AuthManager {
     
     // 현재 로그인상태 확인
     var isLogIn: Bool {
-        return KeychainManager.shared.load(key: "accessToken") != nil
+        return TokenStore.shared.accessToken != nil
     }
     
     // 구글 로그인
@@ -57,6 +57,6 @@ final class AuthManager {
     
     // 로그아웃
     func logout() {
-        KeychainManager.shared.delete(key: "accessToken")
+        TokenStore.shared.clearSession()
     }
 }
