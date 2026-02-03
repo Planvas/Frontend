@@ -10,29 +10,65 @@ import SwiftUI
 // MARK: - 헤더 / 버튼 그룹
 struct HeaderButtonGroup: View {
     let goalSetting: GoalSetting
-
+    
     var body: some View {
-        Button {
-            print(
-                goalSetting == .end
-                ? "최종 리포트 확인하러 가기"
-                : "목표 설정하러 가기"
-            )
-        } label: {
-            Text(
-                goalSetting == .end
-                ? "최종 리포트 확인하러 가기"
-                : "목표 설정하러 가기"
-            )
-            .textStyle(.semibold20)
-            .foregroundStyle(.black1)
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 15)
+        VStack{
+            Button {
+                print(
+                    goalSetting == .end
+                    ? "최종 리포트 확인하러 가기"
+                    : "목표 설정하러 가기"
+                )
+            } label: {
+                Text(
+                    goalSetting == .end
+                    ? "최종 리포트 확인하러 가기"
+                    : "목표 설정하러 가기"
+                )
+                .textStyle(.semibold20)
+                .foregroundStyle(.black1)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 15)
+                        .foregroundStyle(.subPurple)
+                )
+                .padding(.vertical)
+                .padding(.top, 20)
+            }
+            
+            if goalSetting == .end {
+                Text("목표한 균형을")
+                    .textStyle(.medium20)
                     .foregroundStyle(.subPurple)
-            )
-            .padding(.vertical)
+                Text("잘 지켰는지")
+                    .textStyle(.bold20)
+                    .foregroundStyle(.primary1)
+                    .background(.subPurple)
+                Text("확인해보세요")
+                    .textStyle(.medium20)
+                    .foregroundStyle(.subPurple)
+            } else {
+                Text("이번 시즌,\n지수님이")
+                    .textStyle(.medium20)
+                    .foregroundStyle(.subPurple)
+                    .multilineTextAlignment(.center)
+                HStack(spacing: 0){
+                    Text("바라는 모습")
+                        .textStyle(.bold20)
+                        .foregroundStyle(.primary1)
+                        .background(.subPurple)
+                    Text(" 은")                            .textStyle(.medium20)
+                        .foregroundStyle(.subPurple)
+                }
+                Text("무엇인가요?")
+                    .textStyle(.medium20)
+                    .foregroundStyle(.subPurple)
+            }
         }
     }
+}
+
+#Preview {
+    MainView()
 }

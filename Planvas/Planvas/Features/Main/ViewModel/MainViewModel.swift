@@ -11,7 +11,7 @@ import Combine
 class MainViewModel: ObservableObject {
     // MARK: - 메인 페이지 목표 세팅 상태별 메세지
     // ing: 진행 중인 목표 존재, end: 활동 기간 종료, none: 목표 없음
-    @Published var goalSetting: GoalSetting = .ing
+    @Published var goalSetting: GoalSetting = .end
     
     var StateTitle: String {
         switch goalSetting {

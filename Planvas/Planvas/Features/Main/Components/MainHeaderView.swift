@@ -25,6 +25,7 @@ struct MainHeaderView: View {
                     .textStyle(.semibold30)
                     .foregroundStyle( .black1)
                     .padding(.top, 36)
+                    .offset(y: goalSetting == .ing ? 0 : 30)
                 
                 HStack{
                     Group{
@@ -48,6 +49,7 @@ struct MainHeaderView: View {
                                     .foregroundStyle(.primary50)
                             )
                     }
+                    .opacity(goalSetting == .ing ? 1 : 0)
                     .offset(y: -60)
                     Spacer()
                     Image(.mainCharacter)
@@ -62,46 +64,70 @@ struct MainHeaderView: View {
                     WaveBackground()
                         .fill(.primary1)
                     Rectangle()
-                        .fill(Color.primary1)
+                        .fill(.primary1)
                 }
                 .frame(height: 420)
                 
                 VStack(alignment: .trailing) {
-                    if goalSetting == .ing {
-                        HStack{
-                            MainProgressView(
-                                type: "성장",
-                                goal: 60,
-                                progress: 40
-                            )
-                            Spacer()
-                            MainProgressView(
-                                type: "휴식",
-                                goal: 40,
-                                progress: 10
-                            )
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.bottom, 5)
-                        
+                    HStack{
+                        MainProgressView(
+                            type: "성장",
+                            goal: 60,
+                            progress: 40
+                        )
+                        Spacer()
+                        MainProgressView(
+                            type: "휴식",
+                            goal: 40,
+                            progress: 10
+                        )
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 5)
+                    
+                    VStack(alignment: .trailing, spacing: 0) {
                         Text("바라는 모습대로 만든 균형에 맞춰\n일상을 채워보세요.\n그 시도만으로도")
                             .textStyle(.medium18)
                             .foregroundStyle(.subPurple)
                             .multilineTextAlignment(.trailing)
-                        HStack(spacing: 0){
+                        
+                        HStack(spacing: 0) {
                             Text("확실한 성취")
                                 .textStyle(.bold18)
                                 .foregroundStyle(.primary1)
                                 .background(.subPurple)
-                            Text(" 입니다.")                            .textStyle(.medium18)
+                            Text(" 입니다.")
+                                .textStyle(.medium18)
                                 .foregroundStyle(.subPurple)
                         }
-                    } else {
-                        HeaderButtonGroup(goalSetting: goalSetting)
                     }
+                    .opacity(goalSetting == .ing ? 1 : 0)
                 }
                 .padding(20)
                 .padding(.top, 67)
+                
+                if goalSetting != .ing {
+                    VStack(spacing: 0) {
+                        WaveBackground()
+                            .fill(.black60)
+                            .background(.ultraThinMaterial)
+                            .clipShape(WaveBackground())
+
+                        Rectangle()
+                            .fill(.black60)
+                            .background(.ultraThinMaterial)
+                    }
+                    .frame(height: 420)
+                    
+                    HeaderButtonGroup(goalSetting: goalSetting)
+                        .padding(20)
+                    
+                    HStack{
+                        Image(.mainCharacter2)
+                            .offset(x: 10, y: 145)
+                        Spacer()
+                    }
+                }
             }
             .offset(y: -180)
         }
