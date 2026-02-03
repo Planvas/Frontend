@@ -14,8 +14,7 @@ struct MainView: View {
         ScrollView {
             MainHeaderView(
                 goalSetting: viewModel.goalSetting,
-                stateTitle: viewModel.StateTitle,
-                stateDescription: viewModel.StateDescription
+                stateTitle: viewModel.StateTitle
             )
             
             MainBodyView(viewModel: viewModel)
@@ -23,7 +22,7 @@ struct MainView: View {
                     RoundedTopRectangle(radius: 25)
                         .fill(Color.white)
                 )
-                .offset(y: -35)
+                .offset(y: -220)
         }
         .ignoresSafeArea()
     }

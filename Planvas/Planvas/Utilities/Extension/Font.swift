@@ -98,6 +98,12 @@ extension TextStyle {
         letterSpacing: nil
     )
     
+    static let bold18 = TextStyle(
+        weight: .bold,
+        size: 18,
+        letterSpacing: nil
+    )
+    
     static let bold14 = TextStyle(
         weight: .bold,
         size: 14,
