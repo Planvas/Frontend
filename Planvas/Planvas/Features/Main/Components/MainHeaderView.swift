@@ -57,7 +57,36 @@ struct MainHeaderView: View {
                 }
             }
             .padding()
-            .background(.subPurple)
+            .background(
+                ZStack {
+                    Color.subPurple
+                    
+                    Circle()
+                        .fill(Color.primary20)
+                        .frame(width: 153, height: 153)
+                        .offset(x: -160, y: 70)
+                    
+                    Circle()
+                        .fill(Color.primary20)
+                        .frame(width: 22, height: 22)
+                        .offset(x: 0, y: 25)
+                    
+                    Circle()
+                        .fill(Color.primary20)
+                        .frame(width: 29, height: 29)
+                        .offset(x: 110, y: -70)
+                    
+                    Circle()
+                        .fill(Color.primary20)
+                        .frame(width: 19, height: 19)
+                        .offset(x: 165, y: 10)
+                    
+                    Circle()
+                        .fill(Color.primary50)
+                        .frame(width: 99, height: 99)
+                        .offset(x: 210, y: -50)
+                }
+            )
             
             ZStack{
                 VStack(spacing: 0){
