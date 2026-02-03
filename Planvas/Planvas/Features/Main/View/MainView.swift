@@ -22,12 +22,13 @@ struct MainView: View {
                     RoundedTopRectangle(radius: 25)
                         .fill(Color.white)
                 )
-                .offset(y: -220)
+                .padding(.top, -220)
+                .padding(.bottom, 75)
         }
         .ignoresSafeArea()
     }
 }  
 
 #Preview {
-    MainView()
+    TabBar()
 }
