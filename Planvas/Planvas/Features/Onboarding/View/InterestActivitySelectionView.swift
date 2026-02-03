@@ -12,6 +12,8 @@ struct InterestActivitySelectionView: View {
     
     @ObservedObject var viewModel: GoalSetupViewModel
     
+    var onFinish: (() -> Void)?
+        
     private var isStartEnabled: Bool {
         !viewModel.selectedInterestIds.isEmpty
     }
@@ -48,6 +50,9 @@ struct InterestActivitySelectionView: View {
                     }
                     let text = selectedNumbers.map(String.init).joined(separator: ",")
                     print("관심 분야 : \(text)")
+                    
+                    // 메인 화면으로 이동
+                    onFinish?()
                 }
                 .disabled(!isStartEnabled)
 
@@ -67,7 +72,7 @@ struct InterestActivitySelectionView: View {
                     .allowsHitTesting(true) // 아래 버튼 탭 막기
                 }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 24)
             .padding(.bottom, 66)
             .zIndex(1)
         }
