@@ -15,7 +15,7 @@ struct MainHeaderView: View {
     var body: some View {
         VStack {
             VStack(alignment: .leading) {
-                Image(.logo)
+                Image(.planvasLogo)
                     .resizable()
                     .frame(width: 98, height: 23)
                     .padding(.top, 60)
