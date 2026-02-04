@@ -11,7 +11,7 @@ import Combine
 class MainViewModel: ObservableObject {
     // MARK: - 메인 페이지 목표 세팅 상태별 메세지
     // ing: 진행 중인 목표 존재, end: 활동 기간 종료, none: 목표 없음
-    @Published var goalSetting: GoalSetting = .end
+    @Published var goalSetting: GoalSetting = .ing
     
     var StateTitle: String {
         switch goalSetting {
@@ -42,6 +42,58 @@ class MainViewModel: ObservableObject {
         formatter.dateFormat = "M월"
         return formatter.string(from: centerDate)
     }
+    // 오늘에 해당하는 연도 숫자 표시
+    var yearText: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "yyyy"
+        return formatter.string(from: centerDate)
+    }
+    // 날짜 변환 함수
+    private func date(_ string: String) -> Date {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.locale = Locale(identifier: "ko_KR")
+        return formatter.date(from: string)!
+    }
+    
+    // 일정 더미 데이터
+    @Published var schedules: [Schedule] = []
+    
+    init() {
+        schedules = [
+            Schedule(
+                startDate: date("2026-02-04"),
+                endDate: nil,
+                title: "동아리 신청",
+                type: .yellow
+            ),
+            Schedule(
+                startDate: date("2026-02-04"),
+                endDate: nil,
+                title: "과제 제출",
+                type: .red
+            ),
+            Schedule(
+                startDate: date("2026-02-06"),
+                endDate: date("2026-02-09"),
+                title: "베트남 여행",
+                type: .blue
+            )
+        ]
+    }
+    
+    func schedules(for date: Date) -> [Schedule] {
+        schedules.filter { schedule in
+            if let endDate = schedule.endDate {
+                return date >= schedule.startDate && date <= endDate
+            } else {
+                return Calendar.current.isDate(date, inSameDayAs: schedule.startDate)
+            }
+        }
+    }
+
+
     
     // MARK: - 오늘의 할 일
     @Published var todayTodos: [ToDo] = [

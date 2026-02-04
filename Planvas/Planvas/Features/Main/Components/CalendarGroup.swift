@@ -9,48 +9,53 @@ import SwiftUI
 
 // MARK: - 바디 / 캘린더 그룹
 struct CalendarGroup: View {
-    let monthText: String
-    let weekDates: [Date]
-    @Binding var selectedDate: Date 
+    @ObservedObject var viewModel: MainViewModel
     
     var body: some View {
         VStack(alignment: .leading){
             Text("이번 주")
                 .textStyle(.semibold25)
                 .padding(.top, 29)
-                .padding(.leading, 29)
+                .padding(.leading, 20)
             
-            VStack(alignment: .leading){
-                Text(monthText)
-                    .textStyle(.semibold20)
-                    .foregroundStyle(.black1)
-                    .padding(.bottom)
+            VStack(alignment: .leading, spacing: 0){
+                HStack(alignment: .bottom){
+                    Text(viewModel.monthText)
+                        .textStyle(.semibold20)
+                        .foregroundStyle(.black1)
+                        .padding(.bottom)
+                    
+                    Text(viewModel.yearText)
+                        .textStyle(.semibold14)
+                        .foregroundStyle(.black1)
+                        .padding(.bottom)
+                }
+                .padding(.leading, 5)
                 
-                HStack(spacing: 16) {
-                    ForEach(weekDates, id: \.self) { date in
+                HStack(spacing: 0){
+                    ForEach(viewModel.weekDates, id: \.self) { date in
                         DateItem(
                             date: date,
-                            isSelected: selectedDate == date
+                            isSelected: viewModel.selectedDate == date,
+                            selectedDate: $viewModel.selectedDate,
+                            schedules: viewModel.schedules(for: date)
                         )
-                        .onTapGesture {
-                            selectedDate = date
-                        }
                     }
                 }
             }
-            .padding()
+            .padding(.horizontal, 7)
+            .padding(.top, 14)
+            .padding(.bottom, 4)
+            .frame(maxWidth: .infinity)
             .overlay(
                 RoundedRectangle(cornerRadius: 15)
-                    .stroke(
-                        LinearGradient(
-                            colors: [.subPurple, .primary1],
-                            startPoint: UnitPoint(x: -0.1, y: -0.1),
-                            endPoint: UnitPoint(x: 0.2, y: 0.7)
-                        ),
-                        lineWidth: 1
-                    )
+                    .stroke(.primary50, lineWidth: 1)
             )
-            .frame(maxWidth: .infinity)
+            .padding(.horizontal)
         }
     }
+}
+
+#Preview {
+    MainView()
 }

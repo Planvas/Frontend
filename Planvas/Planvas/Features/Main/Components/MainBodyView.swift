@@ -13,7 +13,7 @@ struct MainBodyView: View {
     
     var body: some View {
         VStack {
-            CalendarGroup(monthText: viewModel.monthText, weekDates: viewModel.weekDates, selectedDate: $viewModel.selectedDate)
+            CalendarGroup(viewModel: viewModel)
             
             ToDoGroup(viewModel: viewModel)
             
