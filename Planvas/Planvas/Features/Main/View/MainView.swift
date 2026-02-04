@@ -14,7 +14,7 @@ struct MainView: View {
         ScrollView {
             MainHeaderView(
                 goalSetting: viewModel.goalSetting,
-                stateTitle: viewModel.StateTitle
+                stateTitle: viewModel.stateTitle
             )
             
             MainBodyView(viewModel: viewModel)

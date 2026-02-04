@@ -33,6 +33,7 @@ struct DateItem: View {
                         ScheduleItem(schedule: schedule, date: date)
                     }
                 }
+                .clipped()
                 Spacer()
             }
             .padding(.vertical, 5)
