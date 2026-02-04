@@ -13,7 +13,7 @@ class MainViewModel: ObservableObject {
     // ing: 진행 중인 목표 존재, end: 활동 기간 종료, none: 목표 없음
     @Published var goalSetting: GoalSetting = .ing
     
-    var StateTitle: String {
+    var stateTitle: String {
         switch goalSetting {
         case .ing:
             return "지수님, \n반가워요!"
