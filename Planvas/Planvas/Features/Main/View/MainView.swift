@@ -14,8 +14,7 @@ struct MainView: View {
         ScrollView {
             MainHeaderView(
                 goalSetting: viewModel.goalSetting,
-                stateTitle: viewModel.StateTitle,
-                stateDescription: viewModel.StateDescription
+                stateTitle: viewModel.stateTitle
             )
             
             MainBodyView(viewModel: viewModel)
@@ -23,12 +22,13 @@ struct MainView: View {
                     RoundedTopRectangle(radius: 25)
                         .fill(Color.white)
                 )
-                .offset(y: -35)
+                .padding(.top, -220)
+                .padding(.bottom, 75)
         }
         .ignoresSafeArea()
     }
 }  
 
 #Preview {
-    MainView()
+    TabBar()
 }

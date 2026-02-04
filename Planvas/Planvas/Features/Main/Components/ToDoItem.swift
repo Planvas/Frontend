@@ -73,7 +73,7 @@ struct ToDoItem: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(todo.isCompleted ? .ccc60 : .clear)
+                    .fill(todo.isCompleted ? .primary20 : .clear)
             )
             
             HStack{
