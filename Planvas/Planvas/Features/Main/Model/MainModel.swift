@@ -41,7 +41,9 @@ enum ScheduleType: String {
     }
 }
 
+// 일정 extension
 extension Schedule {
+    // 백그라운드 색상 잇기 위한 일정 시작, 끝 구분
     func position(on date: Date) -> SchedulePosition {
         guard let endDate else { return .single }
 
@@ -53,7 +55,7 @@ extension Schedule {
         }
         return .middle
     }
-    
+    // 일정 며칠간 이어질 때 하루만 일정 제목이 보이도록 구분
     func shouldShowTitle(on date: Date) -> Bool {
         if endDate == nil {
             return Calendar.current.isDate(date, inSameDayAs: startDate)
@@ -63,6 +65,7 @@ extension Schedule {
     }
 }
 
+// 백그라운드 색상 일정 구분
 enum SchedulePosition {
     case single   // 하루짜리
     case start    // 여러 날 - 시작

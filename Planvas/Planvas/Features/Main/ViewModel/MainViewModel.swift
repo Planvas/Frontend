@@ -93,8 +93,6 @@ class MainViewModel: ObservableObject {
         }
     }
 
-
-    
     // MARK: - 오늘의 할 일
     @Published var todayTodos: [ToDo] = [
         ToDo(

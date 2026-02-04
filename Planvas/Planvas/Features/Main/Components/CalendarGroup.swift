@@ -55,7 +55,3 @@ struct CalendarGroup: View {
         }
     }
 }
-
-#Preview {
-    MainView()
-}
