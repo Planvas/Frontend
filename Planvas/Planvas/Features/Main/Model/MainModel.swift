@@ -14,6 +14,65 @@ enum GoalSetting {
     case none
 }
 
+// MARK: - 캘린더 일정
+struct Schedule: Identifiable {
+    let id = UUID()
+    let startDate: Date
+    let endDate: Date?
+    let title: String
+    let type: ScheduleType
+}
+
+// 일정 색상
+enum ScheduleType: String {
+    case yellow
+    case red
+    case blue
+    
+    var color: Color {
+        switch self {
+        case .yellow:
+            return .calYellow
+        case .red:
+            return .calRed
+        case .blue:
+            return .calBlue1
+        }
+    }
+}
+
+// 일정 extension
+extension Schedule {
+    // 백그라운드 색상 잇기 위한 일정 시작, 끝 구분
+    func position(on date: Date) -> SchedulePosition {
+        guard let endDate else { return .single }
+
+        if Calendar.current.isDate(date, inSameDayAs: startDate) {
+            return .start
+        }
+        if Calendar.current.isDate(date, inSameDayAs: endDate) {
+            return .end
+        }
+        return .middle
+    }
+    // 일정 며칠간 이어질 때 하루만 일정 제목이 보이도록 구분
+    func shouldShowTitle(on date: Date) -> Bool {
+        if endDate == nil {
+            return Calendar.current.isDate(date, inSameDayAs: startDate)
+        }
+
+        return Calendar.current.isDate(date, inSameDayAs: startDate)
+    }
+}
+
+// 백그라운드 색상 일정 구분
+enum SchedulePosition {
+    case single   // 하루짜리
+    case start    // 여러 날 - 시작
+    case middle   // 여러 날 - 중간
+    case end      // 여러 날 - 끝
+}
+
 // MARK: - 할 일
 struct ToDo: Identifiable {
     let id = UUID()

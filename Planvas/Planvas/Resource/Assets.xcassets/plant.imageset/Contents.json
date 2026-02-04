@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "plant.pdf",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

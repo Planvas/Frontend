@@ -9,14 +9,15 @@ import SwiftUI
 
 // MARK: - 메인에서 사용되는 프로그레스바 컴포넌트
 struct MainProgressView: View {
+    
+    //프로그레스 타입
+    let type: String
+
     //사용자가 설정한 목표 퍼센트
     let goal: Int
+    
     //사용자가 수행한 퍼센트
     let progress: Int
-    
-    //프로그레스바에 나타나는 색상
-    let startColor: Color
-    let endColor: Color
 
     //진행된 퍼센트 계산 함수
     private var ratio: CGFloat {
@@ -25,37 +26,44 @@ struct MainProgressView: View {
     }
     
     var body: some View {
-        GeometryReader{ geometry in
-            ZStack(alignment: .leading) {
-                ZStack(alignment: .trailing){
-                    Capsule()
-                        .foregroundStyle(.fff)
-                    Text("\(goal)%")
-                        .textStyle(.medium14)
-                        .foregroundStyle(.gray888)
-                        .padding(.trailing)
-                }
-                
-                ZStack(alignment: .trailing){
-                    Capsule()
-                        .frame(width: max(geometry.size.width * ratio, 60))
-                        .modifier(GradientModifier(startColor: startColor, endColor: endColor))
+            VStack(alignment: .leading, spacing: 8) {
+                Image(type == "성장" ? .plant : .moon)
+                HStack(spacing: 4) {
                     Text("\(progress)%")
-                        .textStyle(.medium20)
-                        .foregroundStyle(.fff50)
-                        .padding(.trailing)
+                        .textStyle(.bold25)
+                        .foregroundStyle(.black1)
+                    Text("/ \(goal)%")
+                        .textStyle(.medium18)
+                        .foregroundStyle(.gray888)
                 }
+
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(.subPurple)
+                        Capsule()
+                            .fill(.gray444)
+                            .frame(width: max(geometry.size.width * ratio, 5))
+                    }
+                }
+                .frame(width: 123, height: 9)
+                
+                Text(type)
+                    .textStyle(.bold20)
+                    .padding(.top, 5)
             }
-            .frame(height: 30)
+            .padding(20)
+            .background(
+                RoundedRectangle(cornerRadius: 11)
+                    .fill(.fff)
+            )
         }
     }
-}
 
 #Preview {
     MainProgressView(
+        type: "휴식",
         goal: 60,
-        progress: 40,
-        startColor: .primary1,
-        endColor: .primary2
+        progress: 40
     )
 }
