@@ -30,7 +30,7 @@ struct DateItem: View {
                 // 일정 목록
                 VStack(spacing: 4) {
                     ForEach(schedules) { schedule in
-                        scheduleView(schedule)
+                        ScheduleItem(schedule: schedule, date: date)
                     }
                 }
                 Spacer()
@@ -71,69 +71,8 @@ struct DateItem: View {
             }
         }
     }
-    
-    private func scheduleView(_ schedule: Schedule) -> some View {
-        let position = schedule.position(on: date)
-        let showTitle = schedule.shouldShowTitle(on: date)
-        
-        return HStack(spacing: 4) {
-            if position != .middle {
-                RoundedRectangle(cornerRadius: 5)
-                    .fill(schedule.type.color)
-                    .frame(width: 3)
-            }
-
-            if showTitle {
-                Text(schedule.title)
-                    .textStyle(.medium10)
-                    .foregroundColor(.black1)
-                    .lineLimit(1)
-                    .clipped()
-            }
-
-            Spacer()
-        }
-        .padding(.vertical, 2)
-        .background(
-            scheduleBackground(schedule, position: position)
-                .frame(height: 11)
-        )
-        .frame(height: 11)
-    }
-    
-    private func scheduleBackground(
-        _ schedule: Schedule,
-        position: SchedulePosition
-    ) -> some View {
-        let color = schedule.type.color.opacity(0.3)
-
-        switch position {
-        case .single:
-            return AnyView(
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(color)
-            )
-
-        case .start:
-            return AnyView(
-                RoundedCorner(radius: 2, corners: [.topLeft, .bottomLeft])
-                    .fill(color)
-            )
-
-        case .middle:
-            return AnyView(
-                Rectangle()
-                    .fill(color)
-            )
-
-        case .end:
-            return AnyView(
-                RoundedCorner(radius: 2, corners: [.topRight, .bottomRight])
-                    .fill(color)
-            )
-        }
-    }
 }
+   
 
 #Preview {
     MainView()
