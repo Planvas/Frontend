@@ -16,6 +16,17 @@ struct GoalRatioSetupView: View {
     
     var body: some View {
         ZStack {
+            VStack {
+                Spacer()
+                LinearGradient(
+                    gradient: Gradient(colors: [.primary20, Color.white.opacity(0)]),
+                    startPoint: .bottom,
+                    endPoint: .top
+                )
+                .frame(height: 200)
+            }
+            .ignoresSafeArea(edges: .bottom)
+
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     Spacer().frame(height: 125)
@@ -46,36 +57,16 @@ struct GoalRatioSetupView: View {
                     // 다음 버튼
                     PrimaryButton(title: "다음") {
                         print("성장: \(viewModel.growthPercent)% / 휴식: \(viewModel.restPercent)%")
-                        
-                        // TODO: 목표 이름, 기간, 비율 설정 내용 저장하는 API 호출
-                        
-                        // TODO: 다음 화면 이동 로직
+                        // TODO: 로직 처리
                     }
                     .padding(.horizontal, 20)
                     .padding(.bottom, 66)
-                    .zIndex(1)
                 }
-                
-                // 바닥 그라데이션
-                .background(
-                    VStack {
-                        Spacer()
-                        LinearGradient(
-                            gradient: Gradient(colors: [.primary20, Color.white.opacity(0)]),
-                            startPoint: .bottom,
-                            endPoint: .top
-                        )
-                        .frame(height: 200)
-                    },
-                    alignment: .bottom
-                )
             }
-            .navigationBarBackButtonHidden(true)
-            .toolbar(.hidden, for: .navigationBar)
-            
+            .scrollIndicators(.hidden)
+            .ignoresSafeArea(edges: .bottom)
         }
-        .scrollIndicators(.hidden)
-        .ignoresSafeArea()
+        .ignoresSafeArea(edges: .top)
     }
     
     // MARK: - 맨 위 멘트 그룹
@@ -168,6 +159,8 @@ struct GoalRatioSetupView: View {
             
             // 성장 활동 리스트 보이기/숨기기
             if showGrowthActivities {
+                Spacer().frame(height: 12)
+                
                 let items = viewModel.growthActivityTypes
                 
                 VStack(alignment: .leading, spacing: 12) {
