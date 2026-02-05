@@ -7,7 +7,7 @@
 
 import Foundation
 
-// 구글 캘린더 연동
+// MARK: - 구글 캘린더 연동
 struct GoogleCalendarRequestDTO: Encodable {
     let code: String
 }
@@ -22,7 +22,7 @@ struct GoogleCalendarSuccess: Decodable {
     let message: String?
 }
 
-// 구글 캘린더 연동 상태 조회
+// MARK: - 구글 캘린더 연동 상태 조회
 struct GoogleCalendarStateResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
@@ -35,7 +35,7 @@ struct GoogleCalendarStateSuccess: Decodable {
     let lastSyncedAt: String
 }
 
-// 구글 캘린더 일정 동기화
+// MARK: - 구글 캘린더 일정 동기화
 struct GoogleScheduleSyncResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
@@ -47,7 +47,7 @@ struct GoogleScheduleSyncSuccess: Decodable {
     let syncedCount: Int
 }
 
-// 구글 캘린더 가져올 일정 목록 조회
+// MARK: - 구글 캘린더 가져올 일정 목록 조회
 struct GoogleScheduleListResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
@@ -67,7 +67,7 @@ struct GoogleCalendarEventDTO: Decodable {
     let recurrence: String?
 }
 
-// 월간 캘린더 조회
+// MARK: - 월간 캘린더 조회
 struct MonthlyCalendarResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
@@ -86,7 +86,7 @@ struct CalendarDayDTO: Decodable {
     let itemCount: Int
 }
 
-// 일간 캘린더 조회
+// MARK: - 일간 캘린더 조회
 struct DailyCalendarResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?

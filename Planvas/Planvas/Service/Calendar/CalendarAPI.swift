@@ -9,7 +9,7 @@ import Foundation
 import Moya
 import Alamofire
 
-// 캘린더 API 연결
+// MARK: - 캘린더 API 연결
 enum CalendarAPI {
     case postGoogleCalendar(GoogleCalendarRequestDTO: GoogleCalendarRequestDTO) // 구글 캘린더 연동 요청
     case getGoogleCalendar // 구글 캘린더 연동 상태 조회
