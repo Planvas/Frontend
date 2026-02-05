@@ -10,16 +10,30 @@ struct GoalRatioSetupView: View {
     @Environment(NavigationRouter<OnboardingRoute>.self) private var router
     @ObservedObject var viewModel: GoalSetupViewModel
     
+    // 토글 상태를 위한 @State 변수 추가
+    @State private var showGrowthActivities = false
+    @State private var showRestActivities = false
+    
     var body: some View {
         ZStack {
+            VStack {
+                Spacer()
+                LinearGradient(
+                    gradient: Gradient(colors: [.primary20, Color.white.opacity(0)]),
+                    startPoint: .bottom,
+                    endPoint: .top
+                )
+                .frame(height: 200)
+            }
+            .ignoresSafeArea(edges: .bottom)
+
             ScrollView {
-                VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 0) {
                     Spacer().frame(height: 125)
                     
                     // 멘트 그룹
                     InfoGroup
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.leading, 20)
+                        .padding(.horizontal, 20)
                         .padding(.bottom, 20)
                     
                     // 비율 설정 네모 그룹
@@ -43,36 +57,16 @@ struct GoalRatioSetupView: View {
                     // 다음 버튼
                     PrimaryButton(title: "다음") {
                         print("성장: \(viewModel.growthPercent)% / 휴식: \(viewModel.restPercent)%")
-                        
-                        // TODO: 목표 이름, 기간, 비율 설정 내용 저장하는 API 호출
-                        
-                        // TODO: 다음 화면 이동 로직
+                        // TODO: 로직 처리
                     }
                     .padding(.horizontal, 20)
                     .padding(.bottom, 66)
-                    .zIndex(1)
                 }
-                
-                // 바닥 그라데이션
-                .background(
-                    VStack {
-                        Spacer()
-                        LinearGradient(
-                            gradient: Gradient(colors: [.primary20, Color.white.opacity(0)]),
-                            startPoint: .bottom,
-                            endPoint: .top
-                        )
-                        .frame(height: 200)
-                    },
-                    alignment: .bottom
-                )
             }
-            .navigationBarBackButtonHidden(true)
-            .toolbar(.hidden, for: .navigationBar)
-            
+            .scrollIndicators(.hidden)
+            .ignoresSafeArea(edges: .bottom)
         }
-        .scrollIndicators(.hidden)
-        .ignoresSafeArea()
+        .ignoresSafeArea(edges: .top)
     }
     
     // MARK: - 맨 위 멘트 그룹
@@ -126,6 +120,7 @@ struct GoalRatioSetupView: View {
                     }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .center)
         .padding(.bottom, 35)
     }
     
@@ -135,40 +130,105 @@ struct GoalRatioSetupView: View {
             Text("이런 활동들이 있어요!")
                 .textStyle(.semibold25)
                 .foregroundColor(.primary1)
-                .padding(.bottom, 15)
+                .padding(.leading, 20)
+                .padding(.bottom, 36)
             
-            Text("성장 활동")
-                .textStyle(.medium20)
-                .foregroundColor(.black1)
-                .padding(.bottom, 17)
-            
-            // 성장 활동 리스트
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 23), count: 3),
-                spacing: 18
-            ) {
-                ForEach(viewModel.growthActivityTypes) { item in
-                    ActivityComponent(emoji: item.emoji, title: item.title, ringColor: .green60, labelColor: .green1)
+            // 성장 활동 토글 구역
+            Button(action: {
+                withAnimation {
+                    showGrowthActivities.toggle()
+                }
+            }) {
+                HStack {
+                    Image("plant")
+                        .resizable()
+                        .frame(width: 25, height: 25)
+                        .padding(.leading, 20)
+                
+                    Text("성장 활동")
+                        .textStyle(.semibold20)
+                        .foregroundColor(.black1)
+                    
+                    Spacer()
+                    
+                    Image(systemName: showGrowthActivities ? "chevron.up" : "chevron.down")
+                        .foregroundColor(.black1)
+                        .padding(.trailing, 20)
                 }
             }
-            .padding(.bottom, 27)
             
-            Text("휴식 활동")
-                .textStyle(.medium20)
-                .foregroundColor(.black1)
-                .padding(.bottom, 17)
-            
-            // 휴식 활동 리스트
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 23), count: 3),
-                spacing: 18
-            ) {
-                ForEach(viewModel.restActivityTypes) { item in
-                    ActivityComponent(emoji: item.emoji, title: item.title, ringColor: .blue60, labelColor: .blue1)
+            // 성장 활동 리스트 보이기/숨기기
+            if showGrowthActivities {
+                Spacer().frame(height: 12)
+                
+                let items = viewModel.growthActivityTypes
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    rowView(Array(items.prefix(3)))
+                    rowView(Array(items.dropFirst(3).prefix(3)))
+                    rowView(Array(items.dropFirst(6)))
                 }
+                .padding(.top, 12)
+                .padding(.leading, 25)
+                .padding(.bottom, 3)
+            }
+            
+            Spacer().frame(height: 32)
+            
+            
+            // 휴식 활동 토글 구역
+            Button(action: {
+                withAnimation {
+                    showRestActivities.toggle()
+                }
+            }) {
+                HStack {
+                    Image("moon")
+                        .resizable()
+                        .frame(width: 25, height: 25)
+                        .padding(.leading, 20)
+                    
+                    Text("휴식 활동")
+                        .textStyle(.semibold20)
+                        .foregroundColor(.black1)
+                    
+                    Spacer()
+                    
+                    Image(systemName: showRestActivities ? "chevron.up" : "chevron.down")
+                        .foregroundColor(.black1)
+                        .padding(.trailing, 20)
+                }
+            }
+            
+            // 휴식 활동 리스트 보이기/숨기기
+            if showRestActivities {
+                Spacer().frame(height: 12)
+                
+                let items = viewModel.restActivityTypes
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    rowView(Array(items.prefix(3)))
+                    rowView(Array(items.dropFirst(3).prefix(2)))
+                    rowView(Array(items.dropFirst(5).prefix(2)))
+                    rowView(Array(items.dropFirst(7)))
+                }
+                .padding(.top, 12)
+                .padding(.leading, 25)
+                .padding(.bottom, 3)
             }
         }
-        .padding(.horizontal, 20)
+    }
+    
+    // MARK: - 활동 배열 한 줄씩
+    private func rowView(_ rowItems: [ActivityType]) -> some View {
+        HStack(spacing: 7) {
+            ForEach(rowItems) { item in
+                ActivityComponent(
+                    emoji: item.emoji,
+                    title: item.title
+                )
+            }
+        }
     }
 }
 
