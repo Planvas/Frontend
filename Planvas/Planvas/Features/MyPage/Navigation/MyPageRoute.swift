@@ -1,16 +1,10 @@
-//
-//  MyPageRoute.swift
-//  Planvas
-//
-//  Created by 정서영 on 1/22/26.
-//
-
 import Foundation
 
-enum MyPageRoute {
+enum MyPageRoute: Hashable {
     case mypage
     case mainPage
-    case reportPage
+    case reportPage(goalId: Int)
+    case pastReportPage
     case calenderPage
     case alarmPage
 }
