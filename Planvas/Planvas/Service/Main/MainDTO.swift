@@ -15,6 +15,7 @@ struct MainDataResponse: Decodable {
 }
 
 // MainDataSuccess
+// TODO: - 현재 목표가 없는 경우 확인 필요
 struct MainDataSuccess: Decodable {
     let currentGoal: CurrentGoal
     let progress: Progress
