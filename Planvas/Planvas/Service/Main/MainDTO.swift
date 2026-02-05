@@ -68,9 +68,3 @@ struct Recommendation: Decodable {
     let category: TodoCategory
     let point: Int
 }
-
-// Category
-enum TodoCategory: String, Codable {
-    case growth = "GROWTH"
-    case rest = "REST"
-}
