@@ -40,7 +40,7 @@ class GoalSetupViewModel: ObservableObject {
         .init(emoji: "💼", title: "인턴십"),
         .init(emoji: "👥", title: "학회/동아리"),
         .init(emoji: "💻", title: "웨비나"),
-        .init(emoji: "📂", title: "장기프로젝트"),
+        .init(emoji: "📂", title: "장기 프로젝트"),
         .init(emoji: "📝", title: "자격증"),
         .init(emoji: "📖", title: "관련 독서"),
     ]
