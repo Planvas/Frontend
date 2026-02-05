@@ -69,7 +69,7 @@ struct Recommendation: Decodable {
 }
 
 // Category
-enum TodoCategory: String, Decodable {
+enum TodoCategory: String, Codable {
     case growth = "GROWTH"
     case rest = "REST"
 }
