@@ -11,52 +11,49 @@ struct ActivityComponent: View {
     let emoji: String
     let title: String
     
-    let ringColor: Color
-    let labelColor: Color
-
     var body: some View {
-        ZStack(alignment: .center) {
-
-            Text(emoji)
-                .textStyle(.medium58)
-                .offset(y: -2)
-                .allowsHitTesting(false)
-
-            Circle()
-                .fill(.fff50)
-                .overlay(
-                    Circle().stroke(ringColor, lineWidth: 1.5)
-                )
-                .frame(width: 99, height: 99)
-        }
-        .frame(width: 99, height: 99)
-        .overlay(alignment: .top) {
+        HStack(alignment: .center, spacing: 8.34) {
+            Text("\(emoji)")
+                .textStyle(.bold12_5)
             
-            Text(title)
-                .textStyle(.medium18)
-                .foregroundStyle(.fff)
+            Text("\(title)")
+                .textStyle(.medium14)
                 .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 2)
-                .background(
-                    RoundedRectangle(cornerRadius: 100)
-                        .fill(labelColor)
-                )
-                .offset(y: 49.89)
-                .zIndex(10)
-                .allowsHitTesting(false)
         }
+        .padding(.vertical, 10)
+        .padding(.horizontal, 16)
+        .foregroundStyle(.black1)
+        .background(.interest)
+        .clipShape(Capsule())
+        .overlay(Capsule().stroke(.ccc, lineWidth: 0.5))
+        .fixedSize(horizontal: true, vertical: false)
     }
 }
 
 #Preview {
-    HStack(spacing: 23) {
-        ActivityComponent(emoji: "📚", title: "장기프로젝트", ringColor: .green60, labelColor: .green1)
-        ActivityComponent(emoji: "👥", title: "학회/동아리", ringColor: .green60, labelColor: .green1)
-        ActivityComponent(emoji: "👥", title: "학회/동아리", ringColor: .green60, labelColor: .green1)
+    struct PreviewWrapper: View {
+        var body: some View {
+            HStack(spacing: 7) {
+                ActivityComponent(
+                    emoji: "📚",
+                    title: "개발/IT"
+                )
+
+                ActivityComponent(
+                    emoji: "📊",
+                    title: "마케팅"
+                )
+
+                ActivityComponent(
+                    emoji: "🎨",
+                    title: "디자인"
+                )
+            }
+            .padding()
+        }
     }
-    .padding()
+
+    return PreviewWrapper()
 }
 
 

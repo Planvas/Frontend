@@ -20,7 +20,6 @@ struct RatioSetupCard: View {
         let grayLabel = "\(grayPercent)%"
         
         VStack (alignment: .center, spacing: 0){
-            // TODO: 목표 이름, 기간 설정 화면 라우트 연결 후 수정 예정
             Text(vm.goalName.isEmpty ? "플랜바스" : vm.goalName)
                 .textStyle(.semibold25)
                 .foregroundStyle(.black1)
@@ -35,13 +34,13 @@ struct RatioSetupCard: View {
                 
                 Text("\(purpleLabel)")
                     .textStyle(.semibold20)
-                    .foregroundStyle(.primary1)
+                    .foregroundStyle(.green1)
                 
                 Spacer()
                 
                 Text("\(grayLabel)")
                     .textStyle(.semibold20)
-                    .foregroundStyle(.primary1)
+                    .foregroundStyle(.blue1)
                 
                 Text("휴식")
                     .textStyle(.medium20)
@@ -57,36 +56,31 @@ struct RatioSetupCard: View {
 
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 100)
-                        .fill(.ccc20)
+                        .fill(LinearGradient(
+                                stops: [
+                                    .init(color: .blue20339F, location: 0.0),
+                                    .init(color: .blue1, location: 0.70)
+                                ],
+                                startPoint: UnitPoint(x: 0.25, y: 0.5),
+                                endPoint: UnitPoint(x: 0.95, y: 0.5)
+                            )
+                        )
                         .frame(height: 25)
 
                     RoundedRectangle(cornerRadius: 100)
                         .fill(
                             LinearGradient(
                                 stops: [
-                                    .init(color: .gradprimary2, location: 0.0),
-                                    .init(color: .primary1, location: 0.15)
+                                    .init(color: .green425C47, location: 0.0),
+                                    .init(color: .green33633D, location: 0.23),
+                                    .init(color: .green0A671E, location: 0.4),
+                                    .init(color: .green1, location: 1.0)
                                 ],
-                                startPoint: UnitPoint(x: 0.02, y: 0.02),
-                                endPoint: UnitPoint(x: 0.9, y: 12.0)
+                                startPoint: UnitPoint(x: 0.25, y: 0.5),
+                                endPoint: UnitPoint(x: 0.95, y: 0.5)
                             )
                         )
                         .frame(width: purpleWidth, height: 25)
-                    
-                    if vm.ratioStep > 0 && vm.ratioStep < 10 {
-                        let lineX = snapToPixel(purpleWidth)
-                        let barH: CGFloat = 25
-
-                        VerticalDashedLine()
-                            .stroke(
-                                .primary1,
-                                style: StrokeStyle(lineWidth: 0.2, lineCap: .round, dash: [0.5, 0.5])
-                            )
-                            .frame(width: 10, height: barH)
-                            .position(x: lineX, y: barH / 2)
-                            .zIndex(999)
-                            .allowsHitTesting(false)
-                    }
                 }
                 .contentShape(Rectangle())
                 .gesture(
@@ -116,20 +110,6 @@ struct RatioSetupCard: View {
         )
         .shadow(color: .black20, radius: 4, x:0, y: 2)
         .padding(.horizontal, 20)
-    }
-
-    private struct VerticalDashedLine: Shape {
-        func path(in rect: CGRect) -> Path {
-            var p = Path()
-            p.move(to: CGPoint(x: rect.midX, y: rect.minY))
-            p.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
-            return p
-        }
-    }
-    
-    private func snapToPixel(_ x: CGFloat) -> CGFloat {
-        guard displayScale > 0 else { return x }
-        return (x * displayScale).rounded() / displayScale
     }
 }
 
