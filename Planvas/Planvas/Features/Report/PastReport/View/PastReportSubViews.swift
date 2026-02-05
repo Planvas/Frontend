@@ -24,9 +24,15 @@ struct ReportSectionView: View {
     
     var body: some View {
         ForEach(reports, id: \.goalId) { report in
+            let des = {
+                if let s = report.startDateTuple, let e = report.endDateTuple {
+                    return "\(s.month)/\(s.day) ~ \(e.month)/\(e.day)"
+                } else {
+                    return "날짜 정보 없음"}
+            }()
             MenuButton(
                 title: report.title,
-                desc: "\(report.startDateTuple?.month ?? "")/\(report.startDateTuple?.day ?? "") ~ \(report.endDateTuple?.month ?? "")/\(report.endDateTuple?.day ?? "")",
+                desc: des,
             ) {
                 onTap(report.goalId)
             }
