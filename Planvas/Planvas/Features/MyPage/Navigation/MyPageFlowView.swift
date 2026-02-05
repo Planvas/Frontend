@@ -1,10 +1,3 @@
-//
-//  MyPageFlowView.swift
-//  Planvas
-//
-//  Created by 정서영 on 1/22/26.
-//
-
 import SwiftUI
 
 struct MyPageFlowView: View {
@@ -22,6 +15,8 @@ struct MyPageFlowView: View {
                         MainView()
                     case .reportPage:
                         ReportView(goalId: goalId)
+                    case .pastReportPage:
+                        PastReportView()
                     case .calenderPage:
                         CalendarView()
                     case .alarmPage:
