@@ -86,6 +86,10 @@ struct RatioListResponse: Decodable {
 }
 
 struct RatioListSuccess: Decodable {
+    let presets: [RatioPreset]
+}
+
+struct RatioPreset: Decodable {
     let presetId: Int
     let title: String
     let description: String
