@@ -69,7 +69,7 @@ extension ActivityAPI: APITargetType {
             var params: [String: Any] = [
                 "tab": tab.rawValue
             ]
-
+            
             if let categoryId {
                 params["categoryId"] = categoryId
             }
@@ -82,7 +82,7 @@ extension ActivityAPI: APITargetType {
             if let size {
                 params["size"] = size
             }
-
+            
             return .requestParameters(
                 parameters: params,
                 encoding: URLEncoding.queryString
@@ -91,11 +91,11 @@ extension ActivityAPI: APITargetType {
             var params: [String: Any] = [
                 "tab": tab.rawValue
             ]
-
+            
             if let date {
                 params["date"] = date
             }
-
+            
             return .requestParameters(
                 parameters: params,
                 encoding: URLEncoding.queryString
@@ -104,8 +104,11 @@ extension ActivityAPI: APITargetType {
             return .requestPlain
         case .postActivity(_, let GetActivityRequestDTO):
             return .requestJSONEncodable(GetActivityRequestDTO)
-        case .getCartList:
-            return .requestPlain
+        case .getCartList(let tab):
+            return .requestParameters(
+                parameters: ["tab": tab.rawValue],
+                encoding: URLEncoding.queryString
+            )
         case .postCart(let GetCartItemDTO):
             return .requestJSONEncodable(GetCartItemDTO)
         case .deleteCart:

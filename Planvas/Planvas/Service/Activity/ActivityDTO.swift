@@ -54,7 +54,7 @@ struct GetActivityRequestDTO: Encodable {
 struct GetActivityResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
-    let success: ActivityDetailSuccess?
+    let success: GetActivitySuccess?
 }
 
 struct GetActivitySuccess: Decodable {
