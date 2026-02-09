@@ -36,7 +36,7 @@ struct ErrorResponse: Decodable {
 }
 
 struct UserData: Decodable {
-    let userId: String
+    let userId: Int
     let name: String
     let provider: String
 }
