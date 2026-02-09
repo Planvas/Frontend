@@ -17,6 +17,15 @@ final class RootRouter: ObservableObject {
     
     init(appState: AppState) {
         self.appState = appState
+        
+        let hasSeenOnboarding = UserDefaults.standard.bool(forKey: "hasSeenOnboarding")
+        
+        if !hasSeenOnboarding {
+            self.root = .splash
+        } else {
+            self.root = appState.isLoggedIn ? .main : .login
+        }
+        
         // 로그인 상태 확인
         appState.$isLoggedIn
             .receive(on: DispatchQueue.main)
