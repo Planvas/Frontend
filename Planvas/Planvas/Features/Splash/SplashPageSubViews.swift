@@ -88,15 +88,15 @@ struct RollingIconView: View {
     
     var body: some View {
         GeometryReader { geo in
+            let singleSetWidth: CGFloat = CGFloat(icons.count) * 80 + CGFloat(icons.count - 1) * 40
             HStack(spacing: 40) {
-                ForEach(0..<2) { _ in
+                ForEach(0..<2, id: \.self) { _ in
                     HStack(spacing: 40) {
                         ForEach(icons, id: \.self) { name in
                             Image(name)
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 80, height: 180)
-                                .fixedSize()
                         }
                     }
                 }
@@ -106,7 +106,7 @@ struct RollingIconView: View {
                 withAnimation(
                     .linear(duration: 10)
                     .repeatForever(autoreverses: false)) {
-                    xOffset = -(geo.size.width)
+                    xOffset = -(singleSetWidth + 40) // 한세트폭 + 세트 간 spacing
                 }
             }
         }
