@@ -24,7 +24,7 @@ struct PlanvasApp: App {
               if hasSeenOnboarding {
                 RootView()
               } else {
-                InitOnboardingView()
+                SplashView()
               }
           }
           .environmentObject(container)
