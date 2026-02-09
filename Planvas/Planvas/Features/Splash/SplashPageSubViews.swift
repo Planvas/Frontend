@@ -83,7 +83,7 @@ struct SplashPageView : View {
 
 // MARK: - 옆으로 흐르는 아이콘 뷰
 struct RollingIconView: View {
-    let icons = ["page2", "page3", "page2"]
+    let icons = ["sun", "calendar", "alarm", "flight"]
     @State private var xOffset: CGFloat = 0
     
     var body: some View {
