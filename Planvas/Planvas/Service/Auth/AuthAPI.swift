@@ -28,7 +28,7 @@ extension AuthRouter: APITargetType {
     var task: Task {
         switch self {
         case .googleSignUp(let idToken), .googleLogin(let idToken):
-            return .requestParameters(parameters: ["authorizationCode": idToken], encoding: JSONEncoding.default)
+            return .requestParameters(parameters: ["idToken": idToken], encoding: JSONEncoding.default)
         }
     }
 }
