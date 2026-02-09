@@ -1,6 +1,5 @@
 import SwiftUI
 import Combine
-import Kingfisher
 
 struct MyPageView: View {
     @StateObject private var viewModel = MyPageViewModel()
