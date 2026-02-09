@@ -20,9 +20,9 @@ final class AuthManager {
             case .success(let response):
                 do {
                     let decodedData = try JSONDecoder().decode(GoogleLoginResponse.self, from: response.data)
-                    let SuccessData = decodedData.success
+                    let successData = decodedData.success
                     
-                    if SuccessData?.signupRequired == true {
+                    if successData?.signupRequired == true {
                         print("회원가입이 필요하여 자동 회원가입을 진행합니다.")
                         self.signUp(idToken: idToken) { signupData, error in
                             if let signupData = signupData {
@@ -41,7 +41,7 @@ final class AuthManager {
                             }
                         }
                         
-                    } else if let data = SuccessData, let token = data.token {
+                    } else if let data = successData, let token = data.token {
                         TokenStore.shared.accessToken = token
                         completion(data, false)
                     } else {
