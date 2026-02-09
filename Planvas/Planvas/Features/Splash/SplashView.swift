@@ -54,7 +54,7 @@ struct SplashView: View {
             
             VStack(spacing: 40) {
                 HStack(spacing: 8) {
-                    ForEach(0..<3) { index in
+                    ForEach(0..<splashPages.count, id: \.self) { index in
                         Capsule()
                             .fill(currentPage == index ? Color.gray444 : Color.ccc)
                             .frame(width: currentPage == index ? 32 : 14, height: 8)
