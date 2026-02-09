@@ -1,10 +1,3 @@
-//
-//  RootView.swift
-//  Planvas
-//
-//  Created by 정서영 on 1/22/26.
-//
-
 import SwiftUI
 
 struct RootView: View {
@@ -13,7 +6,7 @@ struct RootView: View {
     var body: some View {
         switch container.rootRouter.root {
         case .splash:
-            SplashView()
+            ProgressView()
         case .login:
             LoginView()
         case .main:
