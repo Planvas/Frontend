@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct EditEventView: View {
-    @StateObject private var viewModel = EditEventViewModel()
+    @State private var viewModel = EditEventViewModel()
     @Environment(\.dismiss) private var dismiss
     @State private var showStartDatePicker = false
     @State private var showEndDatePicker = false
@@ -42,7 +42,7 @@ struct EditEventView: View {
                 
                 // 반복 옵션 선택
                 if showRepeatPicker {
-                    RepeatOptionPickerView(viewModel: viewModel)
+                    RepeatOptionPickerView<EditEventViewModel>(viewModel: viewModel)
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 }
                 

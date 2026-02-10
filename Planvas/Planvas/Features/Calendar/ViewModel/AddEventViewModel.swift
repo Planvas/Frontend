@@ -6,19 +6,37 @@
 //
 
 import Foundation
-import Combine
+import Observation
 
 @MainActor
-class AddEventViewModel: ObservableObject, RepeatOptionConfigurable {
-    @Published var eventName: String = ""
-    @Published var startDate: Date = Date()
-    @Published var endDate: Date = Date()
-    @Published var isAllDay: Bool = false
-    @Published var isRepeatEnabled: Bool = false  // 반복 설정 활성화 여부
-    @Published var repeatType: RepeatType = .weekly
-    @Published var selectedYearDuration: Int = 2
-    @Published var selectedWeekdays: Set<Int> = []  // 기본값 빈 집합
-    @Published var selectedColor: EventColorType = .red
+@Observable
+final class AddEventViewModel: RepeatOptionConfigurable {
+    var eventName: String = ""
+    var startDate: Date = Date()
+    var endDate: Date = Date()
+    var isAllDay: Bool = false
+
+    private static let calendar = Calendar.current
+
+    init(initialDate: Date? = nil) {
+        if let date = initialDate {
+            let now = Date()
+            let start = Self.calendar.date(
+                bySettingHour: Self.calendar.component(.hour, from: now),
+                minute: Self.calendar.component(.minute, from: now),
+                second: 0,
+                of: date
+            ) ?? date
+            startDate = start
+            endDate = Self.calendar.date(byAdding: .hour, value: 1, to: start) ?? start
+        }
+    }
+
+    var isRepeatEnabled: Bool = false
+    var repeatType: RepeatType = .weekly
+    var selectedYearDuration: Int = 2
+    var selectedWeekdays: Set<Int> = []
+    var selectedColor: EventColorType = .red
     
     let weekdays = ["월", "화", "수", "목", "금", "토", "일"]
     let yearDurations = [1, 2, 3, 4]
@@ -59,9 +77,10 @@ class AddEventViewModel: ObservableObject, RepeatOptionConfigurable {
             color: selectedColor,
             startDate: startDate,
             endDate: endDate,
-            category: .none,  // 새 이벤트는 기본적으로 미분류
+            category: .none,
             isCompleted: false,
-            isRepeating: isRepeatEnabled
+            isRepeating: isRepeatEnabled,
+            repeatWeekdays: isRepeatEnabled ? Array(selectedWeekdays).sorted() : nil
         )
     }
     
