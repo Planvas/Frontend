@@ -10,22 +10,11 @@ import Combine
 
 @MainActor
 class CalendarViewModel: ObservableObject {
-    @Published var selectedDate: Date = {
-        let calendar = Calendar.current
-        var components = DateComponents()
-        components.year = 2026
-        components.month = 1
-        components.day = 13
-        return calendar.date(from: components) ?? Date()
-    }()
+    @Published var selectedDate: Date = Date()
     
     @Published var currentMonth: Date = {
         let calendar = Calendar.current
-        var components = DateComponents()
-        components.year = 2026
-        components.month = 1
-        components.day = 1
-        return calendar.date(from: components) ?? Date()
+        return calendar.date(from: calendar.dateComponents([.year, .month], from: Date())) ?? Date()
     }()
     
     private let calendar = Calendar.current
