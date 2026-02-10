@@ -6,31 +6,42 @@
 //
 
 import Foundation
-import Combine
+import GoogleSignIn
+import UIKit
+import Observation
 
+@Observable
 @MainActor
-class CalendarSyncViewModel: ObservableObject {
+final class CalendarSyncViewModel {
     let calendarTitleText = "캘린더 연동으로"
     let highlightedText = "캘린더 연동"
 
-    @Published private(set) var isConnected = false
-    @Published private(set) var isLoadingStatus = false
-    @Published private(set) var isConnecting = false
-    @Published var statusError: String?
+    private(set) var isConnected = false
+    private(set) var isLoadingStatus = false
+    private(set) var isConnecting = false
+    var statusError: String?
 
-    /// 이미 연동된 경우: 일정 선택 시트 노출 등
-    var onConnectSuccess: (() -> Void)?
-    /// 미연동 시: 로그인 필요 (Login 모듈에서 처리할 수 있도록 콜백)
-    var onNeedGoogleLogin: (() -> Void)?
+    /// 연동 성공 시 일정 선택 시트 노출 여부 (View는 이 값만 구독해 시트 표시)
+    var shouldOpenScheduleSelection = false
+
+    func dismissScheduleSelection() {
+        shouldOpenScheduleSelection = false
+    }
 
     private let repository: CalendarRepositoryProtocol
+    private static let calendarScope = "https://www.googleapis.com/auth/calendar.readonly"
 
     init(repository: CalendarRepositoryProtocol? = nil) {
         self.repository = repository ?? CalendarAPIRepository()
     }
 
-    /// 연동 상태 로드 (View onAppear 등에서 호출)
+    /// 연동 상태 로드 (View onAppear 등에서 호출). 로그인되지 않았으면 API 호출 없이 미연동으로 처리.
     func loadStatus() {
+        guard TokenStore.shared.accessToken != nil else {
+            isConnected = false
+            statusError = nil
+            return
+        }
         isLoadingStatus = true
         statusError = nil
         Task {
@@ -44,28 +55,56 @@ class CalendarSyncViewModel: ObservableObject {
         }
     }
 
-    /// "Google 캘린더 연동" 버튼 탭: 연동 여부만 확인. 이미 연동됐으면 시트 오픈, 아니면 로그인 필요 콜백 (GIDSignIn 호출 없음)
+    /// "Google 캘린더 연동" 버튼 탭: 이미 연동됐으면 시트 오픈, 아니면 구글 로그인 띄워 serverAuthCode 받아 연동
     func performGoogleCalendarConnect() {
         statusError = nil
+        guard TokenStore.shared.accessToken != nil else {
+            statusError = "로그인이 필요합니다."
+            return
+        }
         isConnecting = true
         Task {
-            defer { isConnecting = false }
             do {
                 let status = try await repository.getGoogleCalendarStatus()
                 isConnected = status.connected
                 if status.connected {
-                    onConnectSuccess?()
-                } else {
-                    statusError = "Google 로그인이 필요합니다."
-                    onNeedGoogleLogin?()
+                    isConnecting = false
+                    shouldOpenScheduleSelection = true
+                    return
                 }
+                // 미연동: 이 시점에 구글 로그인으로 serverAuthCode 받아서 연동
+                guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                      let rootVC = windowScene.windows.first?.rootViewController else {
+                    isConnecting = false
+                    statusError = "화면을 불러올 수 없습니다."
+                    return
+                }
+                let config = GIDConfiguration(clientID: Config.ClientId, serverClientID: Config.ServerClientId)
+                GIDSignIn.sharedInstance.configuration = config
+                GIDSignIn.sharedInstance.signIn(withPresenting: rootVC, hint: nil, additionalScopes: [Self.calendarScope]) { [weak self] result, error in
+                    Task { @MainActor in
+                        guard let self else { return }
+                        self.isConnecting = false
+                        if let error = error {
+                            self.statusError = error.localizedDescription
+                            return
+                        }
+                        guard let code = result?.serverAuthCode, !code.isEmpty else {
+                            self.statusError = "Google 인증 코드를 받지 못했습니다."
+                            return
+                        }
+                        await self.connectGoogleCalendar(code: code)
+                    }
+                }
+                return
             } catch {
+                isConnecting = false
                 statusError = (error as? CalendarAPIError)?.reason ?? error.localizedDescription
             }
         }
     }
 
-    /// 로그인 모듈 등에서 serverAuthCode 전달받았을 때 호출 (POST connect)
+    /// serverAuthCode로 연동 (버튼 탭 시 내부에서 호출, 또는 외부에서 code 전달 시)
     func connectGoogleCalendar(code: String) async {
         do {
             try await repository.connectGoogleCalendar(code: code)
@@ -73,7 +112,7 @@ class CalendarSyncViewModel: ObservableObject {
             isConnected = status.connected
             statusError = nil
             if status.connected {
-                onConnectSuccess?()
+                shouldOpenScheduleSelection = true
             }
         } catch {
             statusError = (error as? CalendarAPIError)?.reason ?? error.localizedDescription

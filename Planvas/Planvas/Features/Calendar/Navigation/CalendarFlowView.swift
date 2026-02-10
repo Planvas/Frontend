@@ -10,9 +10,8 @@ import SwiftUI
 struct CalendarFlowView: View {
     @State private var router = NavigationRouter<CalendarRoute>()
     @StateObject private var viewModel = CalendarViewModel()
-    @StateObject private var syncViewModel = CalendarSyncViewModel()
+    @State private var syncViewModel = CalendarSyncViewModel()
     @State private var isCalendarOnly = false
-    @State private var showLoginSheet = false
 
     var body: some View {
         Group {
@@ -26,19 +25,13 @@ struct CalendarFlowView: View {
                         onImportSchedules: { schedules in
                             viewModel.importSchedules(schedules)
                             isCalendarOnly = true
-                        },
-                        onNeedGoogleLogin: { showLoginSheet = true }
+                        }
                     )
                 }
             }
         }
         .environment(router)
         .environmentObject(viewModel)
-        .sheet(isPresented: $showLoginSheet, onDismiss: {
-            syncViewModel.loadStatus()
-        }) {
-            LoginView()
-        }
     }
 }
 
