@@ -37,6 +37,10 @@ protocol CalendarRepositoryProtocol {
     func connectGoogleCalendar(code: String) async throws
 }
 
+enum CalendarRepositoryError: Error {
+    case missingServerId(message: String)
+}
+
 /// TODO : 현재는 샘플 데이터를 사용
 final class CalendarRepository: CalendarRepositoryProtocol {
     // 샘플 데이터 (API 연동 전까지)
@@ -115,48 +119,12 @@ final class CalendarRepository: CalendarRepositoryProtocol {
             return cal.date(from: c) ?? Date()
         }
         return [
-            ImportableSchedule(
-                title: "편의점 알바",
-                timeDescription: "매주 수요일 18:00 - 22:00",
-                startDate: date(2026, 2, 4, hour: 18),
-                endDate: date(2026, 2, 4, hour: 22),
-                isSelected: true
-            ),
-            ImportableSchedule(
-                title: "컴퓨터활용능력 학원",
-                timeDescription: "매주 목요일 9:00 - 13:00",
-                startDate: date(2026, 2, 5, hour: 9),
-                endDate: date(2026, 2, 5, hour: 13),
-                isSelected: false
-            ),
-            ImportableSchedule(
-                title: "헬스장 PT",
-                timeDescription: "매주 토요일 17:00 - 18:00",
-                startDate: date(2026, 2, 7, hour: 17),
-                endDate: date(2026, 2, 7, hour: 18),
-                isSelected: false
-            ),
-            ImportableSchedule(
-                title: "아빠 생신",
-                timeDescription: "2026년 2월 7일",
-                startDate: date(2026, 2, 7),
-                endDate: date(2026, 2, 7),
-                isSelected: true
-            ),
-            ImportableSchedule(
-                title: "겨울 국내 여행",
-                timeDescription: "2/15 - 2/18",
-                startDate: date(2026, 2, 15),
-                endDate: date(2026, 2, 18),
-                isSelected: true
-            ),
-            ImportableSchedule(
-                title: "개강 전 친구 모임",
-                timeDescription: "2026년 2월 25일",
-                startDate: date(2026, 2, 25),
-                endDate: date(2026, 2, 25),
-                isSelected: false
-            )
+            ImportableSchedule(id: "sample-1", title: "편의점 알바", timeDescription: "매주 수요일 18:00 - 22:00", startDate: date(2026, 2, 4, hour: 18), endDate: date(2026, 2, 4, hour: 22), isSelected: true),
+            ImportableSchedule(id: "sample-2", title: "컴퓨터활용능력 학원", timeDescription: "매주 목요일 9:00 - 13:00", startDate: date(2026, 2, 5, hour: 9), endDate: date(2026, 2, 5, hour: 13), isSelected: false),
+            ImportableSchedule(id: "sample-3", title: "헬스장 PT", timeDescription: "매주 토요일 17:00 - 18:00", startDate: date(2026, 2, 7, hour: 17), endDate: date(2026, 2, 7, hour: 18), isSelected: false),
+            ImportableSchedule(id: "sample-4", title: "아빠 생신", timeDescription: "2026년 2월 7일", startDate: date(2026, 2, 7), endDate: date(2026, 2, 7), isSelected: true),
+            ImportableSchedule(id: "sample-5", title: "겨울 국내 여행", timeDescription: "2/15 - 2/18", startDate: date(2026, 2, 15), endDate: date(2026, 2, 18), isSelected: true),
+            ImportableSchedule(id: "sample-6", title: "개강 전 친구 모임", timeDescription: "2026년 2월 25일", startDate: date(2026, 2, 25), endDate: date(2026, 2, 25), isSelected: false)
         ]
     }
     
