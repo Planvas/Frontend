@@ -1,8 +1,9 @@
 import SwiftUI
+import Combine
 
 struct LoginSuccessView: View {
-    var viewModel: LoginViewModel
     @EnvironmentObject var container: DIContainer
+    @Environment(LoginViewModel.self) var viewModel
 
     var body: some View {
         ZStack {
@@ -11,13 +12,13 @@ struct LoginSuccessView: View {
                 startPoint: .bottom,
                 endPoint: .top)
             .ignoresSafeArea()
-            
+
             VStack {
                 Image("loginImage")
                     .resizable()
                     .frame(width: 174, height: 213)
                     .padding(.vertical, 50)
-                
+
                 VStack {
                     Text("로그인 완료!")
                         .foregroundStyle(Color.gray444)
@@ -33,19 +34,15 @@ struct LoginSuccessView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-//            viewModel.rootRouter?.root = .main
-//            viewModel.rootRouter?.objectWillChange.send()
-            let hasCompletedOnboarding =
-                UserDefaults.standard.bool(forKey: OnboardingKeys.hasCompletedOnboarding)
-            let hasActiveGoal =
-                UserDefaults.standard.bool(forKey: OnboardingKeys.hasActiveGoal)
-
-            // 온보딩을 이미 완료했고, 현재 활성화된 목표가 있는 경우 → 바로 메인 화면으로 이동
+            container.appState.isLoggedIn = true
+            let hasCompletedOnboarding = UserDefaults.standard.bool(forKey: OnboardingKeys.hasCompletedOnboarding)
+            let hasActiveGoal = UserDefaults.standard.bool(forKey: OnboardingKeys.hasActiveGoal)
             if hasCompletedOnboarding && hasActiveGoal {
                 container.rootRouter.root = .main
             } else {
-                // 온보딩을 완료하지 않았거나 목표가 없는 경우 → 목표 설정 온보딩으로 이동
-                container.rootRouter.root = .onboarding
+                // TODO: 임시로 주석처리, 다음 버튼 완성되면 아래 main 지우고 해당 줄 주석 해제해주세요!
+                // container.rootRouter.root = .onboarding  
+                container.rootRouter.root = .main
             }
         }
     }
