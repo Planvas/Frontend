@@ -8,6 +8,7 @@
 //
 
 import Foundation
+import CryptoKit
 
 /// API 기반 캘린더 Repository (CalendarNetworkService + SchedulesNetworkService)
 final class CalendarAPIRepository: CalendarRepositoryProtocol {
@@ -120,15 +121,11 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
 
     // MARK: - DTO → 도메인 매핑
 
-    /// ISO8601 문자열 → Date (연동일·마지막 동기화일 파싱)
+    /// ISO8601 문자열 → Date (연동일·마지막 동기화일 파싱). static formatter 재사용.
     private func parseISO8601(_ string: String?) -> Date? {
         guard let string = string else { return nil }
-        let full = ISO8601DateFormatter()
-        full.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let d = full.date(from: string) { return d }
-        let fallback = ISO8601DateFormatter()
-        fallback.formatOptions = [.withInternetDateTime]
-        return fallback.date(from: string)
+        if let d = Self.iso8601WithFraction.date(from: string) { return d }
+        return Self.iso8601NoFraction.date(from: string)
     }
 
     /// 구글 일정 DTO → 가져오기 선택용 ImportableSchedule (Google 이벤트 ID는 UUID가 아니므로 String으로 보존)
@@ -173,21 +170,17 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         )
     }
 
-    /// itemId 등 문자열로부터 동일 입력에 대해 항상 같은 UUID 생성 (서버 항목 식별용)
+    /// itemId 등 문자열로부터 동일 입력에 대해 항상 같은 UUID 생성 (서버 항목 식별용).
+    /// Hasher는 프로세스별 시드로 앱 재시작 시 값이 바뀌므로, UUID v5(SHA-1 기반) 사용.
     private static func stableUUID(from string: String) -> UUID {
-        var h1 = Hasher()
-        h1.combine("planvas.calendar.event")
-        h1.combine(string)
-        let v1 = h1.finalize()
-        var h2 = Hasher()
-        h2.combine("planvas.calendar.event.2")
-        h2.combine(string)
-        let v2 = h2.finalize()
-        let high = UInt64(bitPattern: Int64(truncatingIfNeeded: v1))
-        let low = UInt64(bitPattern: Int64(truncatingIfNeeded: v2))
-        var bytes: [UInt8] = []
-        withUnsafeBytes(of: high) { bytes.append(contentsOf: $0) }
-        withUnsafeBytes(of: low) { bytes.append(contentsOf: $0) }
+        let namespace = UUID(uuidString: "6ba7b810-9dad-11d1-80b4-00c04fd430c8")! // RFC 4122 DNS namespace
+        var data = Data()
+        withUnsafeBytes(of: namespace.uuid) { data.append(contentsOf: $0) }
+        data.append(contentsOf: string.utf8)
+        let hash = Insecure.SHA1.hash(data: data)
+        var bytes = Array(Array(hash).prefix(16))
+        bytes[6] = (bytes[6] & 0x0F) | 0x50  // version 5
+        bytes[8] = (bytes[8] & 0x3F) | 0x80  // variant RFC 4122
         return UUID(uuid: (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7], bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]))
     }
 
