@@ -17,21 +17,35 @@ final class RootRouter: ObservableObject {
     
     init(appState: AppState) {
         self.appState = appState
-        
-        let hasSeenOnboarding = UserDefaults.standard.bool(forKey: "hasSeenOnboarding")
-        
+
+        let hasSeenOnboarding =
+            UserDefaults.standard.bool(forKey: OnboardingKeys.hasSeenOnboarding)
+        let hasCompletedOnboarding =
+            UserDefaults.standard.bool(forKey: OnboardingKeys.hasCompletedOnboarding)
+        let hasActiveGoal =
+            UserDefaults.standard.bool(forKey: OnboardingKeys.hasActiveGoal)
+
         if !hasSeenOnboarding {
-            self.root = .splash
+            root = .splash
+        } else if !appState.isLoggedIn {
+            root = .login
+        } else if hasCompletedOnboarding && hasActiveGoal {
+            // 로그인 + 목표 설정 완료 → 메인
+            root = .main
         } else {
-            self.root = appState.isLoggedIn ? .main : .login
+            // 로그인은 했지만 목표 설정 안 함
+            root = .onboarding
         }
-        
-        // 로그인 상태 확인
+
         appState.$isLoggedIn
             .dropFirst()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isLoggedIn in
-                self?.root = isLoggedIn ? .main : .login
+                guard let self else { return }
+
+                if !isLoggedIn {
+                    self.root = .login
+                }
             }
             .store(in: &cancellables)
     }
