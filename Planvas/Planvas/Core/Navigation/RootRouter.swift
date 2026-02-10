@@ -7,10 +7,12 @@
 
 import SwiftUI
 import Combine
+import Observation
 
 // MARK: - 최상위 라우터
-final class RootRouter: ObservableObject {
-    @Published var root: RootRoute = .splash
+@Observable
+final class RootRouter {
+    var root: RootRoute = .splash
 
     private let appState: AppState
     private var cancellables = Set<AnyCancellable>()
