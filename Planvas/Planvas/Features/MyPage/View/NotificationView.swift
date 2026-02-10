@@ -9,20 +9,28 @@
 import SwiftUI
 
 struct NotificationView: View {
-    @State private var reminder: Bool = false
-    @State private var complete: Bool = false
+    @Environment(NavigationRouter<MyPageRoute>.self) var router
+    @State private var viewModel = NotificationViewModel()
     
     var body: some View {
-        HeaderGroup
-        SettingGroup
-        Spacer()
+        VStack{
+            HeaderGroup
+            SettingGroup
+            Spacer()
+        }
+        .navigationBarBackButtonHidden()
+        .task {
+            viewModel.fetchReminderState()
+        }
     }
     
     // 헤더
     private var HeaderGroup: some View {
         ZStack{
             HStack{
-                Button(action:{print("뒤로가기")}){
+                Button(action:{
+                    router.pop()
+                }){
                     Image(systemName: "chevron.backward")
                         .resizable()
                         .frame(width: 11, height: 18)
@@ -43,12 +51,12 @@ struct NotificationView: View {
             reminderToggleRow(
                 title: "D-day 및 리마인더 알림 받기",
                 description: "종료일과 일주일 전에 \n리마인드 알림을 발송해요",
-                isOn: $reminder
+                isOn: $viewModel.reminder
             )
             reminderToggleRow(
                 title: "활동 완료 알림 받기",
                 description: "종료일과 종료일 이후에 알림을 발송하여\n활동 완료 등록을 도와드려요",
-                isOn: $complete
+                isOn: $viewModel.complete
             )
 
         }
@@ -90,4 +98,5 @@ private func reminderToggleRow(
 
 #Preview {
     NotificationView()
+        .environment(NavigationRouter<MyPageRoute>())
 }

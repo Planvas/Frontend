@@ -18,18 +18,16 @@ enum NotificationsAPI {
 }
 
 extension NotificationsAPI: APITargetType {
-    private static let notificationsPath = "/api/notifications"
-    
     var path: String {
         switch self {
         case .getNotification:
-            return "\(Self.notificationsPath)/settings"
+            return "/api/settings/reminders"
         case .patchNotification:
-            return "\(Self.notificationsPath)/settings"
+            return "/api/settings/reminders"
         case .postNotification:
-            return "\(Self.notificationsPath)/push-tokens"
+            return "/api/push-tokens"
         case .deleteNotification:
-            return "\(Self.notificationsPath)/push-tokens"
+            return "/api/push-tokens"
         }
     }
     
