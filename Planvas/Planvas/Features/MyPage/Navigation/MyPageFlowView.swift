@@ -20,7 +20,7 @@ struct MyPageFlowView: View {
                     case .calenderPage:
                         CalendarView()
                     case .alarmPage:
-                        EmptyView()
+                        NotificationView()
                     }
                 }
         }
