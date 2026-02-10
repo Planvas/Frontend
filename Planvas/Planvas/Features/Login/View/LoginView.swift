@@ -58,4 +58,5 @@ struct LoginView: View {
 
 #Preview {
     LoginView()
+        .environmentObject(DIContainer())
 }
