@@ -21,6 +21,9 @@ struct PlanvasApp: App {
               }
           }
           .environmentObject(container)
+          .onOpenURL { url in
+              GIDSignIn.sharedInstance.handle(url)
+          }
         }
     }
 }
