@@ -19,6 +19,9 @@ struct NotificationView: View {
             Spacer()
         }
         .navigationBarBackButtonHidden()
+        .task {
+            viewModel.fetchReminderState()
+        }
     }
     
     // 헤더
