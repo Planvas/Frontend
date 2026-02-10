@@ -48,15 +48,25 @@ struct LoginView: View {
                     get: { viewModel.isLoginSuccess },
                     set: { viewModel.isLoginSuccess = $0 }
                 )) {
-                    LoginSuccessView(viewModel: viewModel)
+                    LoginSuccessView()
                         .environmentObject(container)
+                        .environment(viewModel)
                 }
             }
         }
         .onChange(of: viewModel.isLoginSuccess) { _, isSuccess in
-            if isSuccess {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            guard isSuccess else { return }
+            // 로그인 성공 후 2초 뒤 온보딩·목표 상태에 따라 자동 라우팅 (LoginSuccessView 탭과 동일 로직)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                container.appState.isLoggedIn = true
+                let hasCompletedOnboarding = UserDefaults.standard.bool(forKey: OnboardingKeys.hasCompletedOnboarding)
+                let hasActiveGoal = UserDefaults.standard.bool(forKey: OnboardingKeys.hasActiveGoal)
+                if hasCompletedOnboarding && hasActiveGoal {
                     container.rootRouter.root = .main
+                } else {
+                    // TODO: 임시로 주석처리, 다음 버튼 완성되면 아래 main 지우고 해당 줄 주석 해제해주세요!
+                    container.rootRouter.root = .main
+//                    container.rootRouter.root = .onboarding
                 }
             }
         }
