@@ -16,6 +16,7 @@ enum CalendarAPIError: Error {
 }
 
 /// Calendar API 전용 네트워크 서비스 (APIClient). Repository가 의존.
+/// 모든 요청은 APIManager의 TokenPlugin을 통해 Authorization(Bearer) 헤더가 자동 부착됨.
 final class CalendarNetworkService: @unchecked Sendable {
     private let provider = APIManager.shared.createProvider(for: CalendarAPI.self)
 

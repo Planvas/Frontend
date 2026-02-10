@@ -12,6 +12,8 @@ import UIKit
 
 struct CalendarView: View {
     @EnvironmentObject private var viewModel: CalendarViewModel
+    /// 미연동 시 "일정 가져오기" 알림에서 연동 화면(CalendarSyncView)으로 이동하기 위해 Flow에서 설정
+    var onNeedCalendarSync: (() -> Void)?
     @State private var showScheduleSelection = false
     @State private var showImportAlert = false
     @State private var showAddEvent = false
@@ -115,7 +117,7 @@ struct CalendarView: View {
                     secondaryButtonTitle: "취소",
                     primaryButtonAction: {
                         showImportAlert = false
-                        showScheduleSelection = true
+                        onNeedCalendarSync?()
                     },
                     secondaryButtonAction: {
                         showImportAlert = false

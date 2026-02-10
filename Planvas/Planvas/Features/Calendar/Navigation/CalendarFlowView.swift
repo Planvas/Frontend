@@ -16,7 +16,7 @@ struct CalendarFlowView: View {
     var body: some View {
         Group {
             if isCalendarOnly {
-                CalendarView()
+                CalendarView(onNeedCalendarSync: { isCalendarOnly = false })
             } else {
                 NavigationStack(path: $router.path) {
                     CalendarSyncView(
