@@ -6,13 +6,14 @@
 //
 
 import Foundation
-import Combine
+import Observation
 
 @MainActor
-class ScheduleSelectionViewModel: ObservableObject {
-    @Published var schedules: [ImportableSchedule] = []
-    @Published var isLoading: Bool = false
-    @Published var errorMessage: String?
+@Observable
+final class ScheduleSelectionViewModel {
+    var schedules: [ImportableSchedule] = []
+    var isLoading: Bool = false
+    var errorMessage: String?
     
     private let repository: CalendarRepositoryProtocol
     

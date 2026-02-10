@@ -6,26 +6,27 @@
 //
 
 import Foundation
-import Combine
+import Observation
 
 @MainActor
-class CalendarViewModel: ObservableObject {
-    @Published var selectedDate: Date = Date()
-    
-    @Published var currentMonth: Date = {
+@Observable
+final class CalendarViewModel {
+    var selectedDate: Date = Date()
+
+    var currentMonth: Date = {
         let calendar = Calendar.current
         return calendar.date(from: calendar.dateComponents([.year, .month], from: Date())) ?? Date()
     }()
-    
+
     private let calendar = Calendar.current
     private let repository: CalendarRepositoryProtocol
-    
+
     let weekdays = ["일", "월", "화", "수", "목", "금", "토"]
-    
-    @Published private(set) var sampleEvents: [String: [Event]] = [:]
-    
+
+    private(set) var sampleEvents: [String: [Event]] = [:]
+
     /// Google 캘린더 연동 여부 (Repository 연동 상태에서 로드)
-    @Published private(set) var isCalendarConnected: Bool = false
+    private(set) var isCalendarConnected: Bool = false
     
     // MARK: - Initialization
     init(repository: CalendarRepositoryProtocol? = nil) {
@@ -43,6 +44,12 @@ class CalendarViewModel: ObservableObject {
         } catch {
             isCalendarConnected = false
         }
+    }
+
+    /// 구글 캘린더 연동 후 연동 상태 갱신 + 일정 목록 새로고침 (알림에서 바로 연동 시 사용)
+    func refreshAfterGoogleConnect() async {
+        await loadGoogleCalendarStatus()
+        await refreshEvents()
     }
     
     // MARK: - Computed Properties

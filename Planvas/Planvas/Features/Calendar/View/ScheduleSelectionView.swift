@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ScheduleSelectionView: View {
-    @StateObject private var viewModel = ScheduleSelectionViewModel()
+    @State private var viewModel = ScheduleSelectionViewModel()
     @Environment(\.dismiss) private var dismiss
     
     var onImport: (([ImportableSchedule]) -> Void)?

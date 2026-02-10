@@ -9,14 +9,22 @@ import SwiftUI
 
 struct CalendarFlowView: View {
     @State private var router = NavigationRouter<CalendarRoute>()
-    @StateObject private var viewModel = CalendarViewModel()
+    @State private var viewModel = CalendarViewModel()
     @State private var syncViewModel = CalendarSyncViewModel()
     @State private var isCalendarOnly = false
 
     var body: some View {
         Group {
             if isCalendarOnly {
-                CalendarView(onNeedCalendarSync: { isCalendarOnly = false })
+                CalendarView(
+                    onConnectGoogleCalendar: {
+                        Task {
+                            await syncViewModel.performGoogleCalendarConnect(onSuccess: {
+                                await viewModel.refreshAfterGoogleConnect()
+                            })
+                        }
+                    }
+                )
             } else {
                 NavigationStack(path: $router.path) {
                     CalendarSyncView(
@@ -31,7 +39,7 @@ struct CalendarFlowView: View {
             }
         }
         .environment(router)
-        .environmentObject(viewModel)
+        .environment(viewModel)
     }
 }
 
