@@ -8,40 +8,35 @@
 import SwiftUI
 
 struct CalendarSyncView: View {
-    @ObservedObject var viewModel: CalendarSyncViewModel
-    @State private var showScheduleSelection = false
+    var viewModel: CalendarSyncViewModel
 
     var onDirectInput: (() -> Void)?
     var onImportSchedules: (([ImportableSchedule]) -> Void)?
-    var onNeedGoogleLogin: (() -> Void)?
-    
+
+    private var scheduleSelectionBinding: Binding<Bool> {
+        Binding(
+            get: { viewModel.shouldOpenScheduleSelection },
+            set: { if !$0 { viewModel.dismissScheduleSelection() } }
+        )
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Spacer()
-            
-            // 제목 및 설명
             titleView
-            
             Spacer()
-            
-            // 캘린더 아이콘
             calendarIconView
-                       
             Spacer()
-            
-            // 하단 버튼들
             bottomButtonsView
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 20)
         .onAppear {
             viewModel.loadStatus()
-            viewModel.onConnectSuccess = { showScheduleSelection = true }
-            viewModel.onNeedGoogleLogin = onNeedGoogleLogin
         }
-        .sheet(isPresented: $showScheduleSelection) {
+        .sheet(isPresented: scheduleSelectionBinding) {
             ScheduleSelectionView { selectedSchedules in
-                showScheduleSelection = false
+                viewModel.dismissScheduleSelection()
                 onImportSchedules?(selectedSchedules)
             }
             .presentationDetents([.large])
