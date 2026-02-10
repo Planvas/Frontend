@@ -9,6 +9,7 @@ struct GoogleSignupResponse: Decodable {
 struct SignUpSuccess: Decodable {
     let message: String
     let token: String
+    let refreshToken: String?
     let expiresIn: Int
     let user: UserData?
 }
@@ -22,6 +23,7 @@ struct GoogleLoginResponse: Decodable {
 struct LoginSuccess: Decodable {
     let signupRequired: Bool
     let token: String?
+    let refreshToken: String?
     let expiresIn: Int?
     let user: UserData?
     // 회원가입이 필요할시
