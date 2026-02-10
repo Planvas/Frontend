@@ -1,14 +1,8 @@
-//
-//  LoginView.swift
-//  Planvas
-//
-//  Created by 정서영 on 1/14/26.
-//
-
 import SwiftUI
 
 struct LoginView: View {
     @StateObject private var viewModel = LoginViewModel()
+    @EnvironmentObject var container: DIContainer
     
     var body: some View {
         ZStack {
@@ -55,6 +49,9 @@ struct LoginView: View {
                         .environmentObject(viewModel)
                 }
             }
+        }
+        .onAppear {
+            viewModel.rootRouter = container.rootRouter
         }
     }
 }
