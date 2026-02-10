@@ -47,6 +47,7 @@ final class AuthManager {
                         }
                         
                     } else if let data = successData, let token = data.token {
+                        // TODO: - refreshToken 수정 필요
                         let userInfo = UserInfo(
                             accessToken: token,
                             refreshToken: token
