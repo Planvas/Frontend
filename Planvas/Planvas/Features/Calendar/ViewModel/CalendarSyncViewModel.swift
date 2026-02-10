@@ -102,7 +102,7 @@ final class CalendarSyncViewModel {
                             self.statusError = "Google 인증 코드를 받지 못했습니다."
                             return
                         }
-                        print("[CalendarSync] auth code 수신: \(code)")
+                        // print("[CalendarSync] auth code 수신: \(code)") 테스트용 추가, 추후 삭제
                         await self.connectGoogleCalendar(code: code, onSuccess: onSuccess)
                     }
                 }
