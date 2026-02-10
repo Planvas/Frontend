@@ -47,8 +47,17 @@ final class AuthManager {
                         }
                         
                     } else if let data = successData, let token = data.token {
-                        TokenStore.shared.accessToken = token
+                        // TODO: - refreshToken 수정 필요
+                        let userInfo = UserInfo(
+                            accessToken: token,
+                            refreshToken: token
+                        )
+                        
+                        let _ = KeychainManager.shared.saveSession(userInfo, for: "appNameUser")
+                        
                         completion(data, false)
+                        print("🔑 keychain accessToken:",
+                              TokenStore.shared.accessToken ?? "nil")
                     } else {
                         completion(nil, false)
                     }
