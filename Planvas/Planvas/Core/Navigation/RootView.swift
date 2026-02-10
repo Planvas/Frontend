@@ -9,7 +9,7 @@ struct RootView: View {
     }
     
     var body: some View {
-        switch container.rootRouter.root {
+        switch router.root {
         case .splash:
             ProgressView()
         case .login:
