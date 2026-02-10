@@ -7,8 +7,8 @@
 
 import Foundation
 
-/// 반복 옵션 설정을 위한 프로토콜
-protocol RepeatOptionConfigurable: ObservableObject {
+/// 반복 옵션 설정을 위한 프로토콜 (@Observable)
+protocol RepeatOptionConfigurable {
     var repeatType: RepeatType { get set }
     var selectedWeekdays: Set<Int> { get set }
     var weekdays: [String] { get }
