@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 struct LoginSuccessView: View {
     @EnvironmentObject var viewModel: LoginViewModel
@@ -29,6 +30,11 @@ struct LoginSuccessView: View {
                     .textStyle(.bold30)
                 }
             }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            viewModel.rootRouter?.root = .main
+            viewModel.rootRouter?.objectWillChange.send()
         }
     }
 }
