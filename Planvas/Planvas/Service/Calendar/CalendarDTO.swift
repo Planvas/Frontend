@@ -41,7 +41,7 @@ struct GoogleCalendarStateSuccess: Decodable {
     }
 }
 
-// MARK: - 구글 캘린더 일정 동기화
+// MARK: - 구글 캘린더 일정 동기화 (POST /api/integrations/google-calendar/sync, Swagger: success.savedCount)
 struct GoogleScheduleSyncResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
@@ -49,11 +49,10 @@ struct GoogleScheduleSyncResponse: Decodable {
 }
 
 struct GoogleScheduleSyncSuccess: Decodable {
-    let synced: Bool
-    let syncedCount: Int
+    let savedCount: Int
 }
 
-// MARK: - 구글 캘린더 가져올 일정 목록 조회
+// MARK: - 구글 캘린더 가져올 일정 목록 조회 (GET /api/integrations/google-calendar/events, Swagger: success.events[] id/summary/start/end)
 struct GoogleScheduleListResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
@@ -64,13 +63,45 @@ struct GoogleScheduleListSuccessDTO: Decodable {
     let events: [GoogleCalendarEventDTO]
 }
 
+/// Swagger: events[] 항목은 id, summary, start{}, end{} 또는 id, title. Google API 스타일 start/end는 { dateTime } 또는 { date }.
 struct GoogleCalendarEventDTO: Decodable {
-    let externalEventId: String
-    let title: String
-    let startAt: String
-    let endAt: String
-    let allDay: Bool
-    let recurrence: String?
+    var externalEventId: String { id }
+    var title: String { summary ?? titleValue ?? "" }
+    var startAt: String { startObj?.dateTime ?? startObj?.date ?? "" }
+    var endAt: String { endObj?.dateTime ?? endObj?.date ?? "" }
+    var allDay: Bool { startObj?.date != nil }
+    var recurrence: String? { recurrenceRule }
+    
+    let id: String
+    let summary: String?
+    let titleValue: String?
+    let startObj: GoogleCalendarTime?
+    let endObj: GoogleCalendarTime?
+    let recurrenceRule: String?
+    
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        summary = try c.decodeIfPresent(String.self, forKey: .summary)
+        titleValue = try c.decodeIfPresent(String.self, forKey: .titleValue)
+        startObj = try c.decodeIfPresent(GoogleCalendarTime.self, forKey: .startObj)
+        endObj = try c.decodeIfPresent(GoogleCalendarTime.self, forKey: .endObj)
+        recurrenceRule = try c.decodeIfPresent(String.self, forKey: .recurrenceRule)
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case summary
+        case titleValue = "title"
+        case startObj = "start"
+        case endObj = "end"
+        case recurrenceRule = "recurrence"
+    }
+}
+
+struct GoogleCalendarTime: Decodable {
+    let dateTime: String?
+    let date: String?
 }
 
 // MARK: - 월간 캘린더 조회
