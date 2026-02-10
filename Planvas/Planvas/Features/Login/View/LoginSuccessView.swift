@@ -1,10 +1,9 @@
 import SwiftUI
-import Combine
 
 struct LoginSuccessView: View {
+    var viewModel: LoginViewModel
     @EnvironmentObject var container: DIContainer
-    @EnvironmentObject var viewModel: LoginViewModel
-    
+
     var body: some View {
         ZStack {
             LinearGradient(

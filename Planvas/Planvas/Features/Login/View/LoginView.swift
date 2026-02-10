@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct LoginView: View {
-    @StateObject private var viewModel = LoginViewModel()
+    @State private var viewModel = LoginViewModel()
     @EnvironmentObject var container: DIContainer
     
     var body: some View {
@@ -44,14 +44,21 @@ struct LoginView: View {
                         viewModel.GoogleLogin()
                     })
                 .padding()
-                .fullScreenCover(isPresented: $viewModel.isLoginSuccess){
-                    LoginSuccessView()
-                        .environmentObject(viewModel)
+                .fullScreenCover(isPresented: Binding(
+                    get: { viewModel.isLoginSuccess },
+                    set: { viewModel.isLoginSuccess = $0 }
+                )) {
+                    LoginSuccessView(viewModel: viewModel)
+                        .environmentObject(container)
                 }
             }
         }
-        .onAppear {
-            viewModel.rootRouter = container.rootRouter
+        .onChange(of: viewModel.isLoginSuccess) { _, isSuccess in
+            if isSuccess {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    container.rootRouter.root = .main
+                }
+            }
         }
     }
 }
