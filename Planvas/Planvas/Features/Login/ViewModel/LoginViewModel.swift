@@ -1,9 +1,3 @@
-//
-//  LoginViewModel.swift
-//  Planvas
-//
-//  Created by 송민교 on 1/20/26.
-//
 import Foundation
 import GoogleSignIn
 import Combine
@@ -14,6 +8,8 @@ class LoginViewModel: ObservableObject {
     @Published var isSignupRequired = false
     @Published var userName: String = ""
     @Published var errorMessage: String? = nil
+    
+    var rootRouter: RootRouter?
     
     @MainActor
     func GoogleLogin() {
@@ -48,6 +44,7 @@ class LoginViewModel: ObservableObject {
         }
     }
     
+    // 서버로 idToken 전송
     private func requestServerAuth(idToken: String) {
         AuthManager.shared.login(idToken: idToken, completion: { [weak self] loginData, signupRequired in
             DispatchQueue.main.async {
@@ -56,9 +53,18 @@ class LoginViewModel: ObservableObject {
                 } else if let data = loginData {
                     self?.userName = data.user?.name ?? "사용자"
                     self?.isLoginSuccess = true
+                    
+                    if let router = self?.rootRouter {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                            router.root = .main
+                            self?.objectWillChange.send()
+                        }
+                    }
                 } else {
                     self?.errorMessage = "로그인 실패"
                 }
+                
+                
             }
         })
     }
