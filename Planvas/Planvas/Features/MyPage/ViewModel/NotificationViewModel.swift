@@ -23,8 +23,10 @@ class NotificationViewModel {
                 do {
                     let decodedData = try JSONDecoder().decode(NotificationResponse.self, from: response.data)
                     DispatchQueue.main.async {
-                        self.reminder = decodedData.success!.dDayReminderEnabled
-                        self.complete = decodedData.success!.activityCompleteReminderEnabled
+                        if let success = decodedData.success {
+                            self.reminder = success.dDayReminderEnabled
+                            self.complete = success.activityCompleteReminderEnabled
+                        }
                     }
                 } catch {
                     print("GetNotifications 디코더 오류: \(error)")
