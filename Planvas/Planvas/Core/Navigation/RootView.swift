@@ -1,19 +1,17 @@
-//
-//  RootView.swift
-//  Planvas
-//
-//  Created by 정서영 on 1/22/26.
-//
-
 import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject var container: DIContainer
+    @ObservedObject var router: RootRouter
+    
+    init(container: DIContainer) {
+        self.router = container.rootRouter
+    }
     
     var body: some View {
-        switch container.rootRouter.root {
+        switch router.root {
         case .splash:
-            InitOnboardingView()
+            ProgressView()
         case .login:
             LoginView()
         case .main:

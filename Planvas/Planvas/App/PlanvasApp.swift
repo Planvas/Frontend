@@ -1,10 +1,3 @@
-//
-//  PlanvasApp.swift
-//  Planvas
-//
-//  Created by 정서영 on 1/14/26.
-//
-
 import SwiftUI
 import GoogleSignIn
 
@@ -22,9 +15,9 @@ struct PlanvasApp: App {
         WindowGroup {
             Group {
               if hasSeenOnboarding {
-                RootView()
+                RootView(container: container)
               } else {
-                InitOnboardingView()
+                SplashView()
               }
           }
           .environmentObject(container)
