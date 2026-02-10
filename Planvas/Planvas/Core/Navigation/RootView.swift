@@ -14,6 +14,8 @@ struct RootView: View {
             ProgressView()
         case .login:
             LoginView()
+        case .onboarding:
+            OnboardingFlowView()
         case .main:
             TabBar()
         }

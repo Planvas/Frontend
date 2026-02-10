@@ -10,5 +10,6 @@ import Foundation
 enum RootRoute {
     case splash
     case login
+    case onboarding
     case main
 }
