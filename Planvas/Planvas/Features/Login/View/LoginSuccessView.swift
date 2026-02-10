@@ -37,9 +37,9 @@ struct LoginSuccessView: View {
 //            viewModel.rootRouter?.root = .main
 //            viewModel.rootRouter?.objectWillChange.send()
             let hasCompletedOnboarding =
-                UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+                UserDefaults.standard.bool(forKey: OnboardingKeys.hasCompletedOnboarding)
             let hasActiveGoal =
-                UserDefaults.standard.bool(forKey: "hasActiveGoal")
+                UserDefaults.standard.bool(forKey: OnboardingKeys.hasActiveGoal)
 
             // 온보딩을 이미 완료했고, 현재 활성화된 목표가 있는 경우 → 바로 메인 화면으로 이동
             if hasCompletedOnboarding && hasActiveGoal {
