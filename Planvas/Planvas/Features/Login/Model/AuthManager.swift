@@ -19,6 +19,7 @@ final class AuthManager {
             switch result {
             case .success(let response):
                 guard (200..<300).contains(response.statusCode) else {
+                    
                     print("로그인 요청 실패: 상태코드 \(response.statusCode)")
                     completion(nil, false)
                     return
@@ -34,6 +35,7 @@ final class AuthManager {
                                 let convertedData = LoginSuccess(
                                     signupRequired: false,
                                     token: signupData.token,
+                                    refreshToken: signupData.refreshToken,
                                     expiresIn: signupData.expiresIn,
                                     user: signupData.user,
                                     provider: signupData.user?.provider,
@@ -46,11 +48,10 @@ final class AuthManager {
                             }
                         }
                         
-                    } else if let data = successData, let token = data.token {
-                        // TODO: - refreshToken 수정 필요
+                    } else if let data = decodedData.success  {
                         let userInfo = UserInfo(
-                            accessToken: token,
-                            refreshToken: token
+                            accessToken: data.token,
+                            refreshToken: data.refreshToken
                         )
                         
                         let _ = KeychainManager.shared.saveSession(userInfo, for: "appNameUser")
@@ -86,7 +87,13 @@ final class AuthManager {
                 do {
                     let decodedData = try JSONDecoder().decode(GoogleSignupResponse.self, from: response.data)
                     if let data = decodedData.success {
-                        TokenStore.shared.accessToken = data.token
+                        let userInfo = UserInfo(
+                            accessToken: data.token,
+                            refreshToken: data.refreshToken
+                        )
+                        
+                        let _ = KeychainManager.shared.saveSession(userInfo, for: "appNameUser")
+                        
                         print("회원가입 및 로그인 성공")
                         completion(data, nil)
                     } else {
