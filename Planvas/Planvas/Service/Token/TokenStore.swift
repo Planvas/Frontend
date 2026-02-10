@@ -20,10 +20,12 @@ class TokenStore: TokenProviding {
             return userInfo.accessToken
         }
         set {
-            guard var userInfo = keyChain.loadSession(for: userSession) else { return }
+            var userInfo = keyChain.loadSession(for: userSession) ?? UserInfo(accessToken: nil, refreshToken: nil)
             userInfo.accessToken = newValue
             if keyChain.saveSession(userInfo, for: userSession) {
                 print("유저 액세스 토큰 갱신됨: \(String(describing: newValue))")
+            } else {
+                print("유저 액세스 토큰 Keychain 저장 실패")
             }
         }
     }
@@ -33,12 +35,13 @@ class TokenStore: TokenProviding {
             guard let userInfo = keyChain.loadSession(for: userSession) else { return nil }
             return userInfo.refreshToken
         }
-        
         set {
-            guard var userInfo = keyChain.loadSession(for: userSession) else { return }
+            var userInfo = keyChain.loadSession(for: userSession) ?? UserInfo(accessToken: nil, refreshToken: nil)
             userInfo.refreshToken = newValue
             if keyChain.saveSession(userInfo, for: userSession) {
                 print("유저 리프레시 갱신됨")
+            } else {
+                print("유저 리프레시 Keychain 저장 실패")
             }
         }
     }
