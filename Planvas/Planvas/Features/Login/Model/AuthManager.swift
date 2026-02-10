@@ -18,6 +18,11 @@ final class AuthManager {
         provider.request(.googleLogin(idToken: idToken)) { result in
             switch result {
             case .success(let response):
+                guard (200..<300).contains(response.statusCode) else {
+                    print("로그인 요청 실패: 상태코드 \(response.statusCode)")
+                    completion(nil, false)
+                    return
+                }
                 do {
                     let decodedData = try JSONDecoder().decode(GoogleLoginResponse.self, from: response.data)
                     let successData = decodedData.success
@@ -37,7 +42,7 @@ final class AuthManager {
                                 completion(convertedData, false)
                             } else {
                                 print("자동 회원가입 실패")
-                                completion(nil, true)
+                                completion(nil, false)
                             }
                         }
                         
@@ -64,6 +69,11 @@ final class AuthManager {
         provider.request(.googleSignUp(idToken: idToken)) { result in
             switch result {
             case .success(let response):
+                guard (200..<300).contains(response.statusCode) else {
+                    print("회원가입 요청 실패: 상태코드 \(response.statusCode)")
+                    completion(nil, nil)
+                    return
+                }
                 do {
                     let decodedData = try JSONDecoder().decode(GoogleSignupResponse.self, from: response.data)
                     if let data = decodedData.success {
@@ -71,7 +81,7 @@ final class AuthManager {
                         print("회원가입 및 로그인 성공")
                         completion(data, nil)
                     } else {
-                        completion(nil, nil)
+                        completion(nil, MoyaError.statusCode(response))
                     }
                 } catch {
                     completion(nil, error)
