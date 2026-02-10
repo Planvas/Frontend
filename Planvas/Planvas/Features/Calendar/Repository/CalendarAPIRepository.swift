@@ -30,18 +30,28 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         return dayDTO.items.map { mapToEvent(item: $0, date: dayDTO.date) }
     }
 
-    /// 날짜 범위 내 모든 일정 조회 (구간 내 날짜별 getDay 호출 후 합침)
+    /// 날짜 범위 내 모든 일정 조회. 월간 뷰 등에서 N일 치를 한 번에 가져올 때 사용.
+    /// GET /api/calendar/month는 날짜별 메타데이터만 반환하므로, 일정 본문은 GET /api/calendar/day로만 조회 가능.
+    /// 요청 수는 그대로이되 TaskGroup으로 날짜별 호출을 병렬 처리해 체감 지연을 줄임.
     func getEvents(from startDate: Date, to endDate: Date) async throws -> [Event] {
-        var allEvents: [Event] = []
+        var dates: [Date] = []
         var current = calendar.startOfDay(for: startDate)
         let endDay = calendar.startOfDay(for: endDate)
         while current <= endDay {
-            let events = try await getEvents(for: current)
-            allEvents.append(contentsOf: events)
+            dates.append(current)
             guard let next = calendar.date(byAdding: .day, value: 1, to: current) else { break }
             current = next
         }
-        return allEvents
+        return try await withThrowingTaskGroup(of: [Event].self) { group in
+            for date in dates {
+                group.addTask { try await self.getEvents(for: date) }
+            }
+            var allEvents: [Event] = []
+            for try await events in group {
+                allEvents.append(contentsOf: events)
+            }
+            return allEvents
+        }
     }
 
     /// 일정 추가: 고정 일정(반복) → fixed-schedules, 반복 없음 → my-activities
@@ -65,8 +75,9 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         } else if let id = event.myActivityId {
             let dto = buildEditMyActivityRequest(from: event)
             try await schedulesService.patchMyActivity(id: id, dto)
+        } else {
+            throw CalendarRepositoryError.missingServerId(message: "수정할 일정에 서버 ID(fixedScheduleId/myActivityId)가 없습니다.")
         }
-        // 서버 ID 없으면 수정 API 호출 불가 (로컬 전용이면 no-op)
     }
 
     /// 일정 삭제: fixedScheduleId → DELETE fixed-schedules, myActivityId → DELETE my-activities
@@ -75,6 +86,8 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
             try await schedulesService.deleteSchedule(id: id)
         } else if let id = event.myActivityId {
             try await schedulesService.deleteMyActivity(id: id)
+        } else {
+            throw CalendarRepositoryError.missingServerId(message: "삭제할 일정에 서버 ID(fixedScheduleId/myActivityId)가 없습니다.")
         }
     }
 
@@ -84,7 +97,8 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         return events.map { mapToImportableSchedule($0) }
     }
 
-    /// 선택 일정 서버 동기화 (POST sync 호출, 가져오기 확정 시)
+    /// 선택 일정 서버 동기화 (POST sync 호출, 가져오기 확정 시).
+    /// TODO: 현재 서버 API는 선택 일정 목록을 받지 않고 전체 동기화만 지원합니다. schedules 파라미터는 미사용이며, 호출 시 전체 sync가 수행됩니다.
     func importSchedules(_ schedules: [ImportableSchedule]) async throws {
         _ = try await networkService.syncGoogleCalendar()
     }
@@ -117,14 +131,13 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         return fallback.date(from: string)
     }
 
-    /// 구글 일정 DTO → 가져오기 선택용 ImportableSchedule
+    /// 구글 일정 DTO → 가져오기 선택용 ImportableSchedule (Google 이벤트 ID는 UUID가 아니므로 String으로 보존)
     private func mapToImportableSchedule(_ dto: GoogleCalendarEventDTO) -> ImportableSchedule {
         let start = parseISO8601Date(dto.startAt) ?? Date()
         let end = parseISO8601Date(dto.endAt) ?? Date()
         let timeDesc = buildTimeDescription(allDay: dto.allDay, start: start, end: end, recurrence: dto.recurrence)
-        let id = UUID(uuidString: dto.externalEventId) ?? UUID()
         return ImportableSchedule(
-            id: id,
+            id: dto.externalEventId,
             title: dto.title,
             timeDescription: timeDesc,
             startDate: start,
@@ -133,15 +146,16 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         )
     }
 
-    /// 일간 일정 DTO → 캘린더 표시용 Event (날짜+시간 조합, 서버 ID 매핑)
+    /// 일간 일정 DTO → 캘린더 표시용 Event (날짜+시간 조합, 서버 ID 매핑).
+    /// itemId는 서버에서 숫자 문자열("123")로 내려오므로, 서버 ID는 Int(itemId)로 추출하고 Event.id는 동일 itemId에 항상 같은 UUID가 되도록 결정론적 생성.
     private func mapToEvent(item: CalendarItemDTO, date: String) -> Event {
         let (startDate, endDate) = parseDayTime(date: date, startTime: item.startTime, endTime: item.endTime)
         let timeString = item.startTime.isEmpty && item.endTime.isEmpty
             ? "하루종일"
             : "\(item.startTime) - \(item.endTime)"
-        let id = UUID(uuidString: item.itemId) ?? UUID()
         let isFixed = item.type == "FIXED_SCHEDULE"
         let serverId = Int(item.itemId)
+        let id = Self.stableUUID(from: "\(item.type)-\(item.itemId)")
         return Event(
             id: id,
             title: item.title,
@@ -157,6 +171,24 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
             fixedScheduleId: isFixed ? serverId : nil,
             myActivityId: isFixed ? nil : serverId
         )
+    }
+
+    /// itemId 등 문자열로부터 동일 입력에 대해 항상 같은 UUID 생성 (서버 항목 식별용)
+    private static func stableUUID(from string: String) -> UUID {
+        var h1 = Hasher()
+        h1.combine("planvas.calendar.event")
+        h1.combine(string)
+        let v1 = h1.finalize()
+        var h2 = Hasher()
+        h2.combine("planvas.calendar.event.2")
+        h2.combine(string)
+        let v2 = h2.finalize()
+        let high = UInt64(bitPattern: Int64(truncatingIfNeeded: v1))
+        let low = UInt64(bitPattern: Int64(truncatingIfNeeded: v2))
+        var bytes: [UInt8] = []
+        withUnsafeBytes(of: high) { bytes.append(contentsOf: $0) }
+        withUnsafeBytes(of: low) { bytes.append(contentsOf: $0) }
+        return UUID(uuid: (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7], bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]))
     }
 
     // MARK: - Event → Schedules DTO (고정 일정 / 내 활동)
@@ -175,6 +207,13 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         return f
     }()
 
+    private static let monthDayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "M/d"
+        f.locale = Locale(identifier: "ko_KR")
+        return f
+    }()
+
     /// 0=월…6=일 → DayOfWeek
     private static func dayOfWeek(from index: Int) -> DayOfWeek {
         switch index {
@@ -190,8 +229,8 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
     }
 
     private func buildCreateScheduleRequest(from event: Event) -> CreateScheduleRequestDTO {
-        let startDateStr = dateKeyString(from: event.startDate)
-        let endDateStr = dateKeyString(from: event.endDate)
+        let startDateStr = Self.dateOnlyFormatter.string(from: event.startDate)
+        let endDateStr = Self.dateOnlyFormatter.string(from: event.endDate)
         let defaultWeekday = (calendar.component(.weekday, from: event.startDate) - 2 + 7) % 7
         let weekdays = (event.repeatWeekdays ?? [defaultWeekday]).map { Self.dayOfWeek(from: $0) }
         let (startTime, endTime) = event.isAllDay ? ("", "") : (Self.timeFormatter.string(from: event.startDate), Self.timeFormatter.string(from: event.endDate))
@@ -206,8 +245,8 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
     }
 
     private func buildCreateMyActivityRequest(from event: Event) -> CreateMyActivityRequestDTO {
-        let startDateStr = dateKeyString(from: event.startDate)
-        let endDateStr = dateKeyString(from: event.endDate)
+        let startDateStr = Self.dateOnlyFormatter.string(from: event.startDate)
+        let endDateStr = Self.dateOnlyFormatter.string(from: event.endDate)
         let (startTime, endTime) = event.isAllDay ? ("", "") : (Self.timeFormatter.string(from: event.startDate), Self.timeFormatter.string(from: event.endDate))
         return CreateMyActivityRequestDTO(
             activityId: nil,
@@ -226,8 +265,8 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         let weekdays = (event.repeatWeekdays ?? []).map { Self.dayOfWeek(from: $0) }
         return EditScheduleRequestDTO(
             title: event.title,
-            startDate: dateKeyString(from: event.startDate),
-            endDate: dateKeyString(from: event.endDate),
+            startDate: Self.dateOnlyFormatter.string(from: event.startDate),
+            endDate: Self.dateOnlyFormatter.string(from: event.endDate),
             daysOfWeek: weekdays.isEmpty ? nil : weekdays,
             startTime: startTime,
             endTime: endTime
@@ -240,8 +279,8 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
             title: event.title,
             category: eventCategoryToTodoCategory(event.category),
             point: event.activityPoint,
-            startDate: dateKeyString(from: event.startDate),
-            endDate: dateKeyString(from: event.endDate),
+            startDate: Self.dateOnlyFormatter.string(from: event.startDate),
+            endDate: Self.dateOnlyFormatter.string(from: event.endDate),
             startTime: startTime,
             endTime: endTime
         )
@@ -258,54 +297,47 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
     /// 종일/시간형·반복 여부에 따라 표시용 시간 문자열 생성 (예: "09:00 - 18:00", "M/d - M/d (반복)")
     private func buildTimeDescription(allDay: Bool, start: Date, end: Date, recurrence: String?) -> String {
         if allDay {
-            let f = DateFormatter()
-            f.dateFormat = "M/d"
-            f.locale = Locale(identifier: "ko_KR")
             if Calendar.current.isDate(start, inSameDayAs: end) {
-                return f.string(from: start)
+                return Self.monthDayFormatter.string(from: start)
             }
-            return "\(f.string(from: start)) - \(f.string(from: end))"
+            return "\(Self.monthDayFormatter.string(from: start)) - \(Self.monthDayFormatter.string(from: end))"
         }
-        let f = DateFormatter()
-        f.dateFormat = "HH:mm"
-        let startStr = f.string(from: start)
-        let endStr = f.string(from: end)
+        let startStr = Self.timeFormatter.string(from: start)
+        let endStr = Self.timeFormatter.string(from: end)
         if let r = recurrence, !r.isEmpty { return "\(startStr) - \(endStr) (반복)" }
         return "\(startStr) - \(endStr)"
     }
 
+    private static let iso8601WithFraction: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+
+    private static let iso8601NoFraction: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+
     /// ISO8601 또는 yyyy-MM-dd 날짜 문자열 파싱 (Google events start/end: dateTime 또는 date)
     private func parseISO8601Date(_ string: String) -> Date? {
         guard !string.isEmpty else { return nil }
-        let full = ISO8601DateFormatter()
-        full.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let d = full.date(from: string) { return d }
-        let fallback = ISO8601DateFormatter()
-        fallback.formatOptions = [.withInternetDateTime]
-        if let d = fallback.date(from: string) { return d }
-        let dateOnly = DateFormatter()
-        dateOnly.dateFormat = "yyyy-MM-dd"
-        dateOnly.locale = Locale(identifier: "en_US_POSIX")
-        return dateOnly.date(from: string)
+        if let d = Self.iso8601WithFraction.date(from: string) { return d }
+        if let d = Self.iso8601NoFraction.date(from: string) { return d }
+        return Self.dateOnlyFormatter.date(from: string)
     }
 
     /// "yyyy-MM-dd" + "HH:mm" 조합으로 해당 날짜의 시작/종료 Date 생성 (종일이면 00:00~다음날 00:00)
     private func parseDayTime(date: String, startTime: String, endTime: String) -> (Date, Date) {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        let timeFormatter = DateFormatter()
-        timeFormatter.dateFormat = "HH:mm"
-        timeFormatter.locale = Locale(identifier: "en_US_POSIX")
-
-        let day = dateFormatter.date(from: date) ?? Date()
+        let day = Self.dateOnlyFormatter.date(from: date) ?? Date()
         if startTime.isEmpty && endTime.isEmpty {
             let start = calendar.startOfDay(for: day)
             let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start
             return (start, end)
         }
-        let start = combine(date: day, time: startTime, formatter: timeFormatter) ?? day
-        let end = combine(date: day, time: endTime, formatter: timeFormatter) ?? day
+        let start = combine(date: day, time: startTime, formatter: Self.timeFormatter) ?? day
+        let end = combine(date: day, time: endTime, formatter: Self.timeFormatter) ?? day
         return (start, end)
     }
 
@@ -318,8 +350,6 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
 
     /// Date → "yyyy-MM-dd" (API 쿼리/키용)
     private func dateKeyString(from date: Date) -> String {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        return f.string(from: date)
+        Self.dateOnlyFormatter.string(from: date)
     }
 }
