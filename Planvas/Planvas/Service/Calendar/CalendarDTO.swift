@@ -31,8 +31,14 @@ struct GoogleCalendarStateResponse: Decodable {
 
 struct GoogleCalendarStateSuccess: Decodable {
     let connected: Bool
-    let connectedAt: String
-    let lastSyncedAt: String
+    let connectedAt: String?
+    let lastSyncedAt: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case connected = "isConnected"
+        case connectedAt
+        case lastSyncedAt
+    }
 }
 
 // MARK: - 구글 캘린더 일정 동기화

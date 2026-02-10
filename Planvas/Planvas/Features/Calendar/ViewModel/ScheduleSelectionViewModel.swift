@@ -30,7 +30,7 @@ class ScheduleSelectionViewModel: ObservableObject {
     }
     
     // MARK: - Methods
-    /// 일정 목록 로드 (View onAppear 등에서 호출)
+    /// 일정 목록 로드 (연동 완료 후 ScheduleSelectionView onAppear에서 호출 → GET /api/integrations/google-calendar/events 로 일정 표시)
     func loadSchedules() {
         isLoading = true
         errorMessage = nil

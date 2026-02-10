@@ -23,6 +23,8 @@ final class CalendarSyncViewModel {
 
     /// 연동 성공 시 일정 선택 시트 노출 여부 (View는 이 값만 구독해 시트 표시)
     var shouldOpenScheduleSelection = false
+    /// 토큰 없을 때 로그인 시트만 띄우기 위해 Flow에서 설정
+    var onNeedLogin: (() -> Void)?
 
     func dismissScheduleSelection() {
         shouldOpenScheduleSelection = false
@@ -55,11 +57,12 @@ final class CalendarSyncViewModel {
         }
     }
 
-    /// "Google 캘린더 연동" 버튼 탭: 이미 연동됐으면 시트 오픈, 아니면 구글 로그인 띄워 serverAuthCode 받아 연동
+    /// "Google 캘린더 연동" 버튼 탭. 연동됐으면 일정 시트만 오픈. 연동 안 된 상태면 SDK로 auth code 받아 POST /api/integrations/google-calendar/connect 로 새로 연동.
     func performGoogleCalendarConnect() {
         statusError = nil
         guard TokenStore.shared.accessToken != nil else {
             statusError = "로그인이 필요합니다."
+            onNeedLogin?()
             return
         }
         isConnecting = true
@@ -72,7 +75,7 @@ final class CalendarSyncViewModel {
                     shouldOpenScheduleSelection = true
                     return
                 }
-                // 미연동: 이 시점에 구글 로그인으로 serverAuthCode 받아서 연동
+                // 연동 안 된 상태: SDK로 serverAuthCode 발급 → POST /api/integrations/google-calendar/connect { "code": "..." } 로 새 연동
                 guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                       let rootVC = windowScene.windows.first?.rootViewController else {
                     isConnecting = false
@@ -93,6 +96,7 @@ final class CalendarSyncViewModel {
                             self.statusError = "Google 인증 코드를 받지 못했습니다."
                             return
                         }
+                        print("[CalendarSync] auth code 수신: \(code)")
                         await self.connectGoogleCalendar(code: code)
                     }
                 }
