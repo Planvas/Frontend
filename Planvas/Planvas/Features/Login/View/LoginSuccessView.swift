@@ -2,6 +2,7 @@ import SwiftUI
 import Combine
 
 struct LoginSuccessView: View {
+    @EnvironmentObject var container: DIContainer
     @EnvironmentObject var viewModel: LoginViewModel
     
     var body: some View {
@@ -33,8 +34,20 @@ struct LoginSuccessView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            viewModel.rootRouter?.root = .main
-            viewModel.rootRouter?.objectWillChange.send()
+//            viewModel.rootRouter?.root = .main
+//            viewModel.rootRouter?.objectWillChange.send()
+            let hasCompletedOnboarding =
+                UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+            let hasActiveGoal =
+                UserDefaults.standard.bool(forKey: "hasActiveGoal")
+
+            // 온보딩을 이미 완료했고, 현재 활성화된 목표가 있는 경우 → 바로 메인 화면으로 이동
+            if hasCompletedOnboarding && hasActiveGoal {
+                container.rootRouter.root = .main
+            } else {
+                // 온보딩을 완료하지 않았거나 목표가 없는 경우 → 목표 설정 온보딩으로 이동
+                container.rootRouter.root = .onboarding
+            }
         }
     }
 }
