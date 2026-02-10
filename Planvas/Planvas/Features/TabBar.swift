@@ -22,7 +22,7 @@ struct TabBar: View {
                 .tabItem {
                     Label("활동 탐색", systemImage: "magnifyingglass")
                 }
-            MyPageView()
+            MyPageFlowView()
                 .tabItem {
                     Label("마이", systemImage: "person")
                 }

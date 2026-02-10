@@ -15,6 +15,7 @@ struct TokenPlugin: PluginType {
                 forHTTPHeaderField: "Authorization"
             )
         }
+        print("Authorization:", request.value(forHTTPHeaderField: "Authorization") ?? "없음")
         return request
     }
     
