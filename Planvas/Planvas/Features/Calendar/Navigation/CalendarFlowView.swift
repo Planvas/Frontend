@@ -10,9 +10,10 @@ import SwiftUI
 struct CalendarFlowView: View {
     @State private var router = NavigationRouter<CalendarRoute>()
     @StateObject private var viewModel = CalendarViewModel()
-    /// true이면 캘린더만 보이고, false이면 연동/직접 입력 화면
+    @StateObject private var syncViewModel = CalendarSyncViewModel()
     @State private var isCalendarOnly = false
-    
+    @State private var showLoginSheet = false
+
     var body: some View {
         Group {
             if isCalendarOnly {
@@ -20,19 +21,24 @@ struct CalendarFlowView: View {
             } else {
                 NavigationStack(path: $router.path) {
                     CalendarSyncView(
-                        onDirectInput: {
-                            isCalendarOnly = true
-                        },
+                        viewModel: syncViewModel,
+                        onDirectInput: { isCalendarOnly = true },
                         onImportSchedules: { schedules in
                             viewModel.importSchedules(schedules)
                             isCalendarOnly = true
-                        }
+                        },
+                        onNeedGoogleLogin: { showLoginSheet = true }
                     )
                 }
             }
         }
         .environment(router)
         .environmentObject(viewModel)
+        .sheet(isPresented: $showLoginSheet, onDismiss: {
+            syncViewModel.loadStatus()
+        }) {
+            LoginView()
+        }
     }
 }
 

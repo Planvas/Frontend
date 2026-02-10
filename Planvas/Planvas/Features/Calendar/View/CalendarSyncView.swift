@@ -8,13 +8,12 @@
 import SwiftUI
 
 struct CalendarSyncView: View {
-    @StateObject private var viewModel = CalendarSyncViewModel()
+    @ObservedObject var viewModel: CalendarSyncViewModel
     @State private var showScheduleSelection = false
-    
-    /// 직접 입력 시 캘린더 화면으로 이동
+
     var onDirectInput: (() -> Void)?
-    /// 가져오기 완료 시 선택 일정 전달 후 캘린더 화면으로 이동 (API 연동 시 서버 전달은 호출측에서 처리?)
     var onImportSchedules: (([ImportableSchedule]) -> Void)?
+    var onNeedGoogleLogin: (() -> Void)?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -35,9 +34,13 @@ struct CalendarSyncView: View {
         }
         .padding(.horizontal, 20)
         .padding(.bottom, 20)
+        .onAppear {
+            viewModel.loadStatus()
+            viewModel.onConnectSuccess = { showScheduleSelection = true }
+            viewModel.onNeedGoogleLogin = onNeedGoogleLogin
+        }
         .sheet(isPresented: $showScheduleSelection) {
             ScheduleSelectionView { selectedSchedules in
-                // 시트 닫은 뒤 선택 일정 전달하고 캘린더로 이동
                 showScheduleSelection = false
                 onImportSchedules?(selectedSchedules)
             }
@@ -101,10 +104,11 @@ struct CalendarSyncView: View {
     // MARK: - Bottom Buttons
     private var bottomButtonsView: some View {
         VStack(spacing: 12) {
-            // Google 캘린더 연동 버튼
+            // Google 캘린더 연동: 구글 로그인 → serverAuthCode → POST connect → 성공 시 일정 선택 시트
             SecondaryButton(title: "Google 캘린더 연동") {
-                showScheduleSelection = true
+                viewModel.performGoogleCalendarConnect()
             }
+            .disabled(viewModel.isConnecting)
             
             // 직접 입력 버튼 → 캘린더 화면으로 전환
             PrimaryButton(title: "직접 입력하고 관리할게요") {
@@ -124,5 +128,5 @@ struct CalendarSyncView: View {
 }
 
 #Preview {
-    CalendarSyncView()
+    CalendarSyncView(viewModel: CalendarSyncViewModel())
 }
