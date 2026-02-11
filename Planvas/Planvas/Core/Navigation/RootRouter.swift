@@ -25,6 +25,12 @@ final class RootRouter {
             .store(in: &cancellables)
     }
     
+    // MARK: - 로그인 상태 변화
+    func triggerLoginSuccess() {
+        self.appState.isLoggedIn = true
+        self.updateRootRoute()
+    }
+    
     // MARK: - 화면 전환 로직
     func updateRootRoute() {
         let hasSeenOnboarding = UserDefaults.standard.bool(forKey: OnboardingKeys.hasSeenOnboarding)
