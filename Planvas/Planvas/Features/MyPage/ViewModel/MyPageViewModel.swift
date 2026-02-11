@@ -6,6 +6,7 @@ import Observation
 import CombineMoya
 
 @Observable
+@MainActor
 class MyPageViewModel {
     var goalData: GoalSuccessResponse?
     var userData: UserSuccessResponse?
@@ -53,6 +54,7 @@ class MyPageViewModel {
     // MARK: - 현재 목표 조회
     func fetchGoal() {
         self.goalErrorMessage = nil
+        self.goalIsLoading = true
         provider.requestPublisher(.getCurrentGoal)
             .map(GoalResponse.self)
             .receive(on: DispatchQueue.main)
@@ -72,7 +74,9 @@ class MyPageViewModel {
                         self?.goalData = response.success
                         self?.goalErrorMessage = nil
                     } else {
-                        self?.goalErrorMessage = response.error?.reason ?? "알 수 없는 오류가 발생했습니다."
+                        let errorMessage = response.error?.reason ?? "알 수 없는 오류가 발생했습니다."
+                        self?.goalErrorMessage = errorMessage
+                        self?.handleError(errorMessage)
                     }
                 })
             .store(in: &cancellable)
@@ -81,6 +85,7 @@ class MyPageViewModel {
     // MARK: - 내 정보 조회
     func fetchUser() {
         self.userErrorMessage = nil
+        self.userIsLoading = true
         provider.requestPublisher(.getUserInfo)
             .map(UserResponse.self)
             .receive(on: DispatchQueue.main)
@@ -100,7 +105,9 @@ class MyPageViewModel {
                         self?.userData = response.success?.user
                         self?.userErrorMessage = nil
                     } else {
-                        self?.userErrorMessage = response.error?.reason ?? "알 수 없는 오류가 발생했습니다."
+                        let errorMessage = response.error?.reason ?? "알 수 없는 오류가 발생했습니다."
+                        self?.userErrorMessage = errorMessage
+                        self?.handleError(errorMessage)
                     }
                 })
             .store(in: &cancellable)
