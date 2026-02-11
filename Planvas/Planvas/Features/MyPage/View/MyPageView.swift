@@ -11,7 +11,7 @@ struct MyPageView: View {
         ZStack {
             backgroundCircle
             VStack {
-                if !viewModel.goalIsLoading {
+                if !viewModel.goalIsLoading && !viewModel.userIsLoading {
                     ScrollView {
                         VStack(spacing: 40) {
                             ProfileView(viewModel: viewModel)
@@ -21,7 +21,7 @@ struct MyPageView: View {
                         }
                     }
                     .scrollIndicators(.hidden)
-                } else if viewModel.goalIsLoading || viewModel.userIsLoading {
+                } else {
                     ProgressView().tint(.white)
                 }
             }
@@ -33,6 +33,7 @@ struct MyPageView: View {
                     .padding(.bottom, 50)
             }
         }
+        .animation(.easeInOut, value: viewModel.showToast)
         .overlay {
             if showCalendarAlert {
                 if viewModel.isCalendarConnected {
