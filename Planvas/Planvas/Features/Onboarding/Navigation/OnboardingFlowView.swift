@@ -55,7 +55,7 @@ struct OnboardingFlowView: View {
                         
                         // 메인 페이지
                         case .mainPage:
-                                MainView()
+                                TabBar()
                     }
                 }
         }
