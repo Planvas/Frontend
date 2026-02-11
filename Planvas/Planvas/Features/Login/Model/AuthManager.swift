@@ -8,12 +8,18 @@ final class AuthManager {
     
     private init() {}
     
-    // 현재 로그인상태 확인
+    // MARK: - 현재 로그인 상태 확인
     var isLogIn: Bool {
+        if TokenStore.shared.accessToken != nil { return true }
         return TokenStore.shared.accessToken != nil
     }
     
-    // 구글 로그인 및 필요시 자동 회원가입
+    // MARK: - 자동 로그인 상태 확인
+    func checkAutoLoginStatus() -> Bool {
+        return isLogIn
+    }
+    
+    // MARK: - 구글 로그인 및 필요시 자동 회원가입
     func login(idToken: String, completion: @escaping (LoginSuccess?, Bool) -> Void) { // (성공 데이터?, 회원가입 필요여부)
         provider.request(.googleLogin(idToken: idToken)) { result in
             switch result {
@@ -74,7 +80,7 @@ final class AuthManager {
         }
     }
     
-    // 구글 회원가입
+    // MARK: - 구글 회원가입
     private func signUp(idToken: String, completion: @escaping (SignUpSuccess?, Error?) -> Void) {
         provider.request(.googleSignUp(idToken: idToken)) { result in
             switch result {
@@ -109,7 +115,7 @@ final class AuthManager {
         }
     }
     
-    // 로그아웃
+    // MARK: - 로그아웃
     func logout() {
         TokenStore.shared.clearSession()
     }
