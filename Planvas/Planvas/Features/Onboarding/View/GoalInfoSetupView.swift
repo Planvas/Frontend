@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct GoalInfoSetupView: View {
-    @ObservedObject var viewModel: GoalSetupViewModel
+    @Environment(GoalSetupViewModel.self) private var viewModel
+    @Environment(LoginViewModel.self) private var loginVM
     @Environment(NavigationRouter<OnboardingRoute>.self) private var router
     
     // 버튼 활성화 조건: 이름이 있고 + 시작일이 있고 + 종료일이 있을 때
@@ -25,11 +26,11 @@ struct GoalInfoSetupView: View {
                 
                 Spacer().frame(height: 13)
                 
-                GoalNameCard(vm: viewModel)
+                GoalNameCard()
                 
                 Spacer().frame(height: 10)
                 
-                GoalPeriodCard(vm: viewModel)
+                GoalPeriodCard()
                 
                 Spacer()
                 
@@ -60,8 +61,8 @@ struct GoalInfoSetupView: View {
             
             // 이름 카드가 열려있거나, 이름이 아직 없을 때 (이름 설정히더록)
             if viewModel.expandedSection == .name || !isNameValid {
-                // TODO: 사용자 이름 적용
-                Text("지수님의")
+                // 사용자 이름 적용
+                Text("\(loginVM.userName.isEmpty ? "사용자" : loginVM.userName)의")
                     .textStyle(.semibold30)
                     .foregroundStyle(.black1)
 
@@ -101,7 +102,7 @@ struct GoalInfoSetupView: View {
 #Preview {
     let router = NavigationRouter<OnboardingRoute>()
     NavigationStack(path: .constant(router.path)) {
-        GoalInfoSetupView(viewModel: GoalSetupViewModel())
+        GoalInfoSetupView()
     }
     .environment(router)
 }

@@ -14,7 +14,7 @@ struct TabBar: View {
                 .tabItem {
                     Label("홈", systemImage: "house")
                 }
-            CalendarFlowView()
+            CalendarView()
                 .tabItem {
                     Label("캘린더", systemImage: "calendar")
                 }

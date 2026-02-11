@@ -1,37 +1,37 @@
 //
-//  Untitled.swift
+//  GoalSetupViewModel.swift
 //  Planvas
 //
 //  Created by 황민지 on 1/22/26.
 //
 
 import Foundation
-import Moya
-import Combine
+import Observation
 
-class GoalSetupViewModel: ObservableObject {
-    @Published var goalName: String = ""
-    
+@Observable
+@MainActor
+final class GoalSetupViewModel {
+    var goalName: String = ""
+
     // 20자 초과 체크 로직
-    @Published var isOverLimit: Bool = false
+    var isOverLimit: Bool = false
 
     // 확정된 날짜
-    @Published var startDate: Date?
-    @Published var endDate: Date?
-    
-    @Published var currentMonthIndex: Int = 0
-        
-    // 현재 열려있는 섹션을 추적 (없으면 nil) <- 이름 / 기간 카드 동시에 열리지 않게 하기 위해
+    var startDate: Date?
+    var endDate: Date?
+
+    var currentMonthIndex: Int = 0
+
+    // 현재 열려있는 섹션을 추적 (없으면 nil)
     enum ExpandedSection {
         case name, period
     }
-    
-    @Published var expandedSection: ExpandedSection? = nil
-    
+    var expandedSection: ExpandedSection? = nil
+
     let daysInWeek = ["일", "월", "화", "수", "목", "금", "토"]
     let today = Calendar.current.startOfDay(for: Date())
     let calendar = Calendar.current
-    
+
     // 성장 활동
     let growthActivityTypes: [ActivityType] = [
         .init(emoji: "🏆", title: "공모전"),
@@ -44,7 +44,7 @@ class GoalSetupViewModel: ObservableObject {
         .init(emoji: "📝", title: "자격증"),
         .init(emoji: "📖", title: "관련 독서"),
     ]
-    
+
     // 휴식 활동
     let restActivityTypes: [ActivityType] = [
         .init(emoji: "✈️", title: "여행"),
@@ -57,16 +57,16 @@ class GoalSetupViewModel: ObservableObject {
         .init(emoji: "🏟️", title: "스포츠 관람"),
         .init(emoji: "🕶️", title: "방탈출/VR"),
     ]
-    
+
     // 비율(0~10 step) 저장
-    @Published var ratioStep: Int = 5
-    
+    var ratioStep: Int = 5
+
     var growthPercent: Int { ratioStep * 10 }
     var restPercent: Int { 100 - (ratioStep * 10) }
-    
+
     // 관심 분야 목록 저장
-    @Published var selectedInterestIds: Set<UUID> = []
-    
+    var selectedInterestIds: Set<UUID> = []
+
     // 관심 분야
     let interestActivityTypes: [InterestActivityType] = [
         .init(emoji: "🖥️", title: "개발/IT"),
@@ -80,10 +80,9 @@ class GoalSetupViewModel: ObservableObject {
     ]
 
     // MARK: - 로직 함수
-    
+
     // 월 단위 시작일 계산
     func startOfCurrentMonth() -> Date {
-        // 실제 오늘(Date())을 기준으로 1일을 계산
         let components = calendar.dateComponents([.year, .month], from: Date())
         return calendar.date(from: components) ?? Date()
     }
@@ -102,10 +101,20 @@ class GoalSetupViewModel: ObservableObject {
 
     // 날짜 포맷팅 (M월 d일)
     func formatDate(_ date: Date?) -> String {
-        guard let date = date else { return "" }
+        guard let date else { return "" }
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ko_KR")
         formatter.dateFormat = "M월 d일"
+        return formatter.string(from: date)
+    }
+
+    // ✅ 서버 전송용 날짜 포맷 (yyyy-MM-dd)
+    func formatAPIDate(_ date: Date?) -> String {
+        guard let date else { return "" }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0) // 서버 기준이 UTC면 유지, 아니면 제거
+        formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: date)
     }
 
@@ -133,35 +142,25 @@ class GoalSetupViewModel: ObservableObject {
         while days.count < 42 { days.append(nil) }
         return days
     }
-    
+
     // GoalName 글자 수 제한 및 에러 로직
     func validateGoalName() {
-        // 20자 넘었는지 체크해서 에러 메시지
-        if goalName.count >= 20 {
-            isOverLimit = true
-        } else {
-            isOverLimit = false
-        }
-        
-        // 20자가 넘어가면 잘라내기
+        isOverLimit = goalName.count >= 20
         if goalName.count > 20 {
             goalName = String(goalName.prefix(20))
         }
     }
-    
-    // 관심 분야 목록에 추가하느냐 마느냐
+
+    // 관심 분야 토글
     func toggleInterest(_ id: UUID) {
         if selectedInterestIds.contains(id) {
             selectedInterestIds.remove(id)
             return
         }
-
-        // 최대 3개 제한
         guard selectedInterestIds.count < 3 else { return }
         selectedInterestIds.insert(id)
     }
 
-    // 선택 상태
     func isInterestSelected(_ id: UUID) -> Bool {
         selectedInterestIds.contains(id)
     }
