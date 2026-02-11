@@ -13,52 +13,73 @@ struct MainActivityItem: View {
     let index: Int
     
     var body: some View {
-        VStack(alignment: .leading) {
-            Text("\(index)")
-                .textStyle(.bold20)
-                .foregroundStyle(.primary1)
-                .padding(.bottom, 2)
-            Text(item.title)
-                .textStyle(.medium20)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.bottom, 2)
-            Text(item.subtitle)
-                .textStyle(.medium14)
-                .foregroundStyle(.primary1)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.bottom, 5)
-            Image(item.imageName)
-                .resizable()
-                .scaledToFill()
-                .frame(maxWidth: .infinity, maxHeight: 130, alignment: .top)
-                .clipped()
-                .padding(.bottom, 5)
+        VStack(alignment: .leading, spacing: 0) {
             
-            HStack{
-                Spacer()
-                // TODO: 상세 페이지 네비게이션 연결
-                Button(action: {
-                    // Navigate to detail
-                }) {
-                    Text("더 알아보기 >")
-                        .textStyle(.medium14)
-                        .foregroundStyle(.primary1)
-                }
+            VStack(alignment: .leading) {
+                Text("\(index)")
+                    .textStyle(.bold20)
+                    .foregroundStyle(.primary1)
+                    .padding(.bottom, 2)
+                    .padding(.top, 15)
+
+
+                Text(item.title)
+                    .textStyle(.medium20)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom, 2)
+
+                Text(item.subtitle)
+                    .textStyle(.medium14)
+                    .foregroundStyle(.primary1)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom, 5)
+
+                Image(item.imageName)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: .infinity, maxHeight: 130)
+                    .clipped()
             }
+            .padding(20)
+            
+            Spacer()
         }
         .frame(width: 233, height: 284)
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 15)
-                .fill(.subPurple)
+        .background(Color.subPurple)
+        
+        .overlay(alignment: .bottom) {
+            VStack(spacing: 0) {
+                
+                Rectangle()
+                    .fill(Color.primary1)
+                    .frame(height: 0.2)
+                
+                HStack {
+                    Spacer()
+                    Button {
+                        
+                    } label: {
+                        Text("더 알아보기 >")
+                            .textStyle(.medium14)
+                            .foregroundStyle(.primary1)
+                    }
+                }
+                .padding(20)
+                .frame(height: 39)
+                .frame(maxWidth: .infinity)
+                .background(Color.white)
+            }
+        }        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(.primary1, lineWidth: 0.2)
         )
-        .shadow(
-            color: .black20,
-            radius: 4,
-            x: 0,
-            y: 4
-        )
+        .shadow(color: .black20, radius: 6, x: 0, y: 4)
     }
+}
+
+#Preview{
+    MainView()
 }
