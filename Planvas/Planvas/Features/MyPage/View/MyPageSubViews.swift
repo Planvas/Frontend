@@ -171,5 +171,6 @@ struct DetailPageView: View {
             }
         }
         .padding(.horizontal, 0)
+        .padding(.bottom, 40)
     }
 }
