@@ -14,6 +14,8 @@ struct CalendarView: View {
     @Environment(CalendarViewModel.self) private var viewModel
     /// 미연동 시 "일정 가져오기" 알림에서 "Google 캘린더 연동" 탭 시 바로 연동 API 호출 + 일정 새로고침 (Sync 뷰 없음)
     var onConnectGoogleCalendar: (() -> Void)?
+    var onFinish: (() -> Void)?
+    
     @State private var showScheduleSelection = false
     @State private var showImportAlert = false
     @State private var showAddEvent = false
@@ -473,13 +475,14 @@ struct CalendarView: View {
             }
             
             PrimaryButton(title: "완료") {
-                // 완료 액션
+                // 완료 액션 - 완료 누르면 온보딩의 관심 분야 선택 뷰로 넘어가도록
+                onFinish?()
             }
         }
     }
 }
 
 #Preview {
-    CalendarView()
+    CalendarView(onFinish: {})
         .environment(CalendarViewModel())
 }
