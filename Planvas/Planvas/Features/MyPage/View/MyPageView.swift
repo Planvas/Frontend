@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 
 struct MyPageView: View {
-    @StateObject private var viewModel = MyPageViewModel()
+    @State private var viewModel = MyPageViewModel()
     @Environment(NavigationRouter<MyPageRoute>.self) var router
     
     var body: some View {
@@ -50,7 +50,6 @@ extension MyPageView {
             .offset(y: -500)
     }
 }
-
 #Preview {
-    MyPageFlowView()
+    return MyPageFlowView()
 }
