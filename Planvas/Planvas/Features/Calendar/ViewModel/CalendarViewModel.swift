@@ -7,6 +7,7 @@
 
 import Foundation
 import Observation
+import CryptoKit
 
 @MainActor
 @Observable
@@ -23,6 +24,9 @@ final class CalendarViewModel {
 
     let weekdays = ["일", "월", "화", "수", "목", "금", "토"]
 
+    /// 월간 API 결과 (날짜별 메타·프리뷰). 그리드 표시용.
+    private(set) var monthData: MonthlyCalendarSuccessDTO?
+    /// 날짜 클릭 시 로드한 상세 일정 (날짜 키 → Event[])
     private(set) var sampleEvents: [String: [Event]] = [:]
 
     /// Google 캘린더 연동 여부 (Repository 연동 상태에서 로드)
@@ -89,14 +93,17 @@ final class CalendarViewModel {
     }
     
     // MARK: - Methods
+    /// 그 날짜의 일정. 먼저 sampleEvents(상세 로드분), 없으면 월간 프리뷰로 표시.
     func getEvents(for date: Date) -> [Event] {
         let dateKey = dateKeyString(from: date)
-        return sampleEvents[dateKey] ?? []
+        if let loaded = sampleEvents[dateKey], !loaded.isEmpty { return loaded }
+        guard let day = monthData?.days.first(where: { $0.date == dateKey }) else { return [] }
+        return day.schedulesPreview.prefix(3).map { eventFromPreview($0, date: date) }
     }
     
+    /// 그 날짜의 이벤트 이름 표시용 (고정일정 포함, 다른 일정과 동일하게 제목 표시)
     func getDisplayEvents(for date: Date, isSelected: Bool) -> [Event] {
         let events = getSingleDayEvents(for: date)
-        // 있는 일정을 다 표시하되, 4개 이상이면 3개만 표시 (잘림)
         return Array(events.prefix(3))
     }
     
@@ -105,9 +112,10 @@ final class CalendarViewModel {
         getEvents(for: date).filter(\.isRepeating)
     }
     
-    /// 여러 날에 걸친 이벤트만 해당 날짜 구간으로 반환 (막대 표시용)
+    /// 여러 날에 걸친 이벤트만 해당 날짜 구간으로 반환 (막대 표시용). 고정일정은 제외.
     func getMultiDayEventSegments(for date: Date) -> [(event: Event, isStart: Bool, isEnd: Bool)] {
         getEvents(for: date)
+            .filter { !$0.isFixed }
             .filter { !calendar.isDate($0.startDate, inSameDayAs: $0.endDate) }
             .map { event in
                 let isStart = calendar.isDate(date, inSameDayAs: event.startDate)
@@ -130,6 +138,7 @@ final class CalendarViewModel {
         let isCurrentMonth = calendar.isDate(date, equalTo: currentMonth, toGranularity: .month)
         if isCurrentMonth {
             selectedDate = date
+            Task { await loadEventsForDate(date) }
         }
     }
     
@@ -153,6 +162,14 @@ final class CalendarViewModel {
             }
             Task { await refreshEvents() }
         }
+    }
+
+    /// 캘린더 탭 선택 시 오늘 날짜로 이동
+    func moveToToday() {
+        let today = Date()
+        currentMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: today)) ?? today
+        selectedDate = today
+        Task { await refreshEvents() }
     }
     
     func isDateInCurrentMonth(_ date: Date) -> Bool {
@@ -388,22 +405,32 @@ final class CalendarViewModel {
         }
     }
     
-    /// Repository에서 현재 월 이벤트를 가져와 sampleEvents에 반영 (API 연동 / 실패 시 롤백)
+    /// 월간 API 1회 호출 후, 선택된 날짜만 상세 조회 (날짜 클릭 시에는 loadEventsForDate)
     private func refreshEvents() async {
-        guard let monthInterval = calendar.dateInterval(of: .month, for: currentMonth) else {
-            return
-        }
+        let year = calendar.component(.year, from: currentMonth)
+        let month = calendar.component(.month, from: currentMonth)
         do {
-            let events = try await repository.getEvents(from: monthInterval.start, to: monthInterval.end)
-            let fetchedByDate = eventsToDictionary(events)
-            let monthKeys = dateKeys(from: monthInterval.start, to: monthInterval.end)
-            for key in monthKeys {
-                sampleEvents[key] = fetchedByDate[key] ?? []
-            }
-            // 빈 배열이 된 키 제거 (선택)
-            sampleEvents = sampleEvents.filter { !$0.value.isEmpty }
+            let monthResult = try await repository.getMonthCalendar(year: year, month: month)
+            monthData = monthResult
+            await loadEventsForDate(selectedDate)
         } catch {
-            print("이벤트 새로고침 실패: \(error)")
+            print("월간 캘린더 조회 실패: \(error)")
+        }
+    }
+
+    /// 해당 날짜 상세 일정 로드 (GET /api/calendar/day) 후 sampleEvents에 반영.
+    /// 딕셔너리 전체를 새로 할당해 @Observable이 변경을 감지하도록 함 (시간 정보가 반영된 목록이 UI에 표시됨).
+    func loadEventsForDate(_ date: Date) async {
+        let dateKey = dateKeyString(from: date)
+        do {
+            let events = try await repository.getEvents(for: date)
+            var next = sampleEvents
+            next[dateKey] = events
+            sampleEvents = next
+        } catch {
+            var next = sampleEvents
+            next[dateKey] = []
+            sampleEvents = next
         }
     }
     
@@ -424,5 +451,48 @@ final class CalendarViewModel {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: date)
+    }
+
+    /// 서버에서 색을 주지 않을 때 사용하는 팔레트 (Repository와 동일한 순서로 동일 itemId → 동일 색)
+    private static let serverEventColorPalette: [EventColorType] = [.purple2, .blue1, .red, .yellow, .blue2, .pink, .green, .blue3, .purple1]
+
+    /// 월간 API 프리뷰만 있을 때 그리드 표시용 Event 생성 (날짜 클릭 시 상세 로드로 대체됨)
+    /// endDate를 같은 날 23:59로 두어 getSingleDayEvents/이벤트 표시 영역에 포함되도록 함. 색은 itemId 기준 할당.
+    private func eventFromPreview(_ preview: SchedulePreviewDTO, date: Date) -> Event {
+        let start = calendar.startOfDay(for: date)
+        let end = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: date) ?? start
+        let id = CalendarViewModel.stableUUID(from: "preview-\(preview.itemId)-\(dateKeyString(from: date))")
+        return Event(
+            id: id,
+            title: preview.title,
+            time: "일정",
+            isFixed: preview.isFixed,
+            isAllDay: true,
+            color: preview.isFixed ? .purple1 : Self.colorForServerItem(itemId: preview.itemId, type: preview.type),
+            startDate: start,
+            endDate: end,
+            category: .none,
+            isCompleted: false,
+            isRepeating: preview.isFixed
+        )
+    }
+
+    private static func colorForServerItem(itemId: String, type: String) -> EventColorType {
+        var data = Data()
+        data.append(contentsOf: "\(type)-\(itemId)".utf8)
+        let hash = Insecure.SHA1.hash(data: data)
+        let index = hash.withUnsafeBytes { bytes in bytes.load(as: UInt64.self) }
+        let i = Int(truncatingIfNeeded: index) % serverEventColorPalette.count
+        return serverEventColorPalette[abs(i) % serverEventColorPalette.count]
+    }
+
+    private static func stableUUID(from string: String) -> UUID {
+        var data = Data()
+        data.append(contentsOf: string.utf8)
+        let hash = Insecure.SHA1.hash(data: data)
+        var bytes = Array(Array(hash).prefix(16))
+        bytes[6] = (bytes[6] & 0x0F) | 0x50
+        bytes[8] = (bytes[8] & 0x3F) | 0x80
+        return UUID(uuid: (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7], bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]))
     }
 }
