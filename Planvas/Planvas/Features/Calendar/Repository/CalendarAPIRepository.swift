@@ -155,8 +155,10 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         data.append(contentsOf: "\(type)-\(itemId)".utf8)
         let hash = Insecure.SHA1.hash(data: data)
         let index = hash.withUnsafeBytes { bytes in bytes.load(as: UInt64.self) }
-        let i = Int(truncatingIfNeeded: index) % serverEventColorPalette.count
-        return serverEventColorPalette[abs(i) % serverEventColorPalette.count]
+        // UInt64에서 모듈로 연산을 먼저 수행해 abs(Int.min) 오버플로우 방지
+        let paletteCount = UInt64(serverEventColorPalette.count)
+        let safeIndex = Int(index % paletteCount)
+        return serverEventColorPalette[safeIndex]
     }
 
     /// 일간 일정 DTO → 캘린더 표시용 Event (날짜+시간 조합, 서버 ID 매핑).
@@ -376,14 +378,18 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         return f
     }()
 
-    private func parseDayDateTimeAsLocal(_ string: String) -> Date? {
-        guard !string.isEmpty else { return nil }
-        if let d = Self.dayDateTimeAsLocalFormatter.date(from: string) { return d }
+    private static let dayDateTimeAsLocalFormatterNoFraction: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
         f.timeZone = TimeZone.current
         f.locale = Locale(identifier: "en_US_POSIX")
-        return f.date(from: string)
+        return f
+    }()
+
+    private func parseDayDateTimeAsLocal(_ string: String) -> Date? {
+        guard !string.isEmpty else { return nil }
+        if let d = Self.dayDateTimeAsLocalFormatter.date(from: string) { return d }
+        return Self.dayDateTimeAsLocalFormatterNoFraction.date(from: string)
     }
 
     /// "yyyy-MM-dd" + "HH:mm" 조합으로 해당 날짜의 시작/종료 Date 생성 (종일이면 00:00~다음날 00:00)
