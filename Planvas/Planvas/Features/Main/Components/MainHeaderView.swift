@@ -23,7 +23,7 @@ struct MainHeaderView: View {
                     .lineLimit(nil)
                     .textStyle(.semibold30)
                     .foregroundStyle( .black1)
-                    .padding(.top, 36)
+                    .padding(.top, viewModel.goalSetting == .ACTIVE ? 40 : 0)
                     .offset(y: viewModel.goalSetting == .ACTIVE ? 0 : 30)
                 
                 HStack{
@@ -51,7 +51,7 @@ struct MainHeaderView: View {
                     .opacity(viewModel.goalSetting == .ACTIVE ? 1 : 0)
                     .offset(y: -60)
                     Spacer()
-                    Image(.mainCharacter)
+                    Image(.character)
                         .offset(y: -40)
                 }
             }
@@ -140,7 +140,7 @@ struct MainHeaderView: View {
                             .fill(.black60)
                             .background(.ultraThinMaterial)
                             .clipShape(WaveBackground())
-
+                        
                         Rectangle()
                             .fill(.black60)
                             .background(.ultraThinMaterial)
@@ -150,16 +150,13 @@ struct MainHeaderView: View {
                     HeaderButtonGroup(goalSetting: viewModel.goalSetting)
                         .padding(20)
                     
-                    HStack{
-                        Image(.mainCharacter2)
-                            .offset(x: 10, y: 145)
-                        Spacer()
-                    }
+                    Spacer()
                 }
             }
             .offset(y: -180)
         }
     }
+
 }
 
 struct WaveBackground: Shape {
