@@ -1,10 +1,3 @@
-//
-//  OnboardingViewModel.swift
-//  Planvas
-//
-//  Created by 황민지 on 2/11/26.
-//
-
 import Foundation
 import Observation
 import Moya
@@ -24,14 +17,17 @@ final class OnboardingViewModel {
     var isLoading: Bool = false
     var errorMessage: String? = nil
 
-    // 유형별 비율 추천 목록
+    // 에러 나도 캘린더로 이동
+    var shouldNavigateToCalendar: Bool = false
+
+    // ratio presets
     var ratioPresets: [RatioPreset] = []
 
-    // 사용자가 선택한 프리셋 기억
+    // 선택 프리셋
     var selectedPresetId: Int? = nil
     var selectedPresetStep: Int? = nil
 
-    // MARK: - 목표 기간/이름 생성 (POST)
+    // MARK: - 목표 생성 (POST)
     func createGoal(
         title: String,
         startDate: String,
@@ -39,7 +35,6 @@ final class OnboardingViewModel {
         targetGrowthRatio: Int,
         targetRestRatio: Int
     ) {
-        // 입력값 최소 검증
         guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             errorMessage = "목표 이름이 비어있어요."
             return
@@ -76,52 +71,42 @@ final class OnboardingViewModel {
 
                         if let success = decoded.success {
                             self.createdGoalId = success.goalId
-                            print("목표 생성 성공, goalId:", success.goalId)
-                            return
-                        }
-
-                        let reason = decoded.error?.reason ?? "목표 생성 실패"
-                        self.errorMessage = reason
-                        print("목표 생성 실패:", reason)
-
-                        // 서버가 200으로 FAIL 바디를 내려주는 경우 대비
-                        if reason.contains("이미 진행 중인 목표") {
-                            self.fetchCurrentGoal()
+                            self.shouldNavigateToCalendar = true
+                        } else {
+                            self.errorMessage = decoded.error?.reason ?? "목표 생성 실패"
+                            self.shouldNavigateToCalendar = true
                         }
                     }
                 } catch {
-                    print("CreateGoal 디코딩 오류:", error)
                     DispatchQueue.main.async {
                         self.isLoading = false
-                        self.errorMessage = "CreateGoal 디코딩 오류"
+                        self.errorMessage = "응답 파싱 오류"
+                        self.shouldNavigateToCalendar = true
                     }
                 }
 
             case .failure(let error):
-                // 상태 변경은 메인으로
-                DispatchQueue.main.async {
-                    self.isLoading = false
-                }
+                let statusCode = error.response?.statusCode
 
-                // 409면 현재 목표 조회로 유도
-                if self.isHTTP409(error) {
+                if statusCode == 409 {
                     DispatchQueue.main.async {
-                        self.errorMessage = "이미 진행 중인 목표가 있어요. 기존 목표를 불러올게요."
+                        self.errorMessage = "이미 진행 중인 목표가 있어요. 캘린더로 이동할게요."
                     }
-                    self.fetchCurrentGoal()
+                    self.fetchCurrentGoal(fallbackToCalendar: true)
                     return
                 }
 
-                print("CreateGoal API 오류:", error)
                 DispatchQueue.main.async {
-                    self.errorMessage = "네트워크 오류가 발생했어요."
+                    self.isLoading = false
+                    self.errorMessage = "서버 오류가 발생했어요. 캘린더로 이동할게요."
+                    self.shouldNavigateToCalendar = true
                 }
             }
         }
     }
 
     // MARK: - 현재 목표 조회 (GET /goals/current)
-    func fetchCurrentGoal() {
+    func fetchCurrentGoal(fallbackToCalendar: Bool = false) {
         isLoading = true
         errorMessage = nil
         currentGoalId = nil
@@ -137,47 +122,50 @@ final class OnboardingViewModel {
                     DispatchQueue.main.async {
                         self.isLoading = false
 
-                        if let goalId = decoded.success?.goalId {
+                        if let success = decoded.success, let goalId = success.goalId {
                             self.currentGoalId = goalId
-                            print("현재 목표 조회 성공, goalId:", goalId)
                         } else {
-                            let reason = decoded.error?.reason ?? "현재 목표 조회 실패"
-                            self.errorMessage = reason
-                            print("현재 목표 조회 실패:", reason)
+                            self.errorMessage = decoded.error?.reason ?? "현재 목표 조회 실패"
+                        }
+
+                        if fallbackToCalendar {
+                            self.shouldNavigateToCalendar = true
                         }
                     }
                 } catch {
-                    print("GoalDetail 디코딩 오류:", error)
                     DispatchQueue.main.async {
                         self.isLoading = false
-                        self.errorMessage = "현재 목표 디코딩 오류"
+                        self.errorMessage = "현재 목표 응답 파싱 오류"
+                        if fallbackToCalendar {
+                            self.shouldNavigateToCalendar = true
+                        }
                     }
                 }
 
-            case .failure(let error):
-                print("getCurrentGoal API 오류:", error)
+            case .failure:
                 DispatchQueue.main.async {
                     self.isLoading = false
-                    self.errorMessage = "현재 목표 조회 네트워크 오류"
+                    self.errorMessage = "현재 목표 조회 실패(서버 오류)"
+                    if fallbackToCalendar {
+                        self.shouldNavigateToCalendar = true
+                    }
                 }
             }
         }
     }
 
-    // MARK: - 서버 전송용 날짜 포맷: "yyyy-MM-dd"
+    // MARK: - 서버 전송용 날짜 포맷 (yyyy-MM-dd)
     func formatDateForAPI(_ date: Date?) -> String {
         guard let date else { return "" }
-
         let formatter = DateFormatter()
         formatter.calendar = Calendar(identifier: .gregorian)
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
         formatter.dateFormat = "yyyy-MM-dd"
-
         return formatter.string(from: date)
     }
 
-    // MARK: - 유형별 비율 추천 목록 조회 (GET /goals/ratio-presets)
+    // MARK: - 프리셋 목록 조회 (GET /goals/ratio-presets)
     func fetchRatioPresets() {
         isLoading = true
         errorMessage = nil
@@ -195,23 +183,18 @@ final class OnboardingViewModel {
 
                         if let success = decoded.success {
                             self.ratioPresets = success.presets
-                            print("비율 추천 목록 조회 성공:", success.presets.count)
                         } else {
-                            let reason = decoded.error?.reason ?? "비율 추천 목록 조회 실패"
-                            self.errorMessage = reason
-                            print("비율 추천 목록 조회 실패:", reason)
+                            self.errorMessage = decoded.error?.reason ?? "비율 추천 목록 조회 실패"
                         }
                     }
                 } catch {
-                    print("RatioList 디코딩 오류:", error)
                     DispatchQueue.main.async {
                         self.isLoading = false
                         self.errorMessage = "RatioList 디코딩 오류"
                     }
                 }
 
-            case .failure(let error):
-                print("RatioList API 오류:", error)
+            case .failure:
                 DispatchQueue.main.async {
                     self.isLoading = false
                     self.errorMessage = "네트워크 오류가 발생했어요."
@@ -229,20 +212,5 @@ final class OnboardingViewModel {
     func clearSelectedPreset() {
         selectedPresetId = nil
         selectedPresetStep = nil
-    }
-
-    // MARK: - Helpers
-    private func isHTTP409(_ error: MoyaError) -> Bool {
-        // 1) response가 있으면 여기로 가장 깔끔하게 체크 가능
-        if let response = error.response, response.statusCode == 409 {
-            return true
-        }
-
-        // 2) underlying에 response가 같이 붙는 케이스
-        if case let .underlying(_, response) = error, response?.statusCode == 409 {
-            return true
-        }
-
-        return false
     }
 }

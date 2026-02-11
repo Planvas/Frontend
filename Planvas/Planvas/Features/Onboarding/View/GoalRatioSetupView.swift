@@ -77,13 +77,10 @@ struct GoalRatioSetupView: View {
         }
         .ignoresSafeArea(edges: .top)
         // TODO: 일단 기존 목표가 있어도 캘린더로 가도록
-        .onChange(of: onboardingVM.createdGoalId) { _, newValue in
-            guard newValue != nil else { return }
+        .onChange(of: onboardingVM.shouldNavigateToCalendar) { _, shouldGo in
+            guard shouldGo else { return }
             router.push(.calendar)
-        }
-        .onChange(of: onboardingVM.currentGoalId) { _, newValue in
-            guard newValue != nil else { return }
-            router.push(.calendar)
+            onboardingVM.shouldNavigateToCalendar = false
         }
     }
     
