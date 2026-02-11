@@ -47,5 +47,8 @@ struct CalendarFlowView: View {
 }
 
 #Preview {
+    let router = NavigationRouter<OnboardingRoute>()
+
     CalendarFlowView()
+        .environment(router)
 }
