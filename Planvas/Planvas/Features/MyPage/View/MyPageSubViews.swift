@@ -138,6 +138,7 @@ struct goalCardView: View {
 // MARK: - 상세 페이지 뷰
 struct DetailPageView: View {
     @Environment(NavigationRouter<MyPageRoute>.self) var router
+    @Binding var showCalendarAlert: Bool
     
     var body: some View {
         VStack(spacing: 40) {
@@ -151,7 +152,7 @@ struct DetailPageView: View {
            }
            MenuSection("연동 및 알림") {
                MenuButton(title: "캘린더 연동 설정", desc: "구글 캘린더 관리") {
-                   router.push(.calenderPage)
+                   showCalendarAlert = true
                }
                MenuButton(title: "알림 및 리마인더", desc: "D-day 및 완료 알림") {
                    router.push(.alarmPage)
