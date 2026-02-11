@@ -2,18 +2,22 @@ import Foundation
 import Combine
 import Moya
 import Alamofire
+import Observation
+import CombineMoya
 
-class MyPageViewModel: ObservableObject {
-    @Published var goalData: GoalSuccessResponse?
-    @Published var errorMessage: String?
-    @Published var isLoading: Bool = false
+@Observable
+class MyPageViewModel {
+    var goalData: GoalSuccessResponse?
+    var errorMessage: String?
+    var isLoading: Bool = false
     
-    private let provider = TokenProvider<MyPageRouter>(isStub: true)
+    private let provider = APIManager.shared.createProvider(for: MyPageRouter.self)
     private var cancellable = Set<AnyCancellable>()
     
     // MARK: - 현재 목표 조회
     func fetchGoal() {
         provider.requestPublisher(.getCurrentGoal)
+            .map(GoalResponse.self)
             .receive(on: DispatchQueue.main)
             .handleEvents(
                 receiveSubscription: { [weak self] _ in self?.isLoading = true },
@@ -35,28 +39,5 @@ class MyPageViewModel: ObservableObject {
                     }
                 })
             .store(in: &cancellable)
-    }
-    
-    // MARK: - 뷰에서 사용할 가공된 데이터
-    /// 시작/종료 날짜를 (년, 월, 일) 튜플로 반환
-    var startDate: (year: String, month: String, day: String)? {
-        guard let startDateString = goalData?.startDate else { return nil }
-        
-        let array = startDateString.split(separator: "-").map { String($0) }
-        
-        if array.count == 3 {
-            return (String(Int(array[0])!), String(Int(array[1])!), String(Int(array[2])!))
-        }
-        return nil
-    }
-    var endDate: (year: String, month: String, day: String)? {
-        guard let endDateString = goalData?.endDate else { return nil }
-        
-        let array = endDateString.split(separator: "-").map { String($0) }
-        
-        if array.count == 3 {
-            return (String(Int(array[0])!), String(Int(array[1])!), String(Int(array[2])!))
-        }
-        return nil
     }
 }
