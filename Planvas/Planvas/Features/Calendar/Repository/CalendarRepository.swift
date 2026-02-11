@@ -9,10 +9,13 @@ import Foundation
 
 /// Calendar 관련 데이터를 관리하는 repo
 protocol CalendarRepositoryProtocol {
-    /// 특정 날짜의 이벤트 목록을 가져옵니다
+    /// 월간 캘린더 조회 (GET /api/calendar/month) - 해당 월 날짜별 메타·프리뷰만 반환
+    func getMonthCalendar(year: Int, month: Int) async throws -> MonthlyCalendarSuccessDTO
+
+    /// 특정 날짜의 일정 목록을 가져옵니다 (GET /api/calendar/day) - 날짜 클릭 시 호출
     func getEvents(for date: Date) async throws -> [Event]
     
-    /// 특정 날짜 범위의 이벤트 목록을 가져옵니다
+    /// 특정 날짜 범위의 이벤트 목록을 가져옵니다 (여러 일간 조회용)
     func getEvents(from startDate: Date, to endDate: Date) async throws -> [Event]
     
     /// 이벤트를 추가합니다
@@ -70,6 +73,27 @@ final class CalendarRepository: CalendarRepositoryProtocol {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: date)
+    }
+
+    func getMonthCalendar(year: Int, month: Int) async throws -> MonthlyCalendarSuccessDTO {
+        let range = Calendar.current.range(of: .day, in: .month, for: Calendar.current.date(from: DateComponents(year: year, month: month)) ?? Date())!
+        let days = range.map { day -> CalendarDayDTO in
+            let dateStr = String(format: "%04d-%02d-%02d", year, month, day)
+            let hasKey = sampleEvents[dateStr] != nil
+            let list = sampleEvents[dateStr] ?? []
+            return CalendarDayDTO(
+                date: dateStr,
+                hasItems: hasKey,
+                itemCount: list.count,
+                schedulesPreview: list.prefix(3).map { CalendarRepository.preview(from: $0, itemId: "\($0.id)") },
+                moreCount: max(0, list.count - 3)
+            )
+        }
+        return MonthlyCalendarSuccessDTO(year: year, month: month, days: days)
+    }
+
+    private static func preview(from event: Event, itemId: String) -> SchedulePreviewDTO {
+        SchedulePreviewDTO(itemId: itemId, title: event.title, isFixed: event.isFixed, type: "MANUAL")
     }
     
     func getEvents(for date: Date) async throws -> [Event] {
