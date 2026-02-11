@@ -12,7 +12,8 @@ import Moya
 class MainViewModel: ObservableObject {
     // MARK: - 메인 페이지 목표 세팅 상태별 메세지
     // ACTIVE: 진행 중인 목표 존재, ENDED: 활동 기간 종료, NONE: 목표 없음
-    @Published var goalSetting: GoalSetting = .ACTIVE
+    
+    @Published var goalSetting: GoalSetting = .ENDED
     
     var stateTitle: String {
         switch goalSetting {

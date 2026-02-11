@@ -26,12 +26,23 @@ struct HeaderButtonGroup: View {
                     : "목표 설정하러 가기"
                 )
                 .textStyle(.semibold20)
-                .foregroundStyle(.black1)
+                .foregroundStyle(.fff)
                 .padding()
                 .frame(maxWidth: .infinity)
                 .background(
                     RoundedRectangle(cornerRadius: 15)
-                        .foregroundStyle(.subPurple)
+                        .foregroundStyle(.primary1)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(
+                            LinearGradient(
+                                colors: [.subPurple, .primary1],
+                                startPoint: UnitPoint(x: -0.1, y: 0),
+                                endPoint: UnitPoint(x: 0.3, y: 1)
+                            ),
+                            lineWidth: 1
+                        )
                 )
                 .padding(.vertical)
                 .padding(.top, 20)
