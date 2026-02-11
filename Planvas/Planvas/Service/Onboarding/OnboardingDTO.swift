@@ -9,7 +9,7 @@ import Foundation
 
 // MARK: - 목표 기간/이름 생성
 struct CreateGoalRequestDTO: Encodable {
-    let presetId: Int
+    let presetId: Int?
     let title: String
     let startDate: String
     let endDate: String
@@ -95,6 +95,7 @@ struct RatioPreset: Decodable {
     let description: String
     let growthRatio: Int
     let restRatio: Int
+    let recommendedFor: String
 }
 
 // MARK: - 목표 진행(현재 성장/휴식 비율) 조회

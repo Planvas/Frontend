@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct LoginView: View {
-    @State private var viewModel = LoginViewModel()
+    @Environment(LoginViewModel.self) private var viewModel
     @EnvironmentObject var container: DIContainer
     
     var body: some View {
@@ -50,7 +50,6 @@ struct LoginView: View {
                 )) {
                     LoginSuccessView()
                         .environmentObject(container)
-                        .environment(viewModel)
                 }
             }
         }
@@ -65,8 +64,8 @@ struct LoginView: View {
                     container.rootRouter.root = .main
                 } else {
                     // TODO: 임시로 주석처리, 다음 버튼 완성되면 아래 main 지우고 해당 줄 주석 해제해주세요!
-                    container.rootRouter.root = .main
-//                    container.rootRouter.root = .onboarding
+//                    container.rootRouter.root = .main
+                    container.rootRouter.root = .onboarding
                 }
             }
         }
