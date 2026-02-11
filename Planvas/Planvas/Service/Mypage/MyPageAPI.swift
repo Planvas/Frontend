@@ -11,9 +11,9 @@ extension MyPageRouter: APITargetType {
     var path: String {
         switch self {
         case .getCurrentGoal:
-            return "api/goals/current"
+            return "/api/goals/current"
         case .getUserInfo:
-            return "api/users/me"
+            return "/api/users/me"
         }
     }
     
