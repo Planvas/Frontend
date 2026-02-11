@@ -13,6 +13,7 @@ final class RootRouter {
     init(appState: AppState) {
         self.appState = appState
         
+        appState.isLoggedIn = AuthManager.shared.checkAutoLoginStatus()
         updateRootRoute()
 
         appState.$isLoggedIn
@@ -24,6 +25,13 @@ final class RootRouter {
             .store(in: &cancellables)
     }
     
+    // MARK: - 로그인 상태 변화
+    func triggerLoginSuccess() {
+        self.appState.isLoggedIn = true
+        self.updateRootRoute()
+    }
+    
+    // MARK: - 화면 전환 로직
     func updateRootRoute() {
         let hasSeenOnboarding = UserDefaults.standard.bool(forKey: OnboardingKeys.hasSeenOnboarding)
         let hasCompletedOnboarding = UserDefaults.standard.bool(forKey: OnboardingKeys.hasCompletedOnboarding)
@@ -33,10 +41,13 @@ final class RootRouter {
             root = .splash
         } else if !appState.isLoggedIn {
             root = .login // 건너뛰기 누른 직후엔 여기로 와야 함!
-        } else if hasCompletedOnboarding && hasActiveGoal {
-            root = .main // 로그인 + 목표 설정 완료 → 메인
         } else {
-            root = .onboarding // 로그인은 했지만 목표 설정 안 함
+            // 로그인 된 상태라면 온보딩 완료 여부 체크
+            if hasCompletedOnboarding && hasActiveGoal {
+                root = .main
+            } else {
+                root = .onboarding
+            }
         }
     }
 }
