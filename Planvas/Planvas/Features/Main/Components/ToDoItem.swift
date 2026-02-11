@@ -36,10 +36,11 @@ struct ToDoItem: View {
                                 .padding(.horizontal, 6)
                                 .background(
                                     RoundedRectangle(cornerRadius: 10)
-                                        .modifier(
-                                            GradientModifier(
-                                                startColor: .subPurple,
-                                                endColor: .primary1
+                                        .foregroundStyle(
+                                            LinearGradient(
+                                                gradient: Gradient(colors: [.subPurple, .primary1]),
+                                                startPoint: UnitPoint(x: -0.1, y: 0.2),
+                                                endPoint: UnitPoint(x: 0.8, y: 0.5)
                                             )
                                         )
                                 )
