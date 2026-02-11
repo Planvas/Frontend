@@ -221,17 +221,19 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         }
     }
 
+    /// 고정 일정 생성: 시작일·종료일·요일만 그대로 전달 (매일=월~일, 매주=선택 요일만)
     private func buildCreateScheduleRequest(from event: Event) -> CreateScheduleRequestDTO {
         let startDateStr = Self.dateOnlyFormatter.string(from: event.startDate)
-        let endDateStr = Self.dateOnlyFormatter.string(from: event.endDate)
-        let defaultWeekday = (calendar.component(.weekday, from: event.startDate) - 2 + 7) % 7
-        let weekdays = (event.repeatWeekdays ?? [defaultWeekday]).map { Self.dayOfWeek(from: $0) }
+        let endDateStr = Self.dateOnlyFormatter.string(from: event.repeatEndDate ?? event.startDate)
+        let daysOfWeek: [DayOfWeek] = event.repeatType == .daily
+            ? [.mon, .tue, .wed, .thu, .fri, .sat, .sun]
+            : (event.repeatWeekdays ?? [(calendar.component(.weekday, from: event.startDate) - 2 + 7) % 7]).map { Self.dayOfWeek(from: $0) }
         let (startTime, endTime) = event.isAllDay ? ("", "") : (Self.timeFormatter.string(from: event.startDate), Self.timeFormatter.string(from: event.endDate))
         return CreateScheduleRequestDTO(
             title: event.title,
             startDate: startDateStr,
             endDate: endDateStr,
-            daysOfWeek: weekdays.isEmpty ? [Self.dayOfWeek(from: defaultWeekday)] : weekdays,
+            daysOfWeek: daysOfWeek,
             startTime: startTime,
             endTime: endTime
         )
@@ -253,14 +255,17 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         )
     }
 
+    /// 고정 일정 수정: 시작일·종료일·요일만 그대로 전달
     private func buildEditScheduleRequest(from event: Event) -> EditScheduleRequestDTO {
         let (startTime, endTime) = event.isAllDay ? ("", "") : (Self.timeFormatter.string(from: event.startDate), Self.timeFormatter.string(from: event.endDate))
-        let weekdays = (event.repeatWeekdays ?? []).map { Self.dayOfWeek(from: $0) }
+        let daysOfWeek: [DayOfWeek]? = event.repeatType == .daily
+            ? [.mon, .tue, .wed, .thu, .fri, .sat, .sun]
+            : (event.repeatWeekdays ?? [(calendar.component(.weekday, from: event.startDate) - 2 + 7) % 7]).map { Self.dayOfWeek(from: $0) }
         return EditScheduleRequestDTO(
             title: event.title,
             startDate: Self.dateOnlyFormatter.string(from: event.startDate),
-            endDate: Self.dateOnlyFormatter.string(from: event.endDate),
-            daysOfWeek: weekdays.isEmpty ? nil : weekdays,
+            endDate: Self.dateOnlyFormatter.string(from: event.repeatEndDate ?? event.startDate),
+            daysOfWeek: daysOfWeek,
             startTime: startTime,
             endTime: endTime
         )
