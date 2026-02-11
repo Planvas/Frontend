@@ -2,6 +2,8 @@ import SwiftUI
 
 // MARK: - 프로필
 struct ProfileView: View {
+    var viewModel: MyPageViewModel
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 30) {
             Image("logo")
@@ -11,7 +13,7 @@ struct ProfileView: View {
                 
                 VStack(alignment: .leading) {
                     HStack {
-                        Text("김지수")
+                        Text(viewModel.userData?.name ?? "사용자")
                             .textStyle(.semibold20)
                         Text("님")
                             .textStyle(.regular18)
@@ -33,12 +35,11 @@ struct ProfileView: View {
 
 // MARK: - 목표
 struct goalCardView: View {
-    @ObservedObject var viewModel: MyPageViewModel
+    var viewModel: MyPageViewModel
     
     var body: some View {
-        
-        if let start = viewModel.startDate, let end = viewModel.endDate  {
-            VStack(alignment: .leading, spacing: 15) {
+        VStack(alignment: .leading, spacing: 15) {
+            if let goal = viewModel.goalData, let start = viewModel.goalData?.startTuple, let end = viewModel.goalData?.endTuple  {
                 Text("현재 목표 기간").textStyle(.semibold18)
                 
                 // 날짜 섹션
@@ -50,32 +51,47 @@ struct goalCardView: View {
                 
                 Divider().frame(height: 1)
                 
-                // TODO: - 서버에서 목표/현재 성장/휴식률 받아오도록 수정
                 // 성장 & 휴식 섹션
                 VStack(alignment: .leading, spacing: 15) {
-                    progressCapsule(title: "성장", color: Color.green2)
-                    progressCapsule(title: "휴식", color: Color.blue1)
+                    progressCapsule(
+                        title: "성장",
+                        color: Color.green2,
+                        actual: goal.currentGrowthRatio ?? 0,
+                        target: goal.growthRatio ?? 0
+                    )
+                    progressCapsule(
+                        title: "휴식",
+                        color: Color.blue1,
+                        actual: goal.currentRestRatio ?? 0,
+                        target: goal.restRatio ?? 0
+                    )
                 }
             }
-            .padding(24)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.white)
-                    .shadow(color: .gray888.opacity(0.25), radius: 10, x: 2, y: 5)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(Color.gray888, lineWidth: 0.3)
-            )
-            .frame(width: 350)
+            else {
+                VStack(spacing:10) {
+                    Text("진행 중인 목표가 없습니다")
+                        .textStyle(.semibold18)
+                        .foregroundColor(.gray444)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 30)
+            }
         }
+        .padding(24)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.white)
+                .shadow(color: .gray888.opacity(0.25), radius: 10, x: 2, y: 5)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(Color.gray888, lineWidth: 0.3)
+        )
+        .frame(width: 350)
     }
-    
     @ViewBuilder
     /// 성장/휴식 공통 캡슐 바
-    private func progressCapsule(title: String, color: Color) -> some View {
-        let target = 70
-        let actual = 40
+    private func progressCapsule(title: String, color: Color, actual: Int, target: Int) -> some View {
         var progress: CGFloat {
             guard target > 0 else { return 0 }
             return min(1.0, CGFloat(Double(actual) / Double(target)))
@@ -90,7 +106,21 @@ struct goalCardView: View {
                         Capsule()
                             .fill(color)
                             .frame(width: geo.size.width * progress)
+                        
+                        Text("\(actual)%")
+                            .font(.system(size: 14, weight: .bold))
+                            .padding(.top, 4)
+                            .foregroundColor(.white)
+                            .padding(.leading, 10)
+                            .opacity(progress > 0.1 ? 1 : 0) // 바가 너무 짧으면 텍스트 숨김
                     }
+                }
+                .overlay(alignment: .trailing) {
+                    // 바 외부 우측 텍스트 (목표 수치)
+                    Text("\(target)%")
+                        .font(.system(size: 14))
+                        .foregroundColor(.gray)
+                        .padding(.trailing, 10)
                 }
                 .frame(height: 25)
         }
@@ -110,12 +140,13 @@ struct goalCardView: View {
 // MARK: - 상세 페이지 뷰
 struct DetailPageView: View {
     @Environment(NavigationRouter<MyPageRoute>.self) var router
+    @Binding var showCalendarAlert: Bool
     
     var body: some View {
         VStack(spacing: 40) {
            MenuSection("목표 및 활동 관리") {
                MenuButton(title: "현재 목표 수정하기", desc: "비율 및 기간 변경") {
-                   router.push(.mainPage)
+                   router.push(.currentGoalPage)
                }
                MenuButton(title: "지난 시즌 리포트", desc: "히스토리 모아보기") {
                    router.push(.pastReportPage)
@@ -123,14 +154,18 @@ struct DetailPageView: View {
            }
            MenuSection("연동 및 알림") {
                MenuButton(title: "캘린더 연동 설정", desc: "구글 캘린더 관리") {
-                   router.push(.calenderPage)
+                   showCalendarAlert = true
                }
                MenuButton(title: "알림 및 리마인더", desc: "D-day 및 완료 알림") {
                    router.push(.alarmPage)
                }
             }
             MenuSection("서비스 정보") {
-                DetailPage(title: "로그아웃", description: nil)
+                MenuButton(title: "로그아웃", desc: nil) {
+                    AuthManager.shared.logout()
+                    router.reset()
+                    router.push(.loginPage)
+                }
             }
         }
         .padding(.horizontal, 0)
