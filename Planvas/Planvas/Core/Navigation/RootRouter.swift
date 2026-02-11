@@ -29,14 +29,25 @@ final class RootRouter {
         let hasCompletedOnboarding = UserDefaults.standard.bool(forKey: OnboardingKeys.hasCompletedOnboarding)
         let hasActiveGoal = UserDefaults.standard.bool(forKey: OnboardingKeys.hasActiveGoal)
 
+        // 자동 로그인
+        if AuthManager.shared.checkAutoLoginStatus() {
+            print("자동 로그인 성공: 토큰을 찾았습니다.")
+            appState.isLoggedIn = true
+        } else {
+            appState.isLoggedIn = false
+        }
+        
         if !hasSeenOnboarding {
             root = .splash
         } else if !appState.isLoggedIn {
             root = .login // 건너뛰기 누른 직후엔 여기로 와야 함!
-        } else if hasCompletedOnboarding && hasActiveGoal {
-            root = .main // 로그인 + 목표 설정 완료 → 메인
         } else {
-            root = .onboarding // 로그인은 했지만 목표 설정 안 함
+            // 로그인 된 상태라면 온보딩 완료 여부 체크
+            if hasCompletedOnboarding && hasActiveGoal {
+                root = .main
+            } else {
+                root = .onboarding
+            }
         }
     }
 }
