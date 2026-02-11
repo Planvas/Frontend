@@ -26,6 +26,8 @@ struct TabBar: View {
                 .tag(3)
         }
         .accentColor(.primary1)
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 
