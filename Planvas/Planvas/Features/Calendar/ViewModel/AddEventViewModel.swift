@@ -29,11 +29,14 @@ final class AddEventViewModel: RepeatOptionConfigurable {
             ) ?? date
             startDate = start
             endDate = Self.calendar.date(byAdding: .hour, value: 1, to: start) ?? start
+            repeatEndDate = Self.calendar.date(byAdding: .month, value: 1, to: start) ?? start
         }
     }
 
     var isRepeatEnabled: Bool = false
     var repeatType: RepeatType = .weekly
+    /// 반복 종료일 (날짜만, 반복 켜졌을 때만 사용)
+    var repeatEndDate: Date = Date()
     var selectedYearDuration: Int = 2
     var selectedWeekdays: Set<Int> = []
     var selectedColor: EventColorType = .red
@@ -43,6 +46,23 @@ final class AddEventViewModel: RepeatOptionConfigurable {
     
     var repeatOptionDisplay: String {
         repeatType.rawValue
+    }
+
+    /// 반복 일정일 때 종료일 선택 가능 범위(시작일 당일 23:59:59)
+    var endOfStartDate: Date {
+        Self.calendar.date(bySettingHour: 23, minute: 59, second: 59, of: startDate) ?? startDate
+    }
+
+    /// 반복 일정일 때 종료일을 시작일과 같은 날로 맞춤(종료 시간 유지). 시작일 변경 시 호출.
+    func syncEndDateToStartDay() {
+        guard isRepeatEnabled else { return }
+        let startDay = Self.calendar.startOfDay(for: startDate)
+        let endTime = Self.calendar.dateComponents([.hour, .minute], from: endDate)
+        let newEnd = Self.calendar.date(bySettingHour: endTime.hour ?? 0, minute: endTime.minute ?? 0, second: 0, of: startDay) ?? startDay
+        endDate = newEnd
+        if endDate < startDate {
+            endDate = Self.calendar.date(byAdding: .hour, value: 1, to: startDate) ?? startDate
+        }
     }
     
     let availableColors: [EventColorType] = [
@@ -68,8 +88,12 @@ final class AddEventViewModel: RepeatOptionConfigurable {
     
     func createEvent() -> Event {
         let timeString = isAllDay ? "하루종일" : "\(startDate.timeString()) - \(endDate.timeString())"
-        // 반복 종료일 = 사용자가 고른 종료일(날짜). API endDate로 그대로 전달
-        let repeatEnd: Date? = isRepeatEnabled ? Self.calendar.startOfDay(for: endDate) : nil
+        // 반복 일정은 시작일 == 종료일만 허용 (같은 날 기준으로 startTime/endTime만 사용)
+        let effectiveEndDate: Date = isRepeatEnabled && !Self.calendar.isDate(startDate, inSameDayAs: endDate)
+            ? Self.calendar.date(bySettingHour: Self.calendar.component(.hour, from: endDate), minute: Self.calendar.component(.minute, from: endDate), second: 0, of: startDate) ?? startDate
+            : endDate
+        // 반복 종료일 = 반복 종료일 선택값 (날짜만). API endDate로 전달
+        let repeatEnd: Date? = isRepeatEnabled ? Self.calendar.startOfDay(for: repeatEndDate) : nil
         // 매주/격주인데 요일 미선택 시 시작일 요일 하나로 설정 (해당 요일만 반복)
         let weekdays: [Int]? = {
             guard isRepeatEnabled else { return nil }
@@ -87,7 +111,7 @@ final class AddEventViewModel: RepeatOptionConfigurable {
             isAllDay: isAllDay,
             color: selectedColor,
             startDate: startDate,
-            endDate: endDate,
+            endDate: effectiveEndDate,
             category: .none,
             isCompleted: false,
             isRepeating: isRepeatEnabled,
