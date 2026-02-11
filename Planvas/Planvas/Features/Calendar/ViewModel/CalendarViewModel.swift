@@ -482,8 +482,10 @@ final class CalendarViewModel {
         data.append(contentsOf: "\(type)-\(itemId)".utf8)
         let hash = Insecure.SHA1.hash(data: data)
         let index = hash.withUnsafeBytes { bytes in bytes.load(as: UInt64.self) }
-        let i = Int(truncatingIfNeeded: index) % serverEventColorPalette.count
-        return serverEventColorPalette[abs(i) % serverEventColorPalette.count]
+        // UInt64에서 모듈로 연산을 먼저 수행해 abs(Int.min) 오버플로우 방지
+        let paletteCount = UInt64(serverEventColorPalette.count)
+        let safeIndex = Int(index % paletteCount)
+        return serverEventColorPalette[safeIndex]
     }
 
     private static func stableUUID(from string: String) -> UUID {
