@@ -140,6 +140,7 @@ struct goalCardView: View {
 // MARK: - 상세 페이지 뷰
 struct DetailPageView: View {
     @Environment(NavigationRouter<MyPageRoute>.self) var router
+    @EnvironmentObject var container: DIContainer
     @Binding var showCalendarAlert: Bool
     
     var body: some View {
@@ -163,6 +164,7 @@ struct DetailPageView: View {
             MenuSection("서비스 정보") {
                 MenuButton(title: "로그아웃", desc: nil) {
                     AuthManager.shared.logout()
+                    container.appState.isLoggedIn = false
                     router.reset()
                     router.push(.loginPage)
                 }
