@@ -67,6 +67,7 @@ class MyPageViewModel {
                 receiveCompletion: { [weak self] completion in
                     if case let .failure(error) = completion {
                         self?.goalErrorMessage = error.localizedDescription
+                        self?.handleError(error.localizedDescription)
                     }
                 },
                 receiveValue: { [weak self] (response: GoalResponse) in
@@ -98,6 +99,7 @@ class MyPageViewModel {
                 receiveCompletion: { [weak self] completion in
                     if case let .failure(error) = completion {
                         self?.userErrorMessage = error.localizedDescription
+                        self?.handleError(error.localizedDescription)
                     }
                 },
                 receiveValue: { [weak self] (response: UserResponse) in
