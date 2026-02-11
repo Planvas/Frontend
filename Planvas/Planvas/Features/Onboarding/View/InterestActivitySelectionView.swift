@@ -9,9 +9,9 @@ import SwiftUI
 
 struct InterestActivitySelectionView: View {
     // TODO: 캘린더까지 연동 완료 후 이 페이지로 이동하도록 라우팅 연결해야 함
-    
-    @ObservedObject var viewModel: GoalSetupViewModel
-    
+    @Environment(LoginViewModel.self) private var loginVM
+    @Environment(GoalSetupViewModel.self) private var viewModel
+
     var onFinish: (() -> Void)?
         
     private var isStartEnabled: Bool {
@@ -85,8 +85,8 @@ struct InterestActivitySelectionView: View {
     // MARK: - 멘트 그룹
     private var InfoGroup: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // TODO: 사용자 이름 연동
-            Text("지수님,")
+            // 사용자 이름 연동
+            Text("\(loginVM.userName.isEmpty ? "사용자" : loginVM.userName)님,")
                 .textStyle(.semibold30)
                 .foregroundStyle(.black1)
             
@@ -151,5 +151,6 @@ struct InterestActivitySelectionView: View {
 }
 
 #Preview {
-    InterestActivitySelectionView(viewModel: GoalSetupViewModel())
+    InterestActivitySelectionView()
+        .environment(GoalSetupViewModel())
 }

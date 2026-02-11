@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct GoalNameCard: View {
-    @ObservedObject var vm: GoalSetupViewModel
+    @Environment(GoalSetupViewModel.self) private var vm
     @FocusState private var isFocused: Bool
     
     private var isExpanded: Bool {
@@ -20,6 +20,8 @@ struct GoalNameCard: View {
     }
 
     var body: some View {
+        @Bindable var vm = vm
+
         VStack(alignment: .leading, spacing: 0) {
 
             // 닫힌 상태
@@ -158,7 +160,8 @@ private struct GoalNameCard_Preview: View {
             Color.gray.opacity(0.1)
                 .ignoresSafeArea()
 
-            GoalNameCard(vm: GoalSetupViewModel())
+            GoalNameCard()
+                .environment(GoalSetupViewModel())
         }
     }
 }
