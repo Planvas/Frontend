@@ -5,8 +5,6 @@ struct MyPageView: View {
     @State private var viewModel = MyPageViewModel()
     @State private var showCalendarAlert = false
     
-    // 앱 전역에서 사용하고 있는 캘린더 뷰모델 가져오기
-    @Environment(CalendarViewModel.self) private var calendarViewModel
     @Environment(NavigationRouter<MyPageRoute>.self) var router
     
     var body: some View {
@@ -19,7 +17,7 @@ struct MyPageView: View {
                 } else if viewModel.goalData != nil {
                     ScrollView {
                         VStack(spacing: 40) {
-                            ProfileView()
+                            ProfileView(viewModel: viewModel)
                             goalCardView(viewModel: viewModel)
                             DetailPageView(showCalendarAlert: $showCalendarAlert)
                                 .environment(router)
@@ -33,7 +31,7 @@ struct MyPageView: View {
         }
         .overlay {
             if showCalendarAlert {
-                if calendarViewModel.isCalendarConnected {
+                if viewModel.isCalendarConnected {
                     CustomAlertView(
                         title: "캘린더를 동기화하고\n새 일정을 불러올까요?",
                         message: "현재 캘린더가 연동되어 있어요",
@@ -56,7 +54,7 @@ struct MyPageView: View {
             }
         }
         .task {
-            viewModel.fetchGoal()
+            await viewModel.fetchMyPageData()
         }
     }
 }
