@@ -6,33 +6,34 @@
 //
 
 import Foundation
-import Combine
+import Observation
 
 @MainActor
-class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
+@Observable
+final class EditEventViewModel: RepeatOptionConfigurable {
     // MARK: - 기본 이벤트 정보
-    @Published var eventName: String = ""
-    @Published var startDate: Date = Date()
-    @Published var endDate: Date = Date()
-    @Published var isAllDay: Bool = false
-    @Published var selectedColor: EventColorType = .red
-    
+    var eventName: String = ""
+    var startDate: Date = Date()
+    var endDate: Date = Date()
+    var isAllDay: Bool = false
+    var selectedColor: EventColorType = .red
+
     // MARK: - 반복 설정
-    @Published var repeatType: RepeatType = .weekly
-    @Published var selectedYearDuration: Int = 1
-    @Published var selectedWeekdays: Set<Int> = []
-    @Published var isRepeating: Bool = false
-    
+    var repeatType: RepeatType = .weekly
+    var selectedYearDuration: Int = 1
+    var selectedWeekdays: Set<Int> = []
+    var isRepeating: Bool = false
+
     // MARK: - 활동치 설정
-    @Published var isActivityEnabled: Bool = false
-    @Published var selectedActivityType: ActivityType = .growth
-    @Published var growthValue: Int = 20
-    @Published var restValue: Int = 20
-    @Published var currentGrowthAchievement: Int = 0
-    @Published var currentRestAchievement: Int = 0
-    @Published var targetGrowthAchievement: Int = 40
-    @Published var targetRestAchievement: Int = 40
-    
+    var isActivityEnabled: Bool = false
+    var selectedActivityType: ActivityType = .growth
+    var growthValue: Int = 20
+    var restValue: Int = 20
+    var currentGrowthAchievement: Int = 0
+    var currentRestAchievement: Int = 0
+    var targetGrowthAchievement: Int = 40
+    var targetRestAchievement: Int = 40
+
     // MARK: - 원본 이벤트 (수정 대상)
     private var originalEvent: Event?
     
@@ -117,6 +118,12 @@ class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
         self.isAllDay = event.isAllDay
         self.selectedColor = event.color
         self.isRepeating = event.isRepeating
+        self.repeatType = event.repeatType ?? .weekly
+        self.selectedWeekdays = Set(event.repeatWeekdays ?? [])
+        if let end = event.repeatEndDate {
+            let years = Calendar.current.dateComponents([.year], from: event.startDate, to: end).year ?? 1
+            self.selectedYearDuration = min(max(years, 1), 4)
+        }
         
         // 이벤트 카테고리에 따라 활동치 설정 초기화
         switch event.category {
@@ -166,8 +173,14 @@ class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
     
     // MARK: - Repeat Option Methods
     func handleRepeatTypeChange(to newType: RepeatType) {
-        if newType == .daily {
+        switch newType {
+        case .daily:
             selectedWeekdays = Set(0..<7)
+        case .weekly, .biweekly:
+            let weekdayIndex = (Calendar.current.component(.weekday, from: startDate) - 2 + 7) % 7
+            selectedWeekdays = [weekdayIndex]
+        case .monthly, .yearly:
+            break
         }
         repeatType = newType
     }
@@ -204,6 +217,8 @@ class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
             category = .none
         }
         
+        // 반복 종료일 = 사용자가 고른 종료일(날짜). API endDate로 그대로 전달
+        let repeatEnd: Date? = isRepeating ? Calendar.current.startOfDay(for: endDate) : (originalEvent?.repeatEndDate)
         return Event(
             id: originalEvent?.id ?? UUID(),
             title: eventName.isEmpty ? "이름 없음" : eventName,
@@ -215,7 +230,13 @@ class EditEventViewModel: ObservableObject, RepeatOptionConfigurable {
             endDate: endDate,
             category: category,
             isCompleted: originalEvent?.isCompleted ?? false,
-            isRepeating: isRepeating
+            isRepeating: isRepeating,
+            fixedScheduleId: originalEvent?.fixedScheduleId,
+            myActivityId: originalEvent?.myActivityId,
+            repeatWeekdays: isRepeating ? Array(selectedWeekdays).sorted() : nil,
+            repeatEndDate: repeatEnd,
+            repeatType: isRepeating ? repeatType : nil,
+            activityPoint: isActivityEnabled ? currentActivityValue : (originalEvent?.activityPoint ?? 10)
         )
     }
     

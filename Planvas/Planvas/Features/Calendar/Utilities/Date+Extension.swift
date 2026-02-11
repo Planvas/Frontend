@@ -40,11 +40,11 @@ extension Date {
         return formatter.string(from: self)
     }
     
-    /// 시간을 "h:mm a" 형식으로 포맷팅
+    /// 시간을 24시간 형식 "HH:mm"으로 포맷팅 (예: 21:00)
     func timeString() -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "h:mm a"
+        formatter.dateFormat = "HH:mm"
         return formatter.string(from: self)
     }
     

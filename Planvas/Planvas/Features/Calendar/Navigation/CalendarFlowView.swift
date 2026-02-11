@@ -9,20 +9,27 @@ import SwiftUI
 
 struct CalendarFlowView: View {
     @State private var router = NavigationRouter<CalendarRoute>()
-    @StateObject private var viewModel = CalendarViewModel()
-    /// true이면 캘린더만 보이고, false이면 연동/직접 입력 화면
+    @State private var viewModel = CalendarViewModel()
+    @State private var syncViewModel = CalendarSyncViewModel()
     @State private var isCalendarOnly = false
-    
+
     var body: some View {
         Group {
             if isCalendarOnly {
-                CalendarView()
+                CalendarView(
+                    onConnectGoogleCalendar: {
+                        Task {
+                            await syncViewModel.performGoogleCalendarConnect(onSuccess: {
+                                await viewModel.refreshAfterGoogleConnect()
+                            })
+                        }
+                    }
+                )
             } else {
                 NavigationStack(path: $router.path) {
                     CalendarSyncView(
-                        onDirectInput: {
-                            isCalendarOnly = true
-                        },
+                        viewModel: syncViewModel,
+                        onDirectInput: { isCalendarOnly = true },
                         onImportSchedules: { schedules in
                             viewModel.importSchedules(schedules)
                             isCalendarOnly = true
@@ -32,7 +39,7 @@ struct CalendarFlowView: View {
             }
         }
         .environment(router)
-        .environmentObject(viewModel)
+        .environment(viewModel)
     }
 }
 
