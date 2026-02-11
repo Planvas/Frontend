@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct EditEventView: View {
-    @StateObject private var viewModel = EditEventViewModel()
+    @State private var viewModel = EditEventViewModel()
     @Environment(\.dismiss) private var dismiss
     @State private var showStartDatePicker = false
     @State private var showEndDatePicker = false
     @State private var showRepeatPicker = false
+    @State private var showRepeatEndDatePicker = false
     
     let event: Event
     let startDate: Date
@@ -42,8 +43,9 @@ struct EditEventView: View {
                 
                 // 반복 옵션 선택
                 if showRepeatPicker {
-                    RepeatOptionPickerView(viewModel: viewModel)
+                    RepeatOptionPickerView<EditEventViewModel>(viewModel: viewModel)
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                    repeatEndDateView
                 }
                 
                 // 활동치 설정
@@ -178,6 +180,11 @@ struct EditEventView: View {
                 endDatePicker
             }
         }
+        .onChange(of: viewModel.startDate) {
+            if viewModel.isRepeating {
+                viewModel.syncEndDateToStartDay()
+            }
+        }
     }
     
     // MARK: - Start Date Picker
@@ -194,12 +201,12 @@ struct EditEventView: View {
         .padding(.vertical, 8)
     }
     
-    // MARK: - End Date Picker
+    // MARK: - End Date Picker (반복 일정일 때는 시작일 == 종료일만 가능)
     private var endDatePicker: some View {
         DatePicker(
             "",
             selection: $viewModel.endDate,
-            in: viewModel.startDate...,
+            in: viewModel.isRepeating ? (viewModel.startDate...viewModel.endOfStartDate) : (viewModel.startDate...Date.distantFuture),
             displayedComponents: viewModel.isAllDay ? [.date] : [.date, .hourAndMinute]
         )
         .datePickerStyle(.wheel)
@@ -215,6 +222,12 @@ struct EditEventView: View {
             withAnimation(.easeInOut(duration: 0.3)) {
                 showRepeatPicker.toggle()
                 viewModel.isRepeating = showRepeatPicker
+                if showRepeatPicker {
+                    if viewModel.repeatEndDate < viewModel.startDate {
+                        viewModel.repeatEndDate = Calendar.current.date(byAdding: .month, value: 1, to: viewModel.startDate) ?? viewModel.startDate
+                    }
+                    viewModel.syncEndDateToStartDay()
+                }
             }
         } label: {
             HStack(spacing: 12) {
@@ -243,6 +256,51 @@ struct EditEventView: View {
             }
         }
         .buttonStyle(PlainButtonStyle())
+    }
+
+    // MARK: - 반복 종료일 (날짜만 휠 선택, AddEventView와 동일 디자인)
+    private var repeatEndDateView: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Button {
+                withAnimation { showRepeatEndDatePicker.toggle() }
+            } label: {
+                HStack(spacing: 25) {
+                    Text("반복 종료")
+                        .textStyle(.semibold14)
+                        .foregroundColor(.gray444)
+                    
+                    HStack(spacing: 5) {
+                        Text(viewModel.repeatEndDate.yearStringWithSuffix())
+                            .textStyle(.semibold14)
+                            .foregroundColor(showRepeatEndDatePicker ? .primary1 : .gray444)
+                        Text(viewModel.repeatEndDate.monthDayString())
+                            .textStyle(.semibold14)
+                            .foregroundColor(showRepeatEndDatePicker ? .primary1 : .gray444)
+                    }
+                    .background(
+                        Rectangle()
+                            .fill(.subPurple)
+                            .frame(width: 130, height: 30)
+                            .cornerRadius(5)
+                    )
+                    
+                    Spacer()
+                }
+            }
+            .buttonStyle(.plain)
+            if showRepeatEndDatePicker {
+                DatePicker(
+                    "",
+                    selection: $viewModel.repeatEndDate,
+                    in: viewModel.startDate...,
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.wheel)
+                .labelsHidden()
+                .environment(\.locale, Locale(identifier: "ko_KR"))
+                .frame(maxWidth: .infinity)
+            }
+        }
     }
     
     // MARK: - Activity Settings Section

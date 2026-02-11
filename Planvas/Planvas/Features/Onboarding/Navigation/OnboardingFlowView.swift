@@ -9,8 +9,7 @@ import SwiftUI
 
 struct OnboardingFlowView: View {
     @State private var router = NavigationRouter<OnboardingRoute>()
-    @StateObject private var viewModel = GoalSetupViewModel()
-    
+    @EnvironmentObject private var container: DIContainer
     @State private var showOnboardingSuccessSheet = false
     
     var body: some View {
@@ -28,20 +27,27 @@ struct OnboardingFlowView: View {
                         
                         // 목표 이름, 기간 설정
                         case .info:
-                            GoalInfoSetupView(viewModel: viewModel)
+                            GoalInfoSetupView()
                         
                         // 목표 비율 설정
                         case .ratio:
-                            GoalRatioSetupView(viewModel: viewModel)
+                            GoalRatioSetupView()
                         
                         // 유형별 비율 추천 선택
                         case .recommendation:
-                            RecommendedRatioSelectionView(viewModel: viewModel)
+                            RecommendedRatioSelectionView()
                         
+                        // 캘린더
+                        case .calendar:
+                            CalendarFlowView(
+                                selectedTab: .constant(1),
+                                calendarTabTag: 1,
+                                onFinishFromOnboarding: { router.push(.interest) }
+                            )
+                            
                         // 관심 분야 선택
                         case .interest:
                             InterestActivitySelectionView(
-                                viewModel: viewModel,
                                 onFinish: {
                                     // 먼저 메인으로 push
                                     router.push(.mainPage)
@@ -55,11 +61,14 @@ struct OnboardingFlowView: View {
                         
                         // 메인 페이지
                         case .mainPage:
-                                TabBar()
+                            TabBar()
                     }
                 }
         }
         .environment(router)
+        .environment(container.goalVM)
+        .environment(container.onboardingVM)
+        .environment(container.loginVM)
         .sheet(isPresented: $showOnboardingSuccessSheet, onDismiss: {
             showOnboardingSuccessSheet = false
         }) {
@@ -73,4 +82,5 @@ struct OnboardingFlowView: View {
 
 #Preview {
     OnboardingFlowView()
+        .environmentObject(DIContainer())
 }

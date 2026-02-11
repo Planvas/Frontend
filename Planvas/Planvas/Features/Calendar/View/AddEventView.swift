@@ -8,13 +8,22 @@
 import SwiftUI
 
 struct AddEventView: View {
-    @StateObject private var viewModel = AddEventViewModel()
+    /// 캘린더에서 선택된 날짜 (있으면 해당 날짜 + 현재 시간으로 시작/종료일 설정)
+    var initialDate: Date?
+    var onAdd: ((Event) -> Void)?
+
+    @State private var viewModel: AddEventViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showRepeatPicker = false
     @State private var showStartDatePicker = false
     @State private var showEndDatePicker = false
-    
-    var onAdd: ((Event) -> Void)?
+    @State private var showRepeatEndDatePicker = false
+
+    init(initialDate: Date? = nil, onAdd: ((Event) -> Void)? = nil) {
+        self.initialDate = initialDate
+        self.onAdd = onAdd
+        _viewModel = State(initialValue: AddEventViewModel(initialDate: initialDate))
+    }
     
     var body: some View {
         ScrollView {
@@ -31,8 +40,9 @@ struct AddEventView: View {
                 
                 // 반복 옵션 선택
                 if showRepeatPicker {
-                    RepeatOptionPickerView(viewModel: viewModel)
+                    RepeatOptionPickerView<AddEventViewModel>(viewModel: viewModel)
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                    repeatEndDateView
                 }
                 
                 // 캘린더 컬러 선택
@@ -166,6 +176,11 @@ struct AddEventView: View {
                 endDatePicker
             }
         }
+        .onChange(of: viewModel.startDate) {
+            if viewModel.isRepeatEnabled {
+                viewModel.syncEndDateToStartDay()
+            }
+        }
     }
     
     // MARK: - Start Date Picker
@@ -182,12 +197,12 @@ struct AddEventView: View {
         .padding(.vertical, 8)
     }
     
-    // MARK: - End Date Picker
+    // MARK: - End Date Picker (반복 일정일 때는 시작일 == 종료일만 가능)
     private var endDatePicker: some View {
         DatePicker(
             "",
             selection: $viewModel.endDate,
-            in: viewModel.startDate...,
+            in: viewModel.isRepeatEnabled ? (viewModel.startDate...viewModel.endOfStartDate) : (viewModel.startDate...Date.distantFuture),
             displayedComponents: viewModel.isAllDay ? [.date] : [.date, .hourAndMinute]
         )
         .datePickerStyle(.wheel)
@@ -203,6 +218,12 @@ struct AddEventView: View {
             withAnimation(.easeInOut(duration: 0.3)) {
                 showRepeatPicker.toggle()
                 viewModel.isRepeatEnabled = showRepeatPicker
+                if showRepeatPicker {
+                    if viewModel.repeatEndDate < viewModel.startDate {
+                        viewModel.repeatEndDate = Calendar.current.date(byAdding: .month, value: 1, to: viewModel.startDate) ?? viewModel.startDate
+                    }
+                    viewModel.syncEndDateToStartDay()
+                }
             }
         } label: {
             HStack(spacing: 12) {
@@ -232,6 +253,51 @@ struct AddEventView: View {
             }
         }
         .buttonStyle(PlainButtonStyle())
+    }
+
+    // MARK: - 반복 종료일 (날짜만 휠 선택)
+    private var repeatEndDateView: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Button {
+                withAnimation { showRepeatEndDatePicker.toggle() }
+            } label: {
+                HStack(spacing: 25) {
+                    Text("반복 종료")
+                        .textStyle(.semibold14)
+                        .foregroundColor(.gray444)
+                    
+                    HStack(spacing:5){
+                        Text(viewModel.repeatEndDate.yearStringWithSuffix())
+                            .textStyle(.semibold14)
+                            .foregroundColor(showRepeatEndDatePicker ? .primary1 : .gray444)
+                        Text(viewModel.repeatEndDate.monthDayString())
+                            .textStyle(.semibold14)
+                            .foregroundColor(showRepeatEndDatePicker ? .primary1 : .gray444)
+                    }
+                    .background(
+                        Rectangle()
+                            .fill(.subPurple)
+                            .frame(width: 130, height: 30)
+                            .cornerRadius(5)
+                    )
+                    
+                    Spacer()
+                }
+            }
+            .buttonStyle(.plain)
+            if showRepeatEndDatePicker {
+                DatePicker(
+                    "",
+                    selection: $viewModel.repeatEndDate,
+                    in: viewModel.startDate...,
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.wheel)
+                .labelsHidden()
+                .environment(\.locale, Locale(identifier: "ko_KR"))
+                .frame(maxWidth: .infinity)
+            }
+        }
     }
     
     // MARK: - Calendar Color

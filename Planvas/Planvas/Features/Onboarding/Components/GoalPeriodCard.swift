@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct GoalPeriodCard: View {
-    @ObservedObject var vm: GoalSetupViewModel
+    @Environment(GoalSetupViewModel.self) private var vm
     @FocusState private var isFocused: Bool
     
     private var isExpanded: Bool {
@@ -27,6 +27,8 @@ struct GoalPeriodCard: View {
     }
 
     var body: some View {
+        @Bindable var vm = vm
+        
         VStack(alignment: .leading, spacing: 0) {
 
             // 닫힌 상태
@@ -94,6 +96,7 @@ struct GoalPeriodCard: View {
     // MARK: - 캘린더 메인 영역
     private var calendarContent: some View {
         VStack(alignment: .leading, spacing: 0) {
+            @Bindable var vm = vm
 
             let displayMonth = vm.calendar.date(byAdding: .month, value: vm.currentMonthIndex, to: vm.startOfCurrentMonth()) ?? Date()
 
@@ -319,27 +322,10 @@ struct DatePreferenceKey: PreferenceKey {
 }
 
 // MARK: - 프리뷰
-#Preview("값 없음") {
-    GoalPeriodCard_Perview()
-}
-
-#Preview("값 있음") {
-    GoalPeriodCard_Perview(initialName: "플랜버스")
-}
-
-private struct GoalPeriodCard_Perview: View {
-    @State private var goalName: String
-
-    init(initialName: String = "") {
-        _goalName = State(initialValue: initialName)
-    }
-
-    var body: some View {
-        ZStack {
-            Color.gray.opacity(0.1)
-                .ignoresSafeArea()
-
-            GoalPeriodCard(vm: GoalSetupViewModel())
-        }
+#Preview {
+    ZStack {
+        Color.gray.opacity(0.1).ignoresSafeArea()
+        GoalPeriodCard()
+            .environment(GoalSetupViewModel())
     }
 }
