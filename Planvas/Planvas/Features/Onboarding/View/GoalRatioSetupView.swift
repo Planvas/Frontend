@@ -58,6 +58,7 @@ struct GoalRatioSetupView: View {
                     // 다음 버튼
                     PrimaryButton(title: "다음") {
                         print("성장: \(vm.growthPercent)% / 휴식: \(vm.restPercent)%")
+                        
                         // 목표 이름, 기간, 비율 저장 API 연동
                         onboardingVM.createGoal(
                             title: vm.goalName,
@@ -75,6 +76,15 @@ struct GoalRatioSetupView: View {
             .ignoresSafeArea(edges: .bottom)
         }
         .ignoresSafeArea(edges: .top)
+        // TODO: 일단 기존 목표가 있어도 캘린더로 가도록
+        .onChange(of: onboardingVM.createdGoalId) { _, newValue in
+            guard newValue != nil else { return }
+            router.push(.calendar)
+        }
+        .onChange(of: onboardingVM.currentGoalId) { _, newValue in
+            guard newValue != nil else { return }
+            router.push(.calendar)
+        }
     }
     
     // MARK: - 맨 위 멘트 그룹
@@ -114,7 +124,7 @@ struct GoalRatioSetupView: View {
             Button(action: {
                 print("유형별 추천 비율 선택 버튼 클릭")
                 
-                // TODO: 유형별 추천 비율 선택 화면 연결
+                // 유형별 추천 비율 선택 화면 연결
                 router.push(.recommendation)
             }) {
                 Text("유형별 추천 비율 선택하기")

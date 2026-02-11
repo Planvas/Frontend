@@ -8,7 +8,9 @@
 import SwiftUI
 
 struct CalendarFlowView: View {
-    @State private var router = NavigationRouter<CalendarRoute>()
+//    @State private var router = NavigationRouter<CalendarRoute>()
+    @Environment(NavigationRouter<OnboardingRoute>.self) private var onboardingRouter
+
     @State private var viewModel = CalendarViewModel()
     @State private var syncViewModel = CalendarSyncViewModel()
     @State private var isCalendarOnly = false
@@ -23,10 +25,13 @@ struct CalendarFlowView: View {
                                 await viewModel.refreshAfterGoogleConnect()
                             })
                         }
+                    },
+                    onFinish: {
+                        // 온보딩 다음 단계로 이동
+                        onboardingRouter.push(.interest)
                     }
                 )
             } else {
-                NavigationStack(path: $router.path) {
                     CalendarSyncView(
                         viewModel: syncViewModel,
                         onDirectInput: { isCalendarOnly = true },
@@ -35,10 +40,8 @@ struct CalendarFlowView: View {
                             isCalendarOnly = true
                         }
                     )
-                }
             }
         }
-        .environment(router)
         .environment(viewModel)
     }
 }
