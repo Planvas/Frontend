@@ -66,7 +66,36 @@ final class EventDetailViewModel {
         guard targetAchievement > 0 else { return 0 }
         return min(CGFloat(currentAchievement + currentActivityValue) / CGFloat(targetAchievement), 1.0)
     }
-    
+
+    /// AddActivityView와 동일한 구조의 활동치 UI용 (현재 달성률 라벨)
+    var growthLabel: String {
+        selectedActivityType == .growth ? "성장" : "휴식"
+    }
+
+    /// 추가 활동치 퍼센트 문구 (예: +20%)
+    var addedPercentText: String {
+        "+\(currentActivityValue)%"
+    }
+
+    /// AddActivityView와 동일 프로퍼티명 (현재 달성률)
+    var currentAchievementPercent: Int {
+        currentAchievement
+    }
+
+    /// AddActivityView와 동일 프로퍼티명 (목표 퍼센트)
+    var goalPercent: Int {
+        targetAchievement
+    }
+
+    /// AddActivityView와 동일 프로퍼티명 (활동치 값, 조회 시 currentActivityValue와 동일)
+    var activityValue: Int {
+        get { currentActivityValue }
+        set {
+            if selectedActivityType == .growth { growthValue = newValue }
+            else { restValue = newValue }
+        }
+    }
+
     // MARK: - Initialization
     
     func configure(
@@ -81,15 +110,17 @@ final class EventDetailViewModel {
         self.endDate = endDate
         self.daysUntil = daysUntil
         self.targetPeriod = targetPeriod
-        
-        // 이벤트 카테고리에 따라 초기 상태 설정
+
+        let point = event.activityPoint ?? 20
         switch event.category {
         case .growth:
             self.selectedActivityType = .growth
             self.showActivitySettings = true
+            self.growthValue = point
         case .rest:
             self.selectedActivityType = .rest
             self.showActivitySettings = true
+            self.restValue = point
         case .none:
             self.selectedActivityType = .growth
             self.showActivitySettings = false

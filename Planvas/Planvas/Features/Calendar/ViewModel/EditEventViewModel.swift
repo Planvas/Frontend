@@ -130,37 +130,39 @@ final class EditEventViewModel: RepeatOptionConfigurable {
     // MARK: - Initializer
     init() {}
     
-    /// 수정할 이벤트로 초기화
+    /// 수정할 이벤트로 초기화 (event.startDate/startTime, endDate/endTime 기준)
     func configure(with event: Event, startDate: Date, endDate: Date) {
         self.originalEvent = event
         self.eventName = event.title
-        self.startDate = startDate
-        self.endDate = endDate
+        self.startDate = event.startDateTime(calendar: calendar)
+        self.endDate = event.endDateTime(calendar: calendar)
         self.isAllDay = event.isAllDay
         self.selectedColor = event.color
         self.isRepeating = event.isRepeating
-        self.repeatType = event.repeatType ?? .weekly
+        self.repeatType = event.repeatOption ?? .weekly
         self.selectedWeekdays = Set(event.repeatWeekdays ?? [])
-        self.repeatEndDate = event.repeatEndDate ?? Calendar.current.date(byAdding: .month, value: 1, to: startDate) ?? startDate
+        self.repeatEndDate = event.repeatEndDate ?? Calendar.current.date(byAdding: .month, value: 1, to: event.startDate) ?? event.startDate
         if let end = event.repeatEndDate {
             let years = Calendar.current.dateComponents([.year], from: event.startDate, to: end).year ?? 1
             self.selectedYearDuration = min(max(years, 1), 4)
         }
-        
-        // 이벤트 카테고리에 따라 활동치 설정 초기화
+
+        let activityPoint = event.activityPoint ?? 20
         switch event.category {
         case .growth:
             self.selectedActivityType = .growth
             self.isActivityEnabled = true
+            self.growthValue = activityPoint
         case .rest:
             self.selectedActivityType = .rest
             self.isActivityEnabled = true
+            self.restValue = activityPoint
         case .none:
             self.selectedActivityType = .growth
             self.isActivityEnabled = false
         }
     }
-    
+
     /// 시작일과 종료일로 목표 기간 문자열 생성 (시작일~종료일)
     private func calculateTargetPeriod(from startDate: Date, to endDate: Date) -> String {
         let formatter = DateFormatter()
@@ -229,39 +231,39 @@ final class EditEventViewModel: RepeatOptionConfigurable {
     
     // MARK: - Save Event
     func createUpdatedEvent() -> Event {
-        let timeString = isAllDay ? "하루종일" : "\(startDate.timeString()) - \(endDate.timeString())"
-        
-        // 활동치 설정에 따른 카테고리 결정
         let category: EventCategory
         if isActivityEnabled {
             category = selectedActivityType == .growth ? .growth : .rest
         } else {
             category = .none
         }
-        
-        // 반복 일정은 시작일 == 종료일만 허용
         let effectiveEndDate: Date = isRepeating && !calendar.isDate(startDate, inSameDayAs: endDate)
             ? calendar.date(bySettingHour: calendar.component(.hour, from: endDate), minute: calendar.component(.minute, from: endDate), second: 0, of: startDate) ?? startDate
             : endDate
-        // 반복 종료일 = 반복 종료일 선택값 (날짜만)
+        let startDay = calendar.startOfDay(for: startDate)
+        let endDay = calendar.startOfDay(for: effectiveEndDate)
+        let startTime: Time = isAllDay ? .midnight : Time(from: startDate, calendar: calendar)
+        let endTime: Time = isAllDay ? .endOfDay : Time(from: effectiveEndDate, calendar: calendar)
         let repeatEnd: Date? = isRepeating ? calendar.startOfDay(for: repeatEndDate) : (originalEvent?.repeatEndDate)
         return Event(
             id: originalEvent?.id ?? UUID(),
             title: eventName.isEmpty ? "이름 없음" : eventName,
-            time: timeString,
             isFixed: originalEvent?.isFixed ?? false,
             isAllDay: isAllDay,
             color: selectedColor,
-            startDate: startDate,
-            endDate: effectiveEndDate,
+            type: originalEvent?.type ?? .activity,
+            startDate: startDay,
+            endDate: endDay,
+            startTime: startTime,
+            endTime: endTime,
             category: category,
             isCompleted: originalEvent?.isCompleted ?? false,
             isRepeating: isRepeating,
+            repeatOption: isRepeating ? repeatType : nil,
             fixedScheduleId: originalEvent?.fixedScheduleId,
             myActivityId: originalEvent?.myActivityId,
             repeatWeekdays: isRepeating ? Array(selectedWeekdays).sorted() : nil,
             repeatEndDate: repeatEnd,
-            repeatType: isRepeating ? repeatType : nil,
             activityPoint: isActivityEnabled ? currentActivityValue : (originalEvent?.activityPoint ?? 10)
         )
     }

@@ -7,6 +7,51 @@
 
 import Foundation
 
+// MARK: - Time (시:분, 14:00 형식)
+struct Time: Codable, Equatable {
+    var hour: Int   // 0...23
+    var minute: Int // 0...59
+
+    /// "HH:mm" 또는 "H:mm" 형식 문자열
+    var formatted: String {
+        String(format: "%02d:%02d", hour, minute)
+    }
+
+    static let midnight = Time(hour: 0, minute: 0)
+    static let endOfDay = Time(hour: 23, minute: 59)
+
+    init(hour: Int, minute: Int) {
+        self.hour = max(0, min(23, hour))
+        self.minute = max(0, min(59, minute))
+    }
+
+    /// "14:00" 형태 문자열에서 생성. 실패 시 midnight 반환.
+    init(from timeString: String) {
+        let parts = timeString.split(separator: ":")
+        let h = parts.count > 0 ? Int(parts[0].trimmingCharacters(in: .whitespaces)) ?? 0 : 0
+        let m = parts.count > 1 ? Int(parts[1].trimmingCharacters(in: .whitespaces)) ?? 0 : 0
+        self.hour = max(0, min(23, h))
+        self.minute = max(0, min(59, m))
+    }
+
+    /// Date에서 시·분만 추출
+    init(from date: Date, calendar: Calendar = .current) {
+        let comps = calendar.dateComponents([.hour, .minute], from: date)
+        self.hour = comps.hour ?? 0
+        self.minute = comps.minute ?? 0
+    }
+
+    func apply(to date: Date, calendar: Calendar = .current) -> Date {
+        calendar.date(bySettingHour: hour, minute: minute, second: 0, of: date) ?? date
+    }
+}
+
+// MARK: - Event Type (fixed / activity)
+enum EventType: String, Codable, CaseIterable {
+    case fixed = "FIXED"
+    case activity = "ACTIVITY"
+}
+
 // MARK: - Event Category
 enum EventCategory: String, Codable, CaseIterable {
     case growth = "GROWTH"  // 성장
@@ -17,66 +62,95 @@ enum EventCategory: String, Codable, CaseIterable {
 // MARK: - Event Model
 struct Event: Identifiable, Codable {
     let id: UUID
-    let title: String
-    let time: String
+    var title: String
     var isFixed: Bool
     var isAllDay: Bool
     let color: EventColorType
-    
+    var type: EventType
+
+    /// 날짜만 (해당일 00:00 기준으로 다룸)
     var startDate: Date
     var endDate: Date
+    /// isAllDay면 00:00
+    var startTime: Time
+    /// isAllDay면 23:59
+    var endTime: Time
+
     var category: EventCategory
     var isCompleted: Bool
     var isRepeating: Bool
+    /// 매일, 매주, 격주, 매달, 매년
+    var repeatOption: RepeatType?
 
-    /// 서버 고정 일정 ID (반복 일정, PATCH/DELETE fixed-schedules 시 사용)
+    /// 서버 고정 일정 ID
     var fixedScheduleId: Int?
-    /// 서버 내 활동 ID (일시적 일정, PATCH/DELETE my-activities 시 사용)
+    /// 서버 내 활동 ID
     var myActivityId: Int?
-    /// 반복 요일 (0=월…6=일). 고정 일정 생성 시 POST fixed-schedules에 사용
     var repeatWeekdays: [Int]?
-    /// 반복 종료일 (이 날짜까지 매일/매주/격주/매달/매년 반복). nil이면 비반복 또는 미설정
     var repeatEndDate: Date?
-    /// 반복 타입 (매일/매주/격주/매달/매년). 반복 일정 표시 확장 시 사용
-    var repeatType: RepeatType?
-    /// 내 활동 포인트 (my-activities 생성/수정 시 사용, 기본 10)
+    /// 활동 포인트 (activity 타입 시)
     var activityPoint: Int?
+
+    /// 반복 타입 (repeatOption과 동일, 호환용)
+    var repeatType: RepeatType? { get { repeatOption } set { repeatOption = newValue } }
+
+    /// 표시용 시간 문자열 (목록 등): "14:00 - 17:00" 또는 "하루종일"
+    var time: String {
+        if isAllDay { return "하루종일" }
+        return "\(startTime.formatted) - \(endTime.formatted)"
+    }
+
+    /// startDate + startTime 조합 (API/비교용)
+    func startDateTime(calendar: Calendar = .current) -> Date {
+        let day = calendar.startOfDay(for: startDate)
+        return startTime.apply(to: day, calendar: calendar)
+    }
+
+    /// endDate + endTime 조합 (API/비교용)
+    func endDateTime(calendar: Calendar = .current) -> Date {
+        let day = calendar.startOfDay(for: endDate)
+        return endTime.apply(to: day, calendar: calendar)
+    }
 
     init(
         id: UUID = UUID(),
         title: String,
-        time: String,
         isFixed: Bool = false,
         isAllDay: Bool = false,
         color: EventColorType,
+        type: EventType = .activity,
         startDate: Date = Date(),
         endDate: Date = Date(),
+        startTime: Time = .midnight,
+        endTime: Time = .endOfDay,
         category: EventCategory = .none,
         isCompleted: Bool = false,
         isRepeating: Bool = false,
+        repeatOption: RepeatType? = nil,
         fixedScheduleId: Int? = nil,
         myActivityId: Int? = nil,
         repeatWeekdays: [Int]? = nil,
         repeatEndDate: Date? = nil,
-        repeatType: RepeatType? = nil,
         activityPoint: Int? = nil
     ) {
         self.id = id
         self.title = title
-        self.time = time
         self.isFixed = isFixed
         self.isAllDay = isAllDay
         self.color = color
+        self.type = type
         self.startDate = startDate
         self.endDate = endDate
+        self.startTime = isAllDay ? .midnight : startTime
+        self.endTime = isAllDay ? .endOfDay : endTime
         self.category = category
         self.isCompleted = isCompleted
         self.isRepeating = isRepeating
+        self.repeatOption = repeatOption
         self.fixedScheduleId = fixedScheduleId
         self.myActivityId = myActivityId
         self.repeatWeekdays = repeatWeekdays
         self.repeatEndDate = repeatEndDate
-        self.repeatType = repeatType
         self.activityPoint = activityPoint
     }
 }
