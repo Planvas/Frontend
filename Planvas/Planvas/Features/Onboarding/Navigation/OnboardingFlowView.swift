@@ -39,7 +39,11 @@ struct OnboardingFlowView: View {
                         
                         // 캘린더
                         case .calendar:
-                            CalendarFlowView()
+                            CalendarFlowView(
+                                selectedTab: .constant(1),
+                                calendarTabTag: 1,
+                                onFinishFromOnboarding: { router.push(.interest) }
+                            )
                             
                         // 관심 분야 선택
                         case .interest:

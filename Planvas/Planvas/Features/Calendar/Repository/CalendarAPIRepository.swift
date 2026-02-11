@@ -24,16 +24,19 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         self.schedulesService = schedulesService
     }
 
-    /// 특정 날짜의 일정 목록 조회 (GET /api/calendar/day → Event 배열)
+    /// 월간 캘린더 조회 (GET /api/calendar/month) - 해당 월 날짜별 메타·프리뷰만
+    func getMonthCalendar(year: Int, month: Int) async throws -> MonthlyCalendarSuccessDTO {
+        try await networkService.getMonthCalendar(year: year, month: month)
+    }
+
+    /// 특정 날짜의 일정 목록 조회 (GET /api/calendar/day) - 날짜 클릭 시 호출
     func getEvents(for date: Date) async throws -> [Event] {
         let dateKey = dateKeyString(from: date)
         let dayDTO = try await networkService.getDayCalendar(date: dateKey)
         return dayDTO.items.map { mapToEvent(item: $0, date: dayDTO.date) }
     }
 
-    /// 날짜 범위 내 모든 일정 조회. 월간 뷰 등에서 N일 치를 한 번에 가져올 때 사용.
-    /// GET /api/calendar/month는 날짜별 메타데이터만 반환하므로, 일정 본문은 GET /api/calendar/day로만 조회 가능.
-    /// 요청 수는 그대로이되 TaskGroup으로 날짜별 호출을 병렬 처리해 체감 지연을 줄임.
+    /// 날짜 범위 내 일정 조회 (여러 일간 조회용)
     func getEvents(from startDate: Date, to endDate: Date) async throws -> [Event] {
         var dates: [Date] = []
         var current = calendar.startOfDay(for: startDate)
@@ -143,31 +146,70 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         )
     }
 
+    /// 서버에서 색을 주지 않을 때 itemId 기준으로 항상 같은 색이 나오도록 사용하는 팔레트
+    private static let serverEventColorPalette: [EventColorType] = [.purple2, .blue1, .red, .yellow, .blue2, .pink, .green, .blue3, .purple1]
+
+    /// 서버 일정용 색 결정 (type+itemId 해시로 동일 일정은 항상 같은 색)
+    private static func colorForServerItem(type: String, itemId: String) -> EventColorType {
+        var data = Data()
+        data.append(contentsOf: "\(type)-\(itemId)".utf8)
+        let hash = Insecure.SHA1.hash(data: data)
+        let index = hash.withUnsafeBytes { bytes in bytes.load(as: UInt64.self) }
+        // UInt64에서 모듈로 연산을 먼저 수행해 abs(Int.min) 오버플로우 방지
+        let paletteCount = UInt64(serverEventColorPalette.count)
+        let safeIndex = Int(index % paletteCount)
+        return serverEventColorPalette[safeIndex]
+    }
+
     /// 일간 일정 DTO → 캘린더 표시용 Event (날짜+시간 조합, 서버 ID 매핑).
-    /// itemId는 서버에서 숫자 문자열("123")로 내려오므로, 서버 ID는 Int(itemId)로 추출하고 Event.id는 동일 itemId에 항상 같은 UUID가 되도록 결정론적 생성.
+    /// API는 startAt/endAt(ISO8601) 또는 startTime/endTime(시:분) 중 하나로 옴. 종일이면 "하루종일" 표시.
     private func mapToEvent(item: CalendarItemDTO, date: String) -> Event {
-        let (startDate, endDate) = parseDayTime(date: date, startTime: item.startTime, endTime: item.endTime)
-        let timeString = item.startTime.isEmpty && item.endTime.isEmpty
-            ? "하루종일"
-            : "\(item.startTime) - \(item.endTime)"
-        let isFixed = item.type == "FIXED_SCHEDULE"
+        let isFixed = item.type == "FIXED_SCHEDULE" || item.type == "FIXED"
         let serverId = Int(item.itemId)
         let id = Self.stableUUID(from: "\(item.type)-\(item.itemId)")
+
+        let (startDate, endDate, timeString, isAllDay): (Date, Date, String, Bool)
+        if let startAt = item.startAt, let endAt = item.endAt,
+           let start = parseDayDateTimeAsLocal(startAt), let end = parseDayDateTimeAsLocal(endAt) {
+            let allDay = isAllDayEvent(start: start, end: end)
+            let timeStr = allDay ? "하루종일" : "\(Self.timeFormatter.string(from: start)) - \(Self.timeFormatter.string(from: end))"
+            (startDate, endDate, timeString, isAllDay) = (start, end, timeStr, allDay)
+        } else {
+            let st = item.startTime ?? ""
+            let et = item.endTime ?? ""
+            let (s, e) = parseDayTime(date: date, startTime: st, endTime: et)
+            let allDay = st.isEmpty && et.isEmpty
+            let timeStr = allDay ? "하루종일" : "\(st) - \(et)"
+            (startDate, endDate, timeString, isAllDay) = (s, e, timeStr, allDay)
+        }
+
         return Event(
             id: id,
             title: item.title,
             time: timeString,
             isFixed: isFixed,
-            isAllDay: item.startTime.isEmpty && item.endTime.isEmpty,
-            color: .red,
+            isAllDay: isAllDay,
+            color: isFixed ? .purple1 : Self.colorForServerItem(type: item.type, itemId: item.itemId),
             startDate: startDate,
             endDate: endDate,
             category: .none,
-            isCompleted: item.completed,
+            isCompleted: item.completed ?? false,
             isRepeating: isFixed,
             fixedScheduleId: isFixed ? serverId : nil,
             myActivityId: isFixed ? nil : serverId
         )
+    }
+
+    /// startAt/endAt 기준으로 종일 일정 여부 (시작 00:00 + 종료 당일 23:59 또는 다음날 00:00)
+    private func isAllDayEvent(start: Date, end: Date) -> Bool {
+        let startOfDay = calendar.startOfDay(for: start)
+        let isStartMidnight = start.timeIntervalSince(startOfDay) < 60
+        guard isStartMidnight else { return false }
+        let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: start) ?? start
+        let nextDayStart = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? start
+        let isEndSameDayEOD = calendar.isDate(end, inSameDayAs: start) && end >= endOfDay
+        let isEndNextDayStart = abs(end.timeIntervalSince(nextDayStart)) < 60
+        return isEndSameDayEOD || isEndNextDayStart
     }
 
     /// itemId 등 문자열로부터 동일 입력에 대해 항상 같은 UUID 생성 (서버 항목 식별용).
@@ -324,6 +366,30 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         if let d = Self.iso8601WithFraction.date(from: string) { return d }
         if let d = Self.iso8601NoFraction.date(from: string) { return d }
         return Self.dateOnlyFormatter.date(from: string)
+    }
+
+    /// 일간 API startAt/endAt: 서버가 로컬 시간을 Z로 보내는 경우를 위해, 날짜·시간을 로컬 타임존으로 해석.
+    /// (예: "2026-02-19T16:10:00.000Z" → 16:10 로컬, UTC로 해석하면 KST에서 01:10으로 나옴)
+    private static let dayDateTimeAsLocalFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        f.timeZone = TimeZone.current
+        f.locale = Locale(identifier: "en_US_POSIX")
+        return f
+    }()
+
+    private static let dayDateTimeAsLocalFormatterNoFraction: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        f.timeZone = TimeZone.current
+        f.locale = Locale(identifier: "en_US_POSIX")
+        return f
+    }()
+
+    private func parseDayDateTimeAsLocal(_ string: String) -> Date? {
+        guard !string.isEmpty else { return nil }
+        if let d = Self.dayDateTimeAsLocalFormatter.date(from: string) { return d }
+        return Self.dayDateTimeAsLocalFormatterNoFraction.date(from: string)
     }
 
     /// "yyyy-MM-dd" + "HH:mm" 조합으로 해당 날짜의 시작/종료 Date 생성 (종일이면 00:00~다음날 00:00)
