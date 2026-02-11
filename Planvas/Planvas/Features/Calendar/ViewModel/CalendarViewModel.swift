@@ -101,10 +101,15 @@ final class CalendarViewModel {
         return day.schedulesPreview.prefix(3).map { eventFromPreview($0, date: date) }
     }
     
-    /// 그 날짜의 이벤트 이름 표시용 (고정일정 포함, 다른 일정과 동일하게 제목 표시)
+    /// 그 날짜의 이벤트 이름 표시용 (바 + 일정 이름). 고정+반복만 점으로 표시하므로 제외. 멀티데이 활동은 종료일에만 여기서 표시.
     func getDisplayEvents(for date: Date, isSelected: Bool) -> [Event] {
-        let events = getSingleDayEvents(for: date)
-        return Array(events.prefix(3))
+        let singleDay = getSingleDayEvents(for: date)
+            .filter { !($0.isFixed && $0.isRepeating) }
+        let activityMultiDayEndingToday = getEvents(for: date)
+            .filter { $0.type == .activity }
+            .filter { !calendar.isDate($0.startDate, inSameDayAs: $0.endDate) }
+            .filter { calendar.isDate(date, inSameDayAs: $0.endDate) }
+        return Array((singleDay + activityMultiDayEndingToday).prefix(3))
     }
     
     /// 해당 날짜의 반복 일정 목록 (캘린더 날짜 옆 원 표시용)
@@ -112,10 +117,10 @@ final class CalendarViewModel {
         getEvents(for: date).filter(\.isRepeating)
     }
     
-    /// 여러 날에 걸친 이벤트만 해당 날짜 구간으로 반환 (막대 표시용). 고정일정은 제외.
+    /// 여러 날에 걸친 고정 일정만 막대로 표시 (시작일~종료일). 활동 일정 멀티데이는 막대 없이 종료일에 바+이름만 표시.
     func getMultiDayEventSegments(for date: Date) -> [(event: Event, isStart: Bool, isEnd: Bool)] {
         getEvents(for: date)
-            .filter { !$0.isFixed }
+            .filter { $0.isFixed }
             .filter { !calendar.isDate($0.startDate, inSameDayAs: $0.endDate) }
             .map { event in
                 let isStart = calendar.isDate(date, inSameDayAs: event.startDate)
@@ -138,7 +143,6 @@ final class CalendarViewModel {
         let isCurrentMonth = calendar.isDate(date, equalTo: currentMonth, toGranularity: .month)
         if isCurrentMonth {
             selectedDate = date
-            Task { await loadEventsForDate(date) }
         }
     }
     
@@ -170,6 +174,15 @@ final class CalendarViewModel {
         currentMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: today)) ?? today
         selectedDate = today
         Task { await refreshEvents() }
+    }
+
+    /// 프리뷰용: 지정한 년/월/일로 이동 후 해당 월·날짜 일정 로드 (CalendarRepository 샘플 확인용)
+    func prepareForPreview(year: Int, month: Int, day: Int) async {
+        guard let monthDate = calendar.date(from: DateComponents(year: year, month: month, day: 1)),
+              let dayDate = calendar.date(from: DateComponents(year: year, month: month, day: day)) else { return }
+        currentMonth = monthDate
+        selectedDate = dayDate
+        await refreshEvents()
     }
     
     func isDateInCurrentMonth(_ date: Date) -> Bool {
@@ -405,14 +418,26 @@ final class CalendarViewModel {
         }
     }
     
-    /// 월간 API 1회 호출 후, 선택된 날짜만 상세 조회 (날짜 클릭 시에는 loadEventsForDate)
-    private func refreshEvents() async {
+    /// 월간 API 호출 후, 해당 월 전체 일정을 일간 조회로 불러와 그리드에 바로 표시 (날짜 클릭 없이도 이벤트 표시)
+    func refreshEvents() async {
         let year = calendar.component(.year, from: currentMonth)
         let month = calendar.component(.month, from: currentMonth)
+        guard let firstDay = calendar.date(from: DateComponents(year: year, month: month, day: 1)),
+              let range = calendar.range(of: .day, in: .month, for: firstDay),
+              let lastDay = calendar.date(byAdding: .day, value: range.count - 1, to: firstDay) else {
+            return
+        }
         do {
             let monthResult = try await repository.getMonthCalendar(year: year, month: month)
             monthData = monthResult
-            await loadEventsForDate(selectedDate)
+            let rawEvents = try await repository.getEvents(from: firstDay, to: lastDay)
+            let uniqueEvents = deduplicateMultiDayEvents(rawEvents)
+            let fetchedByDate = eventsToDictionary(uniqueEvents)
+            var next = sampleEvents
+            for (key, list) in fetchedByDate {
+                next[key] = list
+            }
+            sampleEvents = next
         } catch {
             print("월간 캘린더 조회 실패: \(error)")
         }
@@ -434,6 +459,18 @@ final class CalendarViewModel {
         }
     }
     
+    /// 같은 멀티데이 일정을 하나로 묶음. 서버 ID 우선, 없으면 title+start+end+type으로 동일 이벤트 판단.
+    private func deduplicateMultiDayEvents(_ events: [Event]) -> [Event] {
+        func multiDayKey(_ event: Event) -> String {
+            if let id = event.fixedScheduleId { return "f-\(id)" }
+            if let id = event.myActivityId { return "a-\(id)" }
+            let start = event.startDate.timeIntervalSince1970
+            let end = event.endDate.timeIntervalSince1970
+            return "\(event.title)|\(start)|\(end)|\(event.type.rawValue)"
+        }
+        return Array(Dictionary(grouping: events, by: multiDayKey(_:)).values.compactMap { $0.first })
+    }
+
     /// [Event]를 날짜별 [String: [Event]]로 변환 (멀티데이 이벤트는 해당하는 모든 날에 포함)
     private func eventsToDictionary(_ events: [Event]) -> [String: [Event]] {
         var result: [String: [Event]] = [:]
@@ -457,23 +494,27 @@ final class CalendarViewModel {
     private static let serverEventColorPalette: [EventColorType] = [.purple2, .blue1, .red, .yellow, .blue2, .pink, .green, .blue3, .purple1]
 
     /// 월간 API 프리뷰만 있을 때 그리드 표시용 Event 생성 (날짜 클릭 시 상세 로드로 대체됨)
-    /// endDate를 같은 날 23:59로 두어 getSingleDayEvents/이벤트 표시 영역에 포함되도록 함. 색은 itemId 기준 할당.
+    /// endDate를 같은 날 23:59로 두어 getSingleDayEvents/이벤트 표시 영역에 포함되도록 함. 색은 API color(1~10) 우선.
     private func eventFromPreview(_ preview: SchedulePreviewDTO, date: Date) -> Event {
         let start = calendar.startOfDay(for: date)
         let end = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: date) ?? start
         let id = CalendarViewModel.stableUUID(from: "preview-\(preview.itemId)-\(dateKeyString(from: date))")
+        let color: EventColorType = (preview.color.map { EventColorType.from(serverColor: $0) })
+            ?? (preview.isFixed ? .purple1 : Self.colorForServerItem(itemId: "\(preview.itemId)", type: preview.type))
         return Event(
             id: id,
             title: preview.title,
-            time: "일정",
             isFixed: preview.isFixed,
             isAllDay: true,
-            color: preview.isFixed ? .purple1 : Self.colorForServerItem(itemId: preview.itemId, type: preview.type),
+            color: color,
+            type: preview.isFixed ? .fixed : .activity,
             startDate: start,
             endDate: end,
+            startTime: .midnight,
+            endTime: .endOfDay,
             category: .none,
             isCompleted: false,
-            isRepeating: preview.isFixed
+            isRepeating: preview.isRepeating
         )
     }
 
