@@ -8,11 +8,10 @@
 import SwiftUI
 
 struct CalendarFlowView: View {
-//    @State private var router = NavigationRouter<CalendarRoute>()
-    @Environment(NavigationRouter<OnboardingRoute>.self) private var onboardingRouter
-
     @Binding var selectedTab: Int
     var calendarTabTag: Int
+    /// 온보딩 플로우에서만 전달. 메인 탭에서는 nil (이때 Environment에 OnboardingRoute 라우터 없어도 됨)
+    var onFinishFromOnboarding: (() -> Void)? = nil
 
     @State private var router = NavigationRouter<CalendarRoute>()
     @State private var viewModel = CalendarViewModel()
@@ -30,10 +29,7 @@ struct CalendarFlowView: View {
                             })
                         }
                     },
-                    onFinish: {
-                        // 온보딩 다음 단계로 이동
-                        onboardingRouter.push(.interest)
-                    }
+                    onFinish: onFinishFromOnboarding
                 )
             } else {
                     CalendarSyncView(
