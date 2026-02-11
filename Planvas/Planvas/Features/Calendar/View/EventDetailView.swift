@@ -14,7 +14,7 @@ struct EventDetailView: View {
     let daysUntil: Int? // D-6 같은 카운트다운
     let targetPeriod: String? // 11/15 ~ 12/3 같은 목표 기간
     
-    @StateObject private var viewModel = EventDetailViewModel()
+    @State private var viewModel = EventDetailViewModel()
     @Environment(\.dismiss) private var dismiss
     @State private var showEditEventView = false
     

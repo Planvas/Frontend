@@ -11,7 +11,9 @@ import SwiftUI
 import UIKit
 
 struct CalendarView: View {
-    @EnvironmentObject private var viewModel: CalendarViewModel
+    @Environment(CalendarViewModel.self) private var viewModel
+    /// 미연동 시 "일정 가져오기" 알림에서 "Google 캘린더 연동" 탭 시 바로 연동 API 호출 + 일정 새로고침 (Sync 뷰 없음)
+    var onConnectGoogleCalendar: (() -> Void)?
     @State private var showScheduleSelection = false
     @State private var showImportAlert = false
     @State private var showAddEvent = false
@@ -53,8 +55,7 @@ struct CalendarView: View {
             .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showAddEvent) {
-            AddEventView { event in
-                // 추가된 이벤트 처리
+            AddEventView(initialDate: viewModel.selectedDate) { event in
                 viewModel.addEvent(event)
             }
             .presentationDetents([.large])
@@ -115,7 +116,7 @@ struct CalendarView: View {
                     secondaryButtonTitle: "취소",
                     primaryButtonAction: {
                         showImportAlert = false
-                        showScheduleSelection = true
+                        onConnectGoogleCalendar?()
                     },
                     secondaryButtonAction: {
                         showImportAlert = false
@@ -480,5 +481,5 @@ struct CalendarView: View {
 
 #Preview {
     CalendarView()
-        .environmentObject(CalendarViewModel())
+        .environment(CalendarViewModel())
 }

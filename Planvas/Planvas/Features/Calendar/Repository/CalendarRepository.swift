@@ -8,7 +8,6 @@
 import Foundation
 
 /// Calendar 관련 데이터를 관리하는 repo
-/// TODO : API 연동 시 이 프로토콜을 구현하는 새로운 Repository를 만들고 ViewModel에 주입 예정
 protocol CalendarRepositoryProtocol {
     /// 특정 날짜의 이벤트 목록을 가져옵니다
     func getEvents(for date: Date) async throws -> [Event]
@@ -25,11 +24,21 @@ protocol CalendarRepositoryProtocol {
     /// 이벤트를 삭제합니다
     func deleteEvent(_ event: Event) async throws
     
-    /// ImportableSchedule 목록을 가져옵니다
+    /// ImportableSchedule 목록을 가져옵니다 (구글 캘린더 가져올 일정 목록)
     func getImportableSchedules() async throws -> [ImportableSchedule]
     
-    /// ImportableSchedule을 Event로 변환하여 추가합니다
+    /// 선택 일정 동기화 (서버에 반영 후 캘린더에서 조회)
     func importSchedules(_ schedules: [ImportableSchedule]) async throws
+    
+    /// 구글 캘린더 연동 상태 조회
+    func getGoogleCalendarStatus() async throws -> GoogleCalendarStatus
+    
+    /// 구글 캘린더 연동 (serverAuthCode 전달)
+    func connectGoogleCalendar(code: String) async throws
+}
+
+enum CalendarRepositoryError: Error {
+    case missingServerId(message: String)
 }
 
 /// TODO : 현재는 샘플 데이터를 사용
@@ -110,56 +119,24 @@ final class CalendarRepository: CalendarRepositoryProtocol {
             return cal.date(from: c) ?? Date()
         }
         return [
-            ImportableSchedule(
-                title: "편의점 알바",
-                timeDescription: "매주 수요일 18:00 - 22:00",
-                startDate: date(2026, 2, 4, hour: 18),
-                endDate: date(2026, 2, 4, hour: 22),
-                isSelected: true
-            ),
-            ImportableSchedule(
-                title: "컴퓨터활용능력 학원",
-                timeDescription: "매주 목요일 9:00 - 13:00",
-                startDate: date(2026, 2, 5, hour: 9),
-                endDate: date(2026, 2, 5, hour: 13),
-                isSelected: false
-            ),
-            ImportableSchedule(
-                title: "헬스장 PT",
-                timeDescription: "매주 토요일 17:00 - 18:00",
-                startDate: date(2026, 2, 7, hour: 17),
-                endDate: date(2026, 2, 7, hour: 18),
-                isSelected: false
-            ),
-            ImportableSchedule(
-                title: "아빠 생신",
-                timeDescription: "2026년 2월 7일",
-                startDate: date(2026, 2, 7),
-                endDate: date(2026, 2, 7),
-                isSelected: true
-            ),
-            ImportableSchedule(
-                title: "겨울 국내 여행",
-                timeDescription: "2/15 - 2/18",
-                startDate: date(2026, 2, 15),
-                endDate: date(2026, 2, 18),
-                isSelected: true
-            ),
-            ImportableSchedule(
-                title: "개강 전 친구 모임",
-                timeDescription: "2026년 2월 25일",
-                startDate: date(2026, 2, 25),
-                endDate: date(2026, 2, 25),
-                isSelected: false
-            )
+            ImportableSchedule(id: "sample-1", title: "편의점 알바", timeDescription: "매주 수요일 18:00 - 22:00", startDate: date(2026, 2, 4, hour: 18), endDate: date(2026, 2, 4, hour: 22), isSelected: true),
+            ImportableSchedule(id: "sample-2", title: "컴퓨터활용능력 학원", timeDescription: "매주 목요일 9:00 - 13:00", startDate: date(2026, 2, 5, hour: 9), endDate: date(2026, 2, 5, hour: 13), isSelected: false),
+            ImportableSchedule(id: "sample-3", title: "헬스장 PT", timeDescription: "매주 토요일 17:00 - 18:00", startDate: date(2026, 2, 7, hour: 17), endDate: date(2026, 2, 7, hour: 18), isSelected: false),
+            ImportableSchedule(id: "sample-4", title: "아빠 생신", timeDescription: "2026년 2월 7일", startDate: date(2026, 2, 7), endDate: date(2026, 2, 7), isSelected: true),
+            ImportableSchedule(id: "sample-5", title: "겨울 국내 여행", timeDescription: "2/15 - 2/18", startDate: date(2026, 2, 15), endDate: date(2026, 2, 18), isSelected: true),
+            ImportableSchedule(id: "sample-6", title: "개강 전 친구 모임", timeDescription: "2026년 2월 25일", startDate: date(2026, 2, 25), endDate: date(2026, 2, 25), isSelected: false)
         ]
     }
     
     func importSchedules(_ schedules: [ImportableSchedule]) async throws {
-        // ImportableSchedule을 Event로 변환하여 추가
-        // TODO : API 연동 시 이 부분을 수정
-        for _ in schedules {
-            // 여기서는 샘플로 간단하게 처리
-        }
+        // 샘플 모드: 로컬 반영 없음 (API 연동 시 CalendarAPIRepository 사용)
+    }
+
+    func getGoogleCalendarStatus() async throws -> GoogleCalendarStatus {
+        GoogleCalendarStatus(connected: false, connectedAt: nil, lastSyncedAt: nil)
+    }
+
+    func connectGoogleCalendar(code: String) async throws {
+        // 샘플 모드에서는 무시 (API 연동 시 CalendarAPIRepository 사용)
     }
 }

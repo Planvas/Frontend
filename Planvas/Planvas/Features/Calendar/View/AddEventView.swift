@@ -8,13 +8,21 @@
 import SwiftUI
 
 struct AddEventView: View {
-    @StateObject private var viewModel = AddEventViewModel()
+    /// 캘린더에서 선택된 날짜 (있으면 해당 날짜 + 현재 시간으로 시작/종료일 설정)
+    var initialDate: Date?
+    var onAdd: ((Event) -> Void)?
+
+    @State private var viewModel: AddEventViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showRepeatPicker = false
     @State private var showStartDatePicker = false
     @State private var showEndDatePicker = false
-    
-    var onAdd: ((Event) -> Void)?
+
+    init(initialDate: Date? = nil, onAdd: ((Event) -> Void)? = nil) {
+        self.initialDate = initialDate
+        self.onAdd = onAdd
+        _viewModel = State(initialValue: AddEventViewModel(initialDate: initialDate))
+    }
     
     var body: some View {
         ScrollView {
@@ -31,7 +39,7 @@ struct AddEventView: View {
                 
                 // 반복 옵션 선택
                 if showRepeatPicker {
-                    RepeatOptionPickerView(viewModel: viewModel)
+                    RepeatOptionPickerView<AddEventViewModel>(viewModel: viewModel)
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 }
                 
