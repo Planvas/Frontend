@@ -40,9 +40,7 @@ struct LoginSuccessView: View {
             if hasCompletedOnboarding && hasActiveGoal {
                 container.rootRouter.root = .main
             } else {
-                // TODO: 임시로 주석처리, 다음 버튼 완성되면 아래 main 지우고 해당 줄 주석 해제해주세요!
-                // container.rootRouter.root = .onboarding  
-                container.rootRouter.root = .main
+                 container.rootRouter.root = .onboarding
             }
         }
     }
