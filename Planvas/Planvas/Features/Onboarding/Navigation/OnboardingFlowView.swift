@@ -78,4 +78,5 @@ struct OnboardingFlowView: View {
 
 #Preview {
     OnboardingFlowView()
+        .environmentObject(DIContainer())
 }
