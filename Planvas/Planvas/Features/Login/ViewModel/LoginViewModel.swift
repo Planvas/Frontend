@@ -10,6 +10,8 @@ final class LoginViewModel {
     var isSignupRequired = false
     var userName: String = ""
     var errorMessage: String?
+    
+    var rootRouter: RootRouter?
 
     func GoogleLogin() {
         // SwiftUI에서는 현재 뷰의 UIViewController를 찾아와야 구글 로그인창이 뜸
@@ -56,7 +58,6 @@ final class LoginViewModel {
 //                    if let router = self?.rootRouter {
 //                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
 //                            router.root = .main
-//                            self?.objectWillChange.send()
 //                        }
 //                    }
                 } else {
