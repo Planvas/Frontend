@@ -243,9 +243,13 @@ struct GoalRatioSetupView: View {
 // MARK: - 프리부
 #Preview {
     let router = NavigationRouter<OnboardingRoute>()
+    let goalVM = GoalSetupViewModel()
+    let onboardingVM = OnboardingViewModel(provider: APIManager.shared.createProvider(for: OnboardingAPI.self))
+
     NavigationStack {
         GoalRatioSetupView()
-            .environment(GoalSetupViewModel())
+            .environment(goalVM)
+            .environment(onboardingVM)
     }
     .environment(router)
 }

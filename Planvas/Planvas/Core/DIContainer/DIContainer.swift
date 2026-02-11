@@ -22,9 +22,9 @@ final class DIContainer: ObservableObject {
     let onboardingProvider: MoyaProvider<OnboardingAPI>
     
     // MARK: - viewModel
-    let loginVM: LoginViewModel = LoginViewModel()
-    let goalVM: GoalSetupViewModel = GoalSetupViewModel()
-    let onboardingVM: OnboardingViewModel = OnboardingViewModel()
+    let loginVM: LoginViewModel
+    let goalVM: GoalSetupViewModel
+    let onboardingVM: OnboardingViewModel
     
     init() {
         self.appState = AppState()
@@ -33,5 +33,9 @@ final class DIContainer: ObservableObject {
         self.apiManager = APIManager.shared
         self.calendarProvider = apiManager.createProvider(for: CalendarAPI.self)
         self.onboardingProvider = apiManager.createProvider(for: OnboardingAPI.self)
+        
+        self.loginVM = LoginViewModel()
+        self.goalVM = GoalSetupViewModel()
+        self.onboardingVM = OnboardingViewModel(provider: onboardingProvider)
     }
 }

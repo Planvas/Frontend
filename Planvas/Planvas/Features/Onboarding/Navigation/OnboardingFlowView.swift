@@ -10,8 +10,6 @@ import SwiftUI
 struct OnboardingFlowView: View {
     @State private var router = NavigationRouter<OnboardingRoute>()
     @EnvironmentObject private var container: DIContainer
-
-//    @State private var goalVM = GoalSetupViewModel()
     @State private var showOnboardingSuccessSheet = false
     
     var body: some View {
@@ -62,6 +60,7 @@ struct OnboardingFlowView: View {
         .environment(router)
         .environment(container.goalVM)
         .environment(container.onboardingVM)
+        .environment(container.loginVM)
         .sheet(isPresented: $showOnboardingSuccessSheet, onDismiss: {
             showOnboardingSuccessSheet = false
         }) {
