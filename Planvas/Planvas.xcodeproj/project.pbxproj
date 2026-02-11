@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4434DF2F2F2F3021004E540D /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 4434DF2E2F2F3021004E540D /* Kingfisher */; };
-		DB2659362F3C2A7000DDE955 /* CombineMoya in Frameworks */ = {isa = PBXBuildFile; productRef = DB2659352F3C2A7000DDE955 /* CombineMoya */; };
+		DB2661032F3CE92B00DDE955 /* CombineMoya in Frameworks */ = {isa = PBXBuildFile; productRef = DB2661022F3CE92B00DDE955 /* CombineMoya */; };
 		DBB843222F1B9B9800676F3F /* Moya in Frameworks */ = {isa = PBXBuildFile; productRef = DBB843212F1B9B9800676F3F /* Moya */; };
 		DBB847052F21DD9A00676F3F /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = DBB847042F21DD9A00676F3F /* GoogleSignIn */; };
 		DBB847072F21DD9A00676F3F /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = DBB847062F21DD9A00676F3F /* GoogleSignInSwift */; };
@@ -47,7 +47,7 @@
 				4434DF2F2F2F3021004E540D /* Kingfisher in Frameworks */,
 				DBB847072F21DD9A00676F3F /* GoogleSignInSwift in Frameworks */,
 				DBB843222F1B9B9800676F3F /* Moya in Frameworks */,
-				DB2659362F3C2A7000DDE955 /* CombineMoya in Frameworks */,
+				DB2661032F3CE92B00DDE955 /* CombineMoya in Frameworks */,
 				DBB847052F21DD9A00676F3F /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -95,7 +95,7 @@
 				DBB847042F21DD9A00676F3F /* GoogleSignIn */,
 				DBB847062F21DD9A00676F3F /* GoogleSignInSwift */,
 				4434DF2E2F2F3021004E540D /* Kingfisher */,
-				DB2659352F3C2A7000DDE955 /* CombineMoya */,
+				DB2661022F3CE92B00DDE955 /* CombineMoya */,
 			);
 			productName = Planvas;
 			productReference = 44E8D7722F16996B00E95F8E /* Planvas.app */;
@@ -291,9 +291,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				BASE_URL = "http:/$()/3.36.66.26:3000/";
-				CLIENT_ID = "184142894398-ujiqolgd6o0mv2ga6r86la98ll9gk7lo.apps.googleusercontent.com";
-				CLIENT_ID_REVERSE = "com.googleusercontent.apps.184142894398-ujiqolgd6o0mv2ga6r86la98ll9gk7lo";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = THUZAYPFV4;
@@ -313,7 +310,6 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.Planvas.Planvas;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SERVER_CLIENT_ID = "184142894398-2hl5s7fnd54klib8q0uqn4dp021m3ped.apps.googleusercontent.com";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -333,9 +329,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				BASE_URL = "http:/$()/3.36.66.26:3000/";
-				CLIENT_ID = "184142894398-ujiqolgd6o0mv2ga6r86la98ll9gk7lo.apps.googleusercontent.com";
-				CLIENT_ID_REVERSE = "com.googleusercontent.apps.184142894398-ujiqolgd6o0mv2ga6r86la98ll9gk7lo";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = THUZAYPFV4;
@@ -355,7 +348,6 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.Planvas.Planvas;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SERVER_CLIENT_ID = "184142894398-2hl5s7fnd54klib8q0uqn4dp021m3ped.apps.googleusercontent.com";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -426,7 +418,7 @@
 			package = 4434DF2D2F2F3020004E540D /* XCRemoteSwiftPackageReference "Kingfisher" */;
 			productName = Kingfisher;
 		};
-		DB2659352F3C2A7000DDE955 /* CombineMoya */ = {
+		DB2661022F3CE92B00DDE955 /* CombineMoya */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = DBB843202F1B9B9800676F3F /* XCRemoteSwiftPackageReference "Moya" */;
 			productName = CombineMoya;
