@@ -6,27 +6,28 @@ struct LoginView: View {
     
     var body: some View {
         ZStack {
-            Image("background")
+            Image("loginBackground")
                 .resizable()
-                .frame(width: 404, height: 404)
-                .offset(y: -80)
+                .ignoresSafeArea()
+                .offset(y: -450)
             
-            VStack {
-                Spacer()
-                    .frame(height: 100)
+            VStack(spacing: 40) {
+                VStack(spacing: 5) {
+                    Text("채워지는 만큼 목표에 가까워진다는 확신")
+                        .textStyle(.medium18)
+                        .foregroundStyle(Color.primary1)
+                    Text("플랜바스가 함께 만들어 드릴게요")
+                        .textStyle(.medium18)
+                }
                 
                 Image("startImage")
                     .resizable()
-                    .frame(width: 185, height: 185)
-                
-                Spacer()
-                    .frame(height: 40)
+                    .frame(width: 135, height: 135)
+                    .padding()
                 
                 VStack {
-                    Text("Planvas")
-                        .textStyle(.extrabold45)
-                        .linearGradient(startColor: .gradprimary1, endColor: .gradprimary2)
-                        .padding(.vertical, 5)
+                    Image("loginLogo")
+                        .padding()
                     Group {
                         Text("내가 그리는 모습 그대로,")
                         Text("일상을 채워나가는 밸런스 플래너")
@@ -34,16 +35,14 @@ struct LoginView: View {
                     .textStyle(.semibold20)
                 }
                 
-                Spacer()
-                    .frame(height: 70)
-                
                 PlanvasButton(
                     title: "Google로 시작하기",
                     isDisabled: false,
                     action: {
                         viewModel.GoogleLogin()
                     })
-                .padding()
+                .padding(.top, 30)
+                .padding(.horizontal)
                 .fullScreenCover(isPresented: Binding(
                     get: { viewModel.isLoginSuccess },
                     set: { viewModel.isLoginSuccess = $0 }
@@ -63,8 +62,6 @@ struct LoginView: View {
                 if hasCompletedOnboarding && hasActiveGoal {
                     container.rootRouter.root = .main
                 } else {
-                    // TODO: 임시로 주석처리, 다음 버튼 완성되면 아래 main 지우고 해당 줄 주석 해제해주세요!
-//                    container.rootRouter.root = .main
                     container.rootRouter.root = .onboarding
                 }
             }
@@ -74,5 +71,6 @@ struct LoginView: View {
 
 #Preview {
     LoginView()
+        .environment(LoginViewModel())
         .environmentObject(DIContainer())
 }
