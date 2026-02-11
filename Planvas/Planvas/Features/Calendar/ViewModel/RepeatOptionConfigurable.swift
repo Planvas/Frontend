@@ -19,7 +19,7 @@ protocol RepeatOptionConfigurable {
 }
 
 /// 반복 타입 enum (공통 사용)
-enum RepeatType: String, CaseIterable {
+enum RepeatType: String, CaseIterable, Codable {
     case daily = "매일"
     case weekly = "매주"
     case biweekly = "격주"

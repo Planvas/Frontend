@@ -206,7 +206,7 @@ final class CalendarViewModel {
             do {
                 try await repository.deleteEvent(event)
             } catch {
-                await MainActor.run { applyEventsFromRepository() }
+                // 서버 오류가 나더라도 로컬에서는 삭제된 상태 유지 (되돌리지 않음)
                 print("이벤트 삭제 실패: \(error)")
             }
         }
@@ -255,6 +255,65 @@ final class CalendarViewModel {
         }
         return keys
     }
+
+    /// 반복 일정: 시작일~종료일 구간만 계산. 매일=매일, 매주=선택 요일만, 매달/매년=해당 날짜만.
+    private func dateKeysForRepeatingEvent(_ event: Event) -> [String] {
+        guard event.isRepeating,
+              let repeatEnd = event.repeatEndDate,
+              let type = event.repeatType else {
+            return [dateKeyString(from: event.startDate)]
+        }
+        let start = calendar.startOfDay(for: event.startDate)
+        let end = calendar.startOfDay(for: repeatEnd)
+        if start > end { return [dateKeyString(from: start)] }
+
+        func weekdayIndex(from date: Date) -> Int { (calendar.component(.weekday, from: date) - 2 + 7) % 7 }
+        let weekdays: [Int] = event.repeatWeekdays ?? [weekdayIndex(from: start)]
+
+        switch type {
+        case .daily:
+            return dateKeys(from: start, to: end)
+        case .weekly:
+            var keys: [String] = []
+            var current = start
+            while current <= end {
+                if weekdays.contains(weekdayIndex(from: current)) { keys.append(dateKeyString(from: current)) }
+                guard let next = calendar.date(byAdding: .day, value: 1, to: current) else { break }
+                current = next
+            }
+            return keys
+        case .biweekly:
+            var keys: [String] = []
+            var current = start
+            while current <= end {
+                if weekdays.contains(weekdayIndex(from: current)) {
+                    let weeks = (calendar.dateComponents([.day], from: start, to: current).day ?? 0) / 7
+                    if weeks % 2 == 0 { keys.append(dateKeyString(from: current)) }
+                }
+                guard let next = calendar.date(byAdding: .day, value: 1, to: current) else { break }
+                current = next
+            }
+            return keys
+        case .monthly:
+            var keys: [String] = []
+            var current = start
+            while current <= end {
+                keys.append(dateKeyString(from: current))
+                guard let next = calendar.date(byAdding: .month, value: 1, to: current) else { break }
+                current = next
+            }
+            return keys
+        case .yearly:
+            var keys: [String] = []
+            var current = start
+            while current <= end {
+                keys.append(dateKeyString(from: current))
+                guard let next = calendar.date(byAdding: .year, value: 1, to: current) else { break }
+                current = next
+            }
+            return keys
+        }
+    }
     
     /// Repository 결과를 sampleEvents에 반영 (API 연동용 / 실패 시 롤백)
     private func applyEventsFromRepository() {
@@ -292,8 +351,11 @@ final class CalendarViewModel {
     }
     
     func addEvent(_ event: Event) {
-        // 낙관적 업데이트: 먼저 로컬에 추가
-        for dateKey in dateKeys(from: event.startDate, to: event.endDate) {
+        // 반복: 시작일~종료일만. 비반복: 시작일~종료일.
+        let keysToAdd = event.isRepeating
+            ? dateKeysForRepeatingEvent(event)
+            : dateKeys(from: event.startDate, to: event.endDate)
+        for dateKey in keysToAdd {
             if sampleEvents[dateKey] == nil {
                 sampleEvents[dateKey] = []
             }
@@ -304,9 +366,25 @@ final class CalendarViewModel {
             do {
                 try await repository.addEvent(event)
             } catch {
-                await MainActor.run { applyEventsFromRepository() }
-                print("이벤트 추가 실패: \(error)")
+                // 서버 오류 시에도 낙관적 반영은 유지 (사용자에게는 저장된 것처럼 보이게 함). 필요 시 백그라운드 재시도/토스트는 별도 구현.
+                print("이벤트 추가 서버 오류 (로컬에는 유지): \(error)")
             }
+        }
+    }
+
+    /// 해당 날짜 구간만 API로 가져와 sampleEvents에 반영 (일정 추가 실패 시 해당 일만 새로고침 등)
+    private func refreshEventsInRange(from startDate: Date, to endDate: Date) async {
+        let start = calendar.startOfDay(for: startDate)
+        let end = calendar.startOfDay(for: endDate)
+        do {
+            let events = try await repository.getEvents(from: start, to: end)
+            let fetchedByDate = eventsToDictionary(events)
+            for key in dateKeys(from: start, to: end) {
+                sampleEvents[key] = fetchedByDate[key] ?? []
+            }
+            sampleEvents = sampleEvents.filter { !$0.value.isEmpty }
+        } catch {
+            print("일정 구간 새로고침 실패: \(error)")
         }
     }
     

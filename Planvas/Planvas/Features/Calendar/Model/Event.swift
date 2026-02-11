@@ -35,6 +35,10 @@ struct Event: Identifiable, Codable {
     var myActivityId: Int?
     /// 반복 요일 (0=월…6=일). 고정 일정 생성 시 POST fixed-schedules에 사용
     var repeatWeekdays: [Int]?
+    /// 반복 종료일 (이 날짜까지 매일/매주/격주/매달/매년 반복). nil이면 비반복 또는 미설정
+    var repeatEndDate: Date?
+    /// 반복 타입 (매일/매주/격주/매달/매년). 반복 일정 표시 확장 시 사용
+    var repeatType: RepeatType?
     /// 내 활동 포인트 (my-activities 생성/수정 시 사용, 기본 10)
     var activityPoint: Int?
 
@@ -53,6 +57,8 @@ struct Event: Identifiable, Codable {
         fixedScheduleId: Int? = nil,
         myActivityId: Int? = nil,
         repeatWeekdays: [Int]? = nil,
+        repeatEndDate: Date? = nil,
+        repeatType: RepeatType? = nil,
         activityPoint: Int? = nil
     ) {
         self.id = id
@@ -69,6 +75,8 @@ struct Event: Identifiable, Codable {
         self.fixedScheduleId = fixedScheduleId
         self.myActivityId = myActivityId
         self.repeatWeekdays = repeatWeekdays
+        self.repeatEndDate = repeatEndDate
+        self.repeatType = repeatType
         self.activityPoint = activityPoint
     }
 }
