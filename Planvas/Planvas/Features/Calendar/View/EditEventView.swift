@@ -462,9 +462,11 @@ struct EditEventView: View {
     EditEventView(
         event: Event(
             title: "이름",
-            time: "하루종일",
             isAllDay: true,
-            color: .red
+            color: .red,
+            type: .activity,
+            startDate: Date(),
+            endDate: Date()
         ),
         startDate: Date(),
         endDate: Date(),

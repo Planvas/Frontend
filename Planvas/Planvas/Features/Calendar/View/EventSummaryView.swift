@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// 이벤트 요약 뷰 - 수정하기 버튼 클릭 시 EventDetailView로 이동
+/// 이벤트 요약 뷰 - 수정하기 버튼 클릭 시 FixedEventDetailView / ActivityEventDetailView로 이동
 struct EventSummaryView: View {
     let event: Event
     let startDate: Date
@@ -66,20 +66,39 @@ struct EventSummaryView: View {
         }
         .background(.white)
         .sheet(isPresented: $showEventDetailView) {
-            EventDetailView(
-                event: event,
-                startDate: startDate,
-                endDate: endDate,
-                daysUntil: daysUntil,
-                targetPeriod: targetPeriod,
-                onEdit: nil,
-                onDelete: onDelete,
-                onSave: { showEventDetailView = false },
-                onUpdateEvent: { updatedEvent in
-                    onUpdateEvent?(updatedEvent)
-                    showEventDetailView = false
+            Group {
+                if event.category == .growth || event.category == .rest {
+                    ActivityEventDetailView(
+                        event: event,
+                        startDate: startDate,
+                        endDate: endDate,
+                        daysUntil: daysUntil,
+                        targetPeriod: targetPeriod,
+                        onEdit: nil,
+                        onDelete: onDelete,
+                        onSave: { showEventDetailView = false },
+                        onUpdateEvent: { updatedEvent in
+                            onUpdateEvent?(updatedEvent)
+                            showEventDetailView = false
+                        }
+                    )
+                } else {
+                    FixedEventDetailView(
+                        event: event,
+                        startDate: startDate,
+                        endDate: endDate,
+                        daysUntil: daysUntil,
+                        targetPeriod: targetPeriod,
+                        onEdit: nil,
+                        onDelete: onDelete,
+                        onSave: { showEventDetailView = false },
+                        onUpdateEvent: { updatedEvent in
+                            onUpdateEvent?(updatedEvent)
+                            showEventDetailView = false
+                        }
+                    )
                 }
-            )
+            }
             .presentationDragIndicator(.visible)
         }
     }
@@ -203,9 +222,11 @@ struct EventSummaryView: View {
     EventSummaryView(
         event: Event(
             title: "엄마 생신",
-            time: "하루종일",
             isAllDay: true,
-            color: .purple2
+            color: .purple2,
+            type: .activity,
+            startDate: Date(),
+            endDate: Date()
         ),
         startDate: Date(),
         endDate: Date(),
