@@ -6,33 +6,34 @@
 //
 
 import Foundation
-import Combine
+import Observation
 
 @MainActor
-class EventDetailViewModel: ObservableObject {
+@Observable
+final class EventDetailViewModel {
     // MARK: - Event Data
-    @Published var event: Event?
-    @Published var startDate: Date = Date()
-    @Published var endDate: Date = Date()
-    @Published var daysUntil: Int?
-    @Published var targetPeriod: String?
-    
+    var event: Event?
+    var startDate: Date = Date()
+    var endDate: Date = Date()
+    var daysUntil: Int?
+    var targetPeriod: String?
+
     // MARK: - Activity Settings State
-    @Published var showActivitySettings = false
-    @Published var selectedActivityType: ActivityType = .growth
-    
+    var showActivitySettings = false
+    var selectedActivityType: ActivityType = .growth
+
     // 성장/휴식 각각의 활동치
-    @Published var growthValue: Int = 20
-    @Published var restValue: Int = 20
-    
+    var growthValue: Int = 20
+    var restValue: Int = 20
+
     // 성장/휴식 각각의 현재 달성률
-    @Published var currentGrowthAchievement: Int = 0
-    @Published var currentRestAchievement: Int = 0
-    
+    var currentGrowthAchievement: Int = 0
+    var currentRestAchievement: Int = 0
+
     // 성장/휴식 각각의 목표 달성률
-    @Published var targetGrowthAchievement: Int = 60
-    @Published var targetRestAchievement: Int = 50
-    
+    var targetGrowthAchievement: Int = 60
+    var targetRestAchievement: Int = 50
+
     enum ActivityType {
         case growth
         case rest

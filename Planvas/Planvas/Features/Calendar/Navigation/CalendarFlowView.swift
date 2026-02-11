@@ -8,34 +8,57 @@
 import SwiftUI
 
 struct CalendarFlowView: View {
+    @Binding var selectedTab: Int
+    var calendarTabTag: Int
+    /// 온보딩 플로우에서만 전달. 메인 탭에서는 nil (이때 Environment에 OnboardingRoute 라우터 없어도 됨)
+    var onFinishFromOnboarding: (() -> Void)? = nil
+
     @State private var router = NavigationRouter<CalendarRoute>()
-    @StateObject private var viewModel = CalendarViewModel()
-    /// true이면 캘린더만 보이고, false이면 연동/직접 입력 화면
+    @State private var viewModel = CalendarViewModel()
+    @State private var syncViewModel = CalendarSyncViewModel()
     @State private var isCalendarOnly = false
-    
+
     var body: some View {
         Group {
             if isCalendarOnly {
-                CalendarView()
+                CalendarView(
+                    onConnectGoogleCalendar: {
+                        Task {
+                            await syncViewModel.performGoogleCalendarConnect(onSuccess: {
+                                await viewModel.refreshAfterGoogleConnect()
+                            })
+                        }
+                    },
+                    onFinish: onFinishFromOnboarding
+                )
             } else {
-                NavigationStack(path: $router.path) {
                     CalendarSyncView(
-                        onDirectInput: {
-                            isCalendarOnly = true
-                        },
+                        viewModel: syncViewModel,
+                        onDirectInput: { isCalendarOnly = true },
                         onImportSchedules: { schedules in
                             viewModel.importSchedules(schedules)
                             isCalendarOnly = true
                         }
                     )
-                }
             }
         }
-        .environment(router)
-        .environmentObject(viewModel)
+        .environment(viewModel)
+        .onChange(of: selectedTab) { _, newValue in
+            if newValue == calendarTabTag {
+                viewModel.moveToToday()
+            }
+        }
+        .alert("연동 실패", isPresented: Binding(
+            get: { syncViewModel.statusError != nil },
+            set: { if !$0 { syncViewModel.statusError = nil } }
+        )) {
+            Button("확인") { syncViewModel.statusError = nil }
+        } message: {
+            Text(syncViewModel.statusError ?? "연동에 실패했습니다.")
+        }
     }
 }
 
 #Preview {
-    CalendarFlowView()
+    CalendarFlowView(selectedTab: .constant(1), calendarTabTag: 1)
 }

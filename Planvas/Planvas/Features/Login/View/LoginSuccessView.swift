@@ -2,8 +2,9 @@ import SwiftUI
 import Combine
 
 struct LoginSuccessView: View {
-    @EnvironmentObject var viewModel: LoginViewModel
-    
+    @EnvironmentObject var container: DIContainer
+    @Environment(LoginViewModel.self) var viewModel
+
     var body: some View {
         ZStack {
             LinearGradient(
@@ -11,13 +12,13 @@ struct LoginSuccessView: View {
                 startPoint: .bottom,
                 endPoint: .top)
             .ignoresSafeArea()
-            
+
             VStack {
                 Image("loginImage")
                     .resizable()
                     .frame(width: 174, height: 213)
                     .padding(.vertical, 50)
-                
+
                 VStack {
                     Text("로그인 완료!")
                         .foregroundStyle(Color.gray444)
@@ -33,8 +34,14 @@ struct LoginSuccessView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            viewModel.rootRouter?.root = .main
-            viewModel.rootRouter?.objectWillChange.send()
+            container.appState.isLoggedIn = true
+            let hasCompletedOnboarding = UserDefaults.standard.bool(forKey: OnboardingKeys.hasCompletedOnboarding)
+            let hasActiveGoal = UserDefaults.standard.bool(forKey: OnboardingKeys.hasActiveGoal)
+            if hasCompletedOnboarding && hasActiveGoal {
+                container.rootRouter.root = .main
+            } else {
+                 container.rootRouter.root = .onboarding
+            }
         }
     }
 }

@@ -8,27 +8,26 @@
 import SwiftUI
 
 struct TabBar: View {
-    var body: some View {
-        TabView {
-            MainView()
-                .tabItem {
-                    Label("홈", systemImage: "house")
-                }
-            CalendarFlowView()
-                .tabItem {
-                    Label("캘린더", systemImage: "calendar")
-                }
-            ActivityView()
-                .tabItem {
-                    Label("활동 탐색", systemImage: "magnifyingglass")
-                }
-            MyPageFlowView()
-                .tabItem {
-                    Label("마이", systemImage: "person")
-                }
+    @State private var selectedTab = 0
 
+    var body: some View {
+        TabView(selection: $selectedTab) {
+            MainView()
+                .tabItem { Label("홈", systemImage: "house") }
+                .tag(0)
+            CalendarFlowView(selectedTab: $selectedTab, calendarTabTag: 1)
+                .tabItem { Label("캘린더", systemImage: "calendar") }
+                .tag(1)
+            ActivityView()
+                .tabItem { Label("활동 탐색", systemImage: "magnifyingglass") }
+                .tag(2)
+            MyPageFlowView()
+                .tabItem { Label("마이", systemImage: "person") }
+                .tag(3)
         }
         .accentColor(.primary1)
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 

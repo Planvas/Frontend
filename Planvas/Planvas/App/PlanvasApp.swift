@@ -15,15 +15,18 @@ struct PlanvasApp: App {
         WindowGroup {
             Group {
               if hasSeenOnboarding {
-                RootView(container: container)
+                RootView()
               } else {
                 SplashView()
               }
           }
           .environmentObject(container)
+          .environment(container.loginVM)
+          .environment(container.goalVM)
           .onOpenURL { url in
               GIDSignIn.sharedInstance.handle(url)
           }
+          .environment(container.rootRouter)
         }
     }
 }
