@@ -12,7 +12,11 @@ import Moya
 @Observable
 @MainActor
 final class OnboardingViewModel {
-    private let provider = APIManager.shared.createProvider(for: OnboardingAPI.self)
+    private let provider: MoyaProvider<OnboardingAPI>
+    
+    init(provider: MoyaProvider<OnboardingAPI>) {
+        self.provider = provider
+    }
 
     var createdGoalId: Int? = nil
     var isLoading: Bool = false

@@ -101,8 +101,11 @@ struct GoalInfoSetupView: View {
 
 #Preview {
     let router = NavigationRouter<OnboardingRoute>()
+    let goalVM = GoalSetupViewModel()
+
     NavigationStack(path: .constant(router.path)) {
         GoalInfoSetupView()
+            .environment(goalVM)
     }
     .environment(router)
 }

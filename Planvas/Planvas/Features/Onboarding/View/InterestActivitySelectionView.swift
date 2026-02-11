@@ -153,4 +153,5 @@ struct InterestActivitySelectionView: View {
 #Preview {
     InterestActivitySelectionView()
         .environment(GoalSetupViewModel())
+        .environment(LoginViewModel())
 }

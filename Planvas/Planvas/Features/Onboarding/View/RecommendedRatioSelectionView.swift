@@ -110,11 +110,13 @@ struct RecommendedRatioSelectionView: View {
 
 #Preview {
     let router = NavigationRouter<OnboardingRoute>()
+    let container = DIContainer()
 
     NavigationStack(path: .constant(router.path)) {
         RecommendedRatioSelectionView()
-            .environment(GoalSetupViewModel())
+            .environment(container.goalVM)
+            .environment(container.onboardingVM)
     }
     .environment(router)
+    .environmentObject(container)
 }
-
