@@ -10,7 +10,6 @@ final class AuthManager {
     
     // MARK: - 현재 로그인 상태 확인
     var isLogIn: Bool {
-        if TokenStore.shared.accessToken != nil { return true }
         return TokenStore.shared.accessToken != nil
     }
     
