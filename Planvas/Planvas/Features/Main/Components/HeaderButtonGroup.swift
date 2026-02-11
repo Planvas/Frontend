@@ -15,13 +15,13 @@ struct HeaderButtonGroup: View {
         VStack{
             Button {
                 print(
-                    goalSetting == .end
+                    goalSetting == .ENDED
                     ? "최종 리포트 확인하러 가기"
                     : "목표 설정하러 가기"
                 )
             } label: {
                 Text(
-                    goalSetting == .end
+                    goalSetting == .ENDED
                     ? "최종 리포트 확인하러 가기"
                     : "목표 설정하러 가기"
                 )
@@ -37,7 +37,7 @@ struct HeaderButtonGroup: View {
                 .padding(.top, 20)
             }
             
-            if goalSetting == .end {
+            if goalSetting == .ENDED {
                 Text("목표한 균형을")
                     .textStyle(.medium20)
                     .foregroundStyle(.subPurple)
@@ -58,7 +58,8 @@ struct HeaderButtonGroup: View {
                         .textStyle(.bold20)
                         .foregroundStyle(.primary1)
                         .background(.subPurple)
-                    Text(" 은")                            .textStyle(.medium20)
+                    Text(" 은")
+                        .textStyle(.medium20)
                         .foregroundStyle(.subPurple)
                 }
                 Text("무엇인가요?")
