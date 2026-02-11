@@ -1,14 +1,10 @@
 import Foundation
 
+// MARK: - 현재 목표 조회 DTO
 struct GoalResponse: Decodable {
     let resultType: String
-    let error: GoalErrorResponse?
+    let error: ErrorDTO?
     let success: GoalSuccessResponse?
-}
-
-struct GoalErrorResponse: Decodable {
-    let reason: String
-    let data: String?
 }
 
 struct GoalSuccessResponse: Decodable {
@@ -32,4 +28,23 @@ extension GoalSuccessResponse {
     var endTuple: (year: String, month: String, day: String)? {
         return endDate?.toDateTuple()
     }
+}
+
+// MARK: - 내 정보 조회 DTO
+struct UserResponse: Decodable {
+    let resultType: String
+    let error: ErrorDTO?
+    let success: UserContainer?
+}
+
+struct UserContainer: Decodable {
+    let user: UserSuccessResponse?
+}
+
+struct UserSuccessResponse: Decodable {
+    let userId: Int
+    let name: String
+    let provider: String
+    let createdAt: String
+    let onboardingCompleted: Bool
 }
