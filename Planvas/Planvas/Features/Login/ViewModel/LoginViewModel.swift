@@ -55,7 +55,7 @@ final class LoginViewModel {
                     self?.isLoginSuccess = true
                     
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                        self?.rootRouter?.updateRootRoute()
+                        self?.rootRouter?.triggerLoginSuccess()
                     }
                 } else {
                     self?.errorMessage = "로그인 실패"
