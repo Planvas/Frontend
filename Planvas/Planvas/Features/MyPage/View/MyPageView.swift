@@ -10,11 +10,8 @@ struct MyPageView: View {
     var body: some View {
         ZStack {
             backgroundCircle
-            
             VStack {
-                if let errorMessage = viewModel.errorMessage {
-                    Text(errorMessage).foregroundStyle(Color.red)
-                } else if viewModel.goalData != nil {
+                if !viewModel.goalIsLoading {
                     ScrollView {
                         VStack(spacing: 40) {
                             ProfileView(viewModel: viewModel)
@@ -24,9 +21,16 @@ struct MyPageView: View {
                         }
                     }
                     .scrollIndicators(.hidden)
-                } else if viewModel.isLoading {
+                } else if viewModel.goalIsLoading || viewModel.userIsLoading {
                     ProgressView().tint(.white)
                 }
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if viewModel.showToast, let message = viewModel.toastMessage {
+                ToastView(message: message)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .padding(.bottom, 50)
             }
         }
         .overlay {
@@ -59,7 +63,7 @@ struct MyPageView: View {
     }
 }
 
-// MARK: - Sub Views
+// MARK: - 배경 보라색 원
 extension MyPageView {
     private var backgroundCircle: some View {
         Circle()
