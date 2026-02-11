@@ -15,29 +15,40 @@ struct HeaderButtonGroup: View {
         VStack{
             Button {
                 print(
-                    goalSetting == .end
+                    goalSetting == .ENDED
                     ? "최종 리포트 확인하러 가기"
                     : "목표 설정하러 가기"
                 )
             } label: {
                 Text(
-                    goalSetting == .end
+                    goalSetting == .ENDED
                     ? "최종 리포트 확인하러 가기"
                     : "목표 설정하러 가기"
                 )
                 .textStyle(.semibold20)
-                .foregroundStyle(.black1)
+                .foregroundStyle(.fff)
                 .padding()
                 .frame(maxWidth: .infinity)
                 .background(
                     RoundedRectangle(cornerRadius: 15)
-                        .foregroundStyle(.subPurple)
+                        .foregroundStyle(.primary1)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(
+                            LinearGradient(
+                                colors: [.subPurple, .primary1],
+                                startPoint: UnitPoint(x: -0.1, y: 0),
+                                endPoint: UnitPoint(x: 0.3, y: 1)
+                            ),
+                            lineWidth: 1
+                        )
                 )
                 .padding(.vertical)
                 .padding(.top, 20)
             }
             
-            if goalSetting == .end {
+            if goalSetting == .ENDED {
                 Text("목표한 균형을")
                     .textStyle(.medium20)
                     .foregroundStyle(.subPurple)
@@ -58,7 +69,8 @@ struct HeaderButtonGroup: View {
                         .textStyle(.bold20)
                         .foregroundStyle(.primary1)
                         .background(.subPurple)
-                    Text(" 은")                            .textStyle(.medium20)
+                    Text(" 은")
+                        .textStyle(.medium20)
                         .foregroundStyle(.subPurple)
                 }
                 Text("무엇인가요?")
