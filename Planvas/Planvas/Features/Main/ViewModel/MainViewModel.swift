@@ -7,22 +7,31 @@
 
 import SwiftUI
 import Combine
+import Moya
 
 class MainViewModel: ObservableObject {
     // MARK: - 메인 페이지 목표 세팅 상태별 메세지
-    // ing: 진행 중인 목표 존재, end: 활동 기간 종료, none: 목표 없음
-    @Published var goalSetting: GoalSetting = .ing
+    // ACTIVE: 진행 중인 목표 존재, ENDED: 활동 기간 종료, NONE: 목표 없음
+    @Published var goalSetting: GoalSetting = .ACTIVE
     
     var stateTitle: String {
         switch goalSetting {
-        case .ing:
+        case .ACTIVE:
             return "지수님, \n반가워요!"
-        case .end:
+        case .ENDED:
             return "지수님, \n활동 기간이 \n종료되었어요"
-        case .none:
+        case .NONE:
             return "지수님, \n새로운 목표를 \n세워주세요!"
         }
     }
+    
+    // MARK: - 현재 목표 정보
+    @Published var goalTitle: String = ""
+    @Published var dDay: Int = 0
+    @Published var growthRatio: Int = 0
+    @Published var restRatio: Int = 0
+    @Published var growthAchieved: Int = 0
+    @Published var restAchieved: Int = 0
     
     // MARK: - 위클리 캘린더
     @Published var centerDate: Date = Date()
@@ -142,4 +151,34 @@ class MainViewModel: ObservableObject {
             imageName: "banner4"
         )
     ]
+    
+    
+    // MARK: - 메인 페이지 API 연동 함수
+    private let provider = APIManager.shared.createProvider(for: MainAPI.self)
+    
+    func fetchMainData() {
+        provider.request(.getMainData) { result in
+            switch result {
+            case .success(let response):
+                do {
+                    let decodedData = try JSONDecoder().decode(MainDataResponse.self, from: response.data)
+                    DispatchQueue.main.async {
+                        if let success = decodedData.success {
+                            self.goalSetting = success.goalStatus
+                            self.goalTitle = success.currentGoal.title
+                            self.dDay = success.currentGoal.dDay
+                            self.growthRatio = success.currentGoal.growthRatio
+                            self.restRatio = success.currentGoal.restRatio
+                            self.growthAchieved = success.progress.growthAchieved
+                            self.restAchieved = success.progress.restAchieved
+                        }
+                    }
+                } catch {
+                    print("Main 디코더 오류: \(error)")
+                }
+            case .failure(let error):
+                print("Main API 오류: \(error)")
+            }
+        }
+    }
 }

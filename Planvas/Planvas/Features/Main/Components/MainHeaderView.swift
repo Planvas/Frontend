@@ -9,8 +9,7 @@ import SwiftUI
 
 // MARK: - 메인 헤더 그룹
 struct MainHeaderView: View {
-    let goalSetting: GoalSetting
-    let stateTitle: String
+    @ObservedObject var viewModel: MainViewModel
     
     var body: some View {
         VStack {
@@ -20,16 +19,16 @@ struct MainHeaderView: View {
                     .frame(width: 98, height: 23)
                     .padding(.top, 60)
                 
-                Text(stateTitle)
+                Text(viewModel.stateTitle)
                     .lineLimit(nil)
                     .textStyle(.semibold30)
                     .foregroundStyle( .black1)
                     .padding(.top, 36)
-                    .offset(y: goalSetting == .ing ? 0 : 30)
+                    .offset(y: viewModel.goalSetting == .ACTIVE ? 0 : 30)
                 
                 HStack{
                     Group{
-                        Text("D-17")
+                        Text("D-\(viewModel.dDay)")
                             .textStyle(.medium14)
                             .foregroundStyle(.fff)
                             .padding(.horizontal, 8)
@@ -39,7 +38,7 @@ struct MainHeaderView: View {
                                     .foregroundStyle(.primary1)
                             )
                         
-                        Text("시험 기간 전 갓생")
+                        Text(viewModel.goalTitle)
                             .textStyle(.medium14)
                             .foregroundStyle(.fff)
                             .padding(.horizontal, 8)
@@ -49,7 +48,7 @@ struct MainHeaderView: View {
                                     .foregroundStyle(.primary50)
                             )
                     }
-                    .opacity(goalSetting == .ing ? 1 : 0)
+                    .opacity(viewModel.goalSetting == .ACTIVE ? 1 : 0)
                     .offset(y: -60)
                     Spacer()
                     Image(.mainCharacter)
@@ -101,14 +100,14 @@ struct MainHeaderView: View {
                     HStack{
                         MainProgressView(
                             type: "성장",
-                            goal: 60,
-                            progress: 40
+                            goal: viewModel.growthRatio,
+                            progress: viewModel.growthAchieved
                         )
                         Spacer()
                         MainProgressView(
                             type: "휴식",
-                            goal: 40,
-                            progress: 10
+                            goal: viewModel.restRatio,
+                            progress: viewModel.restAchieved
                         )
                     }
                     .frame(maxWidth: .infinity)
@@ -130,12 +129,12 @@ struct MainHeaderView: View {
                                 .foregroundStyle(.subPurple)
                         }
                     }
-                    .opacity(goalSetting == .ing ? 1 : 0)
+                    .opacity(viewModel.goalSetting == .ACTIVE ? 1 : 0)
                 }
                 .padding(20)
                 .padding(.top, 67)
                 
-                if goalSetting != .ing {
+                if viewModel.goalSetting != .ACTIVE {
                     VStack(spacing: 0) {
                         WaveBackground()
                             .fill(.black60)
@@ -148,7 +147,7 @@ struct MainHeaderView: View {
                     }
                     .frame(height: 420)
                     
-                    HeaderButtonGroup(goalSetting: goalSetting)
+                    HeaderButtonGroup(goalSetting: viewModel.goalSetting)
                         .padding(20)
                     
                     HStack{

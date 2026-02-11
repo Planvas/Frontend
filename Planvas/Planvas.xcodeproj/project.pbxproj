@@ -288,7 +288,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				BASE_URL = "http:/$()/43.200.254.101:3000/";
+				BASE_URL = "http:/$()/3.36.66.26:3000/";
 				CLIENT_ID = "184142894398-ujiqolgd6o0mv2ga6r86la98ll9gk7lo.apps.googleusercontent.com";
 				CLIENT_ID_REVERSE = "com.googleusercontent.apps.184142894398-ujiqolgd6o0mv2ga6r86la98ll9gk7lo";
 				CODE_SIGN_STYLE = Automatic;
@@ -330,7 +330,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				BASE_URL = "http:/$()/43.200.254.101:3000/";
+				BASE_URL = "http:/$()/3.36.66.26:3000/";
 				CLIENT_ID = "184142894398-ujiqolgd6o0mv2ga6r86la98ll9gk7lo.apps.googleusercontent.com";
 				CLIENT_ID_REVERSE = "com.googleusercontent.apps.184142894398-ujiqolgd6o0mv2ga6r86la98ll9gk7lo";
 				CODE_SIGN_STYLE = Automatic;
