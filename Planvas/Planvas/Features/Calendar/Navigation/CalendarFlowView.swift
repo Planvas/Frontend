@@ -60,9 +60,5 @@ struct CalendarFlowView: View {
 }
 
 #Preview {
-    let router = NavigationRouter<OnboardingRoute>()
-
-    CalendarFlowView()
-        .environment(router)
     CalendarFlowView(selectedTab: .constant(1), calendarTabTag: 1)
 }
