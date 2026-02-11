@@ -104,7 +104,7 @@ struct GoogleCalendarTime: Decodable {
     let date: String?
 }
 
-// MARK: - 월간 캘린더 조회
+// MARK: - 월간 캘린더 조회 (GET /api/calendar/month)
 struct MonthlyCalendarResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
@@ -121,6 +121,15 @@ struct CalendarDayDTO: Decodable {
     let date: String
     let hasItems: Bool
     let itemCount: Int
+    let schedulesPreview: [SchedulePreviewDTO]
+    let moreCount: Int
+}
+
+struct SchedulePreviewDTO: Decodable {
+    let itemId: String
+    let title: String
+    let isFixed: Bool
+    let type: String
 }
 
 // MARK: - 일간 캘린더 조회
@@ -139,7 +148,10 @@ struct CalendarItemDTO: Decodable {
     let itemId: String
     let type: String
     let title: String
-    let startTime: String
-    let endTime: String
-    let completed: Bool
+    /// 일간 API: ISO8601 (startAt/endAt) 또는 시:분 (startTime/endTime) 둘 중 하나로 옴
+    let startAt: String?
+    let endAt: String?
+    let startTime: String?
+    let endTime: String?
+    let completed: Bool?
 }

@@ -50,7 +50,8 @@ struct RepeatOptionPickerView<ViewModel: RepeatOptionConfigurable>: View {
             }
         }
         .frame(height: 35)
-        .padding(8)
+        .padding(.horizontal, 8)
+        .padding(.top, 8)
     }
 }
 
