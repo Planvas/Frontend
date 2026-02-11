@@ -25,7 +25,13 @@ struct LoginView: View {
                 VStack {
                     Text("Planvas")
                         .textStyle(.extrabold45)
-                        .linearGradient(startColor: .gradprimary1, endColor: .gradprimary2)
+                        .foregroundStyle(
+                            LinearGradient(
+                                gradient: Gradient(colors: [.gradprimary1, .gradprimary2]),
+                                startPoint: UnitPoint(x: -0.1, y: 0.2),
+                                endPoint: UnitPoint(x: 0.8, y: 0.5)
+                            )
+                        )
                         .padding(.vertical, 5)
                     Group {
                         Text("내가 그리는 모습 그대로,")

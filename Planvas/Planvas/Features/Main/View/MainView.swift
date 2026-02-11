@@ -12,10 +12,7 @@ struct MainView: View {
     
     var body: some View {
         ScrollView {
-            MainHeaderView(
-                goalSetting: viewModel.goalSetting,
-                stateTitle: viewModel.stateTitle
-            )
+            MainHeaderView(viewModel: viewModel)
             
             MainBodyView(viewModel: viewModel)
                 .background(
@@ -26,6 +23,7 @@ struct MainView: View {
                 .padding(.bottom, 75)
         }
         .ignoresSafeArea()
+        .task{viewModel.fetchMainData()}
     }
 }  
 

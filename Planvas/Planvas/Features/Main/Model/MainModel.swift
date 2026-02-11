@@ -8,10 +8,10 @@
 import SwiftUI
 
 // MARK: - 목표 설정 상태
-enum GoalSetting {
-    case ing
-    case end
-    case none
+enum GoalSetting: String, Decodable {
+    case ACTIVE
+    case ENDED
+    case NONE
 }
 
 // MARK: - 캘린더 일정
