@@ -13,6 +13,7 @@ final class RootRouter {
     init(appState: AppState) {
         self.appState = appState
         
+        appState.isLoggedIn = AuthManager.shared.checkAutoLoginStatus()
         updateRootRoute()
 
         appState.$isLoggedIn
@@ -24,19 +25,12 @@ final class RootRouter {
             .store(in: &cancellables)
     }
     
+    // MARK: - 화면 전환 로직
     func updateRootRoute() {
         let hasSeenOnboarding = UserDefaults.standard.bool(forKey: OnboardingKeys.hasSeenOnboarding)
         let hasCompletedOnboarding = UserDefaults.standard.bool(forKey: OnboardingKeys.hasCompletedOnboarding)
         let hasActiveGoal = UserDefaults.standard.bool(forKey: OnboardingKeys.hasActiveGoal)
 
-        // 자동 로그인
-        if AuthManager.shared.checkAutoLoginStatus() {
-            print("자동 로그인 성공: 토큰을 찾았습니다.")
-            appState.isLoggedIn = true
-        } else {
-            appState.isLoggedIn = false
-        }
-        
         if !hasSeenOnboarding {
             root = .splash
         } else if !appState.isLoggedIn {
