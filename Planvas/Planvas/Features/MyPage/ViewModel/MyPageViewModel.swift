@@ -10,12 +10,27 @@ class MyPageViewModel {
     var goalData: GoalSuccessResponse?
     var userData: UserSuccessResponse?
     var isCalendarConnected: Bool = false
-    var errorMessage: String?
-    var isLoading: Bool = false
+    var goalErrorMessage: String?
+    var userErrorMessage: String?
+    var goalIsLoading: Bool = false
+    var userIsLoading: Bool = false
+    // 에러 메시지
+    var toastMessage: String?
+    var showToast: Bool = false
     
     private let calendarRepository: CalendarRepositoryProtocol = CalendarAPIRepository()
     private let provider = APIManager.shared.createProvider(for: MyPageRouter.self)
     private var cancellable = Set<AnyCancellable>()
+    
+    // MARK: - 에러 발생 시 호출 할 함수
+    func handleError(_ message: String){
+        self.toastMessage = message
+        self.showToast = true
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            self.showToast = false
+        }
+    }
     
     // MARK: - 마이페이지 데이터 초기화
     func fetchMyPageData() async{
@@ -37,26 +52,27 @@ class MyPageViewModel {
     
     // MARK: - 현재 목표 조회
     func fetchGoal() {
+        self.goalErrorMessage = nil
         provider.requestPublisher(.getCurrentGoal)
             .map(GoalResponse.self)
             .receive(on: DispatchQueue.main)
             .handleEvents(
-                receiveSubscription: { [weak self] _ in self?.isLoading = true },
-                receiveCompletion: { [weak self] _ in self?.isLoading = false },
-                receiveCancel: { [weak self] in self?.isLoading = false}
+                receiveSubscription: { [weak self] _ in self?.goalIsLoading = true },
+                receiveCompletion: { [weak self] _ in self?.goalIsLoading = false },
+                receiveCancel: { [weak self] in self?.goalIsLoading = false}
             )
             .sink(
                 receiveCompletion: { [weak self] completion in
                     if case let .failure(error) = completion {
-                        self?.errorMessage = error.localizedDescription
+                        self?.goalErrorMessage = error.localizedDescription
                     }
                 },
                 receiveValue: { [weak self] (response: GoalResponse) in
                     if response.resultType == "SUCCESS" {
                         self?.goalData = response.success
-                        self?.errorMessage = nil
+                        self?.goalErrorMessage = nil
                     } else {
-                        self?.errorMessage = response.error?.reason ?? "알 수 없는 오류가 발생했습니다."
+                        self?.goalErrorMessage = response.error?.reason ?? "알 수 없는 오류가 발생했습니다."
                     }
                 })
             .store(in: &cancellable)
@@ -64,26 +80,27 @@ class MyPageViewModel {
     
     // MARK: - 내 정보 조회
     func fetchUser() {
+        self.userErrorMessage = nil
         provider.requestPublisher(.getUserInfo)
             .map(UserResponse.self)
             .receive(on: DispatchQueue.main)
             .handleEvents(
-                receiveSubscription: { [weak self] _ in self?.isLoading = true },
-                receiveCompletion: { [weak self] _ in self?.isLoading = false },
-                receiveCancel: { [weak self] in self?.isLoading = false}
+                receiveSubscription: { [weak self] _ in self?.userIsLoading = true },
+                receiveCompletion: { [weak self] _ in self?.userIsLoading = false },
+                receiveCancel: { [weak self] in self?.userIsLoading = false}
             )
             .sink(
                 receiveCompletion: { [weak self] completion in
                     if case let .failure(error) = completion {
-                        self?.errorMessage = error.localizedDescription
+                        self?.userErrorMessage = error.localizedDescription
                     }
                 },
                 receiveValue: { [weak self] (response: UserResponse) in
                     if response.resultType == "SUCCESS" {
                         self?.userData = response.success?.user
-                        self?.errorMessage = nil
+                        self?.userErrorMessage = nil
                     } else {
-                        self?.errorMessage = response.error?.reason ?? "알 수 없는 오류가 발생했습니다."
+                        self?.userErrorMessage = response.error?.reason ?? "알 수 없는 오류가 발생했습니다."
                     }
                 })
             .store(in: &cancellable)
