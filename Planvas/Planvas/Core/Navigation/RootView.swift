@@ -7,6 +7,9 @@ struct RootView: View {
         switch router.root {
         case .splash:
             ProgressView()
+                .onAppear {
+                    router.updateRootRoute()
+                }
         case .login:
             LoginView()
         case .onboarding:
