@@ -8,8 +8,9 @@ import SwiftUI
 
 struct GoalRatioSetupView: View {
     @Environment(NavigationRouter<OnboardingRoute>.self) private var router
-    @ObservedObject var viewModel: GoalSetupViewModel
-    
+    @Environment(GoalSetupViewModel.self) private var vm
+    @Environment(OnboardingViewModel.self) private var onboardingVM
+
     // 토글 상태를 위한 @State 변수 추가
     @State private var showGrowthActivities = false
     @State private var showRestActivities = false
@@ -37,7 +38,7 @@ struct GoalRatioSetupView: View {
                         .padding(.bottom, 20)
                     
                     // 비율 설정 네모 그룹
-                    RatioSetupCard(vm: viewModel)
+                    RatioSetupCard()
                         .padding(.bottom, 30)
                     
                     // 유형별 추천 비율 그룹
@@ -56,8 +57,15 @@ struct GoalRatioSetupView: View {
                     
                     // 다음 버튼
                     PrimaryButton(title: "다음") {
-                        print("성장: \(viewModel.growthPercent)% / 휴식: \(viewModel.restPercent)%")
-                        // TODO: 로직 처리
+                        print("성장: \(vm.growthPercent)% / 휴식: \(vm.restPercent)%")
+                        // 목표 이름, 기간, 비율 저장 API 연동
+                        onboardingVM.createGoal(
+                            title: vm.goalName,
+                            startDate: onboardingVM.formatDateForAPI(vm.startDate),
+                            endDate: onboardingVM.formatDateForAPI(vm.endDate),
+                            targetGrowthRatio: vm.growthPercent,
+                            targetRestRatio: vm.restPercent
+                        )
                     }
                     .padding(.horizontal, 20)
                     .padding(.bottom, 66)
@@ -161,7 +169,7 @@ struct GoalRatioSetupView: View {
             if showGrowthActivities {
                 Spacer().frame(height: 12)
                 
-                let items = viewModel.growthActivityTypes
+                let items = vm.growthActivityTypes
                 
                 VStack(alignment: .leading, spacing: 12) {
                     rowView(Array(items.prefix(3)))
@@ -204,7 +212,7 @@ struct GoalRatioSetupView: View {
             if showRestActivities {
                 Spacer().frame(height: 12)
                 
-                let items = viewModel.restActivityTypes
+                let items = vm.restActivityTypes
                 
                 VStack(alignment: .leading, spacing: 12) {
                     rowView(Array(items.prefix(3)))
@@ -235,8 +243,13 @@ struct GoalRatioSetupView: View {
 // MARK: - 프리부
 #Preview {
     let router = NavigationRouter<OnboardingRoute>()
+    let goalVM = GoalSetupViewModel()
+    let onboardingVM = OnboardingViewModel(provider: APIManager.shared.createProvider(for: OnboardingAPI.self))
+
     NavigationStack {
-        GoalRatioSetupView(viewModel: GoalSetupViewModel())
+        GoalRatioSetupView()
+            .environment(goalVM)
+            .environment(onboardingVM)
     }
     .environment(router)
 }
