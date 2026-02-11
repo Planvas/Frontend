@@ -20,6 +20,8 @@ final class EditEventViewModel: RepeatOptionConfigurable {
 
     // MARK: - 반복 설정
     var repeatType: RepeatType = .weekly
+    /// 반복 종료일 (날짜만)
+    var repeatEndDate: Date = Date()
     var selectedYearDuration: Int = 1
     var selectedWeekdays: Set<Int> = []
     var isRepeating: Bool = false
@@ -82,6 +84,25 @@ final class EditEventViewModel: RepeatOptionConfigurable {
     var repeatOptionDisplay: String {
         repeatType.rawValue
     }
+
+    private let calendar = Calendar.current
+
+    /// 반복 일정일 때 종료일 선택 가능 범위(시작일 당일 23:59:59)
+    var endOfStartDate: Date {
+        calendar.date(bySettingHour: 23, minute: 59, second: 59, of: startDate) ?? startDate
+    }
+
+    /// 반복 일정일 때 종료일을 시작일과 같은 날로 맞춤(종료 시간 유지)
+    func syncEndDateToStartDay() {
+        guard isRepeating else { return }
+        let startDay = calendar.startOfDay(for: startDate)
+        let endTime = calendar.dateComponents([.hour, .minute], from: endDate)
+        let newEnd = calendar.date(bySettingHour: endTime.hour ?? 0, minute: endTime.minute ?? 0, second: 0, of: startDay) ?? startDay
+        endDate = newEnd
+        if endDate < startDate {
+            endDate = calendar.date(byAdding: .hour, value: 1, to: startDate) ?? startDate
+        }
+    }
     
     /// 목표 기간: 진행기간(시작일~종료일)에 따라 항상 동기화
     var targetPeriod: String {
@@ -120,6 +141,7 @@ final class EditEventViewModel: RepeatOptionConfigurable {
         self.isRepeating = event.isRepeating
         self.repeatType = event.repeatType ?? .weekly
         self.selectedWeekdays = Set(event.repeatWeekdays ?? [])
+        self.repeatEndDate = event.repeatEndDate ?? Calendar.current.date(byAdding: .month, value: 1, to: startDate) ?? startDate
         if let end = event.repeatEndDate {
             let years = Calendar.current.dateComponents([.year], from: event.startDate, to: end).year ?? 1
             self.selectedYearDuration = min(max(years, 1), 4)
@@ -217,8 +239,12 @@ final class EditEventViewModel: RepeatOptionConfigurable {
             category = .none
         }
         
-        // 반복 종료일 = 사용자가 고른 종료일(날짜). API endDate로 그대로 전달
-        let repeatEnd: Date? = isRepeating ? Calendar.current.startOfDay(for: endDate) : (originalEvent?.repeatEndDate)
+        // 반복 일정은 시작일 == 종료일만 허용
+        let effectiveEndDate: Date = isRepeating && !calendar.isDate(startDate, inSameDayAs: endDate)
+            ? calendar.date(bySettingHour: calendar.component(.hour, from: endDate), minute: calendar.component(.minute, from: endDate), second: 0, of: startDate) ?? startDate
+            : endDate
+        // 반복 종료일 = 반복 종료일 선택값 (날짜만)
+        let repeatEnd: Date? = isRepeating ? calendar.startOfDay(for: repeatEndDate) : (originalEvent?.repeatEndDate)
         return Event(
             id: originalEvent?.id ?? UUID(),
             title: eventName.isEmpty ? "이름 없음" : eventName,
@@ -227,7 +253,7 @@ final class EditEventViewModel: RepeatOptionConfigurable {
             isAllDay: isAllDay,
             color: selectedColor,
             startDate: startDate,
-            endDate: endDate,
+            endDate: effectiveEndDate,
             category: category,
             isCompleted: originalEvent?.isCompleted ?? false,
             isRepeating: isRepeating,
