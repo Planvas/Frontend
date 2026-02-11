@@ -37,6 +37,10 @@ struct OnboardingFlowView: View {
                         case .recommendation:
                             RecommendedRatioSelectionView()
                         
+                        // 캘린더
+                        case .calendar:
+                            CalendarFlowView()
+                            
                         // 관심 분야 선택
                         case .interest:
                             InterestActivitySelectionView(
