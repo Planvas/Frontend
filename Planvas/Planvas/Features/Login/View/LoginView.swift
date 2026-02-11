@@ -1,10 +1,12 @@
 import SwiftUI
 
 struct LoginView: View {
-    @Environment(LoginViewModel.self) private var viewModel
+    @Environment(LoginViewModel.self) var viewModel
     @EnvironmentObject var container: DIContainer
     
     var body: some View {
+        @Bindable var viewModel = viewModel
+        
         ZStack {
             Image("loginBackground")
                 .resizable()
@@ -43,28 +45,13 @@ struct LoginView: View {
                     })
                 .padding(.top, 30)
                 .padding(.horizontal)
-                .fullScreenCover(isPresented: Binding(
-                    get: { viewModel.isLoginSuccess },
-                    set: { viewModel.isLoginSuccess = $0 }
-                )) {
-                    LoginSuccessView()
-                        .environmentObject(container)
-                }
             }
         }
-        .onChange(of: viewModel.isLoginSuccess) { _, isSuccess in
-            guard isSuccess else { return }
-            // 로그인 성공 후 2초 뒤 온보딩·목표 상태에 따라 자동 라우팅 (LoginSuccessView 탭과 동일 로직)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                container.appState.isLoggedIn = true
-                let hasCompletedOnboarding = UserDefaults.standard.bool(forKey: OnboardingKeys.hasCompletedOnboarding)
-                let hasActiveGoal = UserDefaults.standard.bool(forKey: OnboardingKeys.hasActiveGoal)
-                if hasCompletedOnboarding && hasActiveGoal {
-                    container.rootRouter.root = .main
-                } else {
-                    container.rootRouter.root = .onboarding
-                }
-            }
+        .onAppear {
+            viewModel.isLoginSuccess = false
+        }
+        .fullScreenCover(isPresented: $viewModel.isLoginSuccess) {
+            LoginSuccessView()
         }
     }
 }
