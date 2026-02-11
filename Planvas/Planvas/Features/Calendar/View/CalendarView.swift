@@ -41,8 +41,12 @@ struct CalendarView: View {
                 
                 Spacer()
                 
-                // 하단 버튼들
-                bottomButtonsView
+                schedulegetButtonView
+                
+                // 하단 완료 버튼 (온보딩 과정에서만 표시, 캘린더 탭에서는 숨김)
+                if onFinish != nil {
+                    bottomButtonsView
+                }
             }
             .padding(.horizontal, 20)
             .padding(.top, 20)
@@ -467,13 +471,18 @@ struct CalendarView: View {
         }
     }
     
-    // MARK: - 하단 버튼
-    private var bottomButtonsView: some View {
+    // MARK: - 일정 가져오기 버튼
+    private var schedulegetButtonView: some View {
         VStack(spacing: 12) {
             SecondaryButton(title: "일정 가져오기") {
                 showImportAlert = true
             }
-            
+        }
+    }
+    
+    // MARK: - 완료 버튼
+    private var bottomButtonsView: some View {
+        VStack(spacing: 12) {
             PrimaryButton(title: "완료") {
                 // 완료 액션 - 완료 누르면 온보딩의 관심 분야 선택 뷰로 넘어가도록
                 onFinish?()
