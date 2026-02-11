@@ -1,10 +1,3 @@
-//
-//  DIContainer.swift
-//  Planvas
-//
-//  Created by 정서영 on 1/22/26.
-//
-
 import Foundation
 import Combine
 import Moya
@@ -35,6 +28,7 @@ final class DIContainer: ObservableObject {
         self.onboardingProvider = apiManager.createProvider(for: OnboardingAPI.self)
         
         self.loginVM = LoginViewModel()
+        self.loginVM.rootRouter = self.rootRouter
         self.goalVM = GoalSetupViewModel()
         self.onboardingVM = OnboardingViewModel(provider: onboardingProvider)
     }
