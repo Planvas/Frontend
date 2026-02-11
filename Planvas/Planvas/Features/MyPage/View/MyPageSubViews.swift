@@ -2,6 +2,8 @@ import SwiftUI
 
 // MARK: - 프로필
 struct ProfileView: View {
+    var viewModel: MyPageViewModel
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 30) {
             Image("logo")
@@ -11,7 +13,7 @@ struct ProfileView: View {
                 
                 VStack(alignment: .leading) {
                     HStack {
-                        Text("김지수")
+                        Text(viewModel.userData?.name ?? "사용자")
                             .textStyle(.semibold20)
                         Text("님")
                             .textStyle(.regular18)
@@ -161,6 +163,7 @@ struct DetailPageView: View {
             MenuSection("서비스 정보") {
                 MenuButton(title: "로그아웃", desc: nil) {
                     AuthManager.shared.logout()
+                    router.reset()
                     router.push(.loginPage)
                 }
             }
