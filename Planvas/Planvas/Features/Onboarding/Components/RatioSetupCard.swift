@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct RatioSetupCard: View {
-    @ObservedObject var vm: GoalSetupViewModel
+    @Environment(GoalSetupViewModel.self) private var vm
     @Environment(\.displayScale) var displayScale
     
     var body: some View {
@@ -114,5 +114,6 @@ struct RatioSetupCard: View {
 }
 
 #Preview {
-    RatioSetupCard(vm: GoalSetupViewModel())
+    RatioSetupCard()
+        .environment(GoalSetupViewModel())
 }
