@@ -4,7 +4,7 @@ import SwiftUI
 func styledSubDescription(_ text: String) -> AttributedString {
     var attributedString = AttributedString(text)
     
-    let purpleHighLights = ["계획", "감에만 의존", "성장", "휴식", "균형", "일정에 딱맞는"]
+    let purpleHighLights = ["계획", "늘", "'열심히'", "라는", "감에만", "의존"]
     let grayHighLight:String = "학기, 방학, 시험 기간 등..."
     
     for word in purpleHighLights {
@@ -42,27 +42,30 @@ struct SplashPageView : View {
     
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
+            Spacer()
+            VStack(alignment: .center) {
                 Text(attributedTitle)
-                    .textStyle(.semibold30)
+                    .textStyle(.semibold25)
+                    .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
+                    .padding(.top, 40)
                 Spacer()
             }
             .frame(height: 200)
             
             VStack {
-                Spacer()
                 if isRollingPage {
                     RollingIconView()
+                    Spacer()
                 }
                 else if let name = imageName {
+                    Spacer()
                     Image(name)
                         .resizable()
-                        .scaledToFit()
-                        .frame(width: 240)
+                        .frame(width: 180, height: 400)
                         .padding(.horizontal, 40)
+                        .padding(.top, 30)
                 }
-                Spacer()
             }
             .frame(height: 250)
             
@@ -88,7 +91,7 @@ struct RollingIconView: View {
     
     var body: some View {
         GeometryReader { geo in
-            let singleSetWidth: CGFloat = CGFloat(icons.count) * 80 + CGFloat(icons.count - 1) * 40
+            let singleSetWidth: CGFloat = CGFloat(icons.count) * 130 + CGFloat(icons.count - 1) * 40
             HStack(spacing: 40) {
                 ForEach(0..<2, id: \.self) { _ in
                     HStack(spacing: 40) {
@@ -96,7 +99,7 @@ struct RollingIconView: View {
                             Image(name)
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: 80, height: 180)
+                                .frame(width: 130, height: 240)
                         }
                     }
                 }
