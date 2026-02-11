@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct RepeatOptionPickerView<ViewModel: RepeatOptionConfigurable>: View {
-    @ObservedObject var viewModel: ViewModel
+    var viewModel: ViewModel
 
     var body: some View {
         repeatTypeTabs
@@ -60,9 +60,9 @@ struct RepeatOptionPickerView<ViewModel: RepeatOptionConfigurable>: View {
 }
 
 struct RepeatOptionPickerPreview: View {
-    @StateObject private var viewModel = AddEventViewModel()
+    @State private var viewModel = AddEventViewModel()
 
     var body: some View {
-        RepeatOptionPickerView(viewModel: viewModel)
+        RepeatOptionPickerView<AddEventViewModel>(viewModel: viewModel)
     }
 }

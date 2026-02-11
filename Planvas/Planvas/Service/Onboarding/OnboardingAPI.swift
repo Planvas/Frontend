@@ -25,18 +25,24 @@ extension OnboardingAPI: APITargetType {
     
     var path: String {
         switch self {
-        case .postGoalBase:
+        case .postGoalBase: // 목표 기간/이름 설정
             return "\(Self.goalPath)"
+            
         case .patchGoalBase(let goalId, _):
             return "\(Self.goalPath)/\(goalId)"
+            
         case .getGoalDetail(let goalId):
             return "\(Self.goalPath)/\(goalId)"
+            
         case .getCurrentGoal:
             return "\(Self.goalPath)/current"
+            
         case .patchGoalRatio(let goalId, _):
             return "\(Self.goalPath)/\(goalId)/ratio"
-        case .getRatioList:
+            
+        case .getRatioList: // 목표 비율 프리셋 목록 조회
             return "\(Self.goalPath)/ratio-presets"
+        
         case .getGoalProgress(let goalId):
             return "\(Self.goalPath)/\(goalId)/progress"
         }

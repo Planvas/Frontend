@@ -1,17 +1,16 @@
 import Foundation
 import GoogleSignIn
-import Combine
 import UIKit
+import Observation
 
-class LoginViewModel: ObservableObject {
-    @Published var isLoginSuccess = false
-    @Published var isSignupRequired = false
-    @Published var userName: String = ""
-    @Published var errorMessage: String? = nil
-    
-    var rootRouter: RootRouter?
-    
-    @MainActor
+@Observable
+@MainActor
+final class LoginViewModel {
+    var isLoginSuccess = false
+    var isSignupRequired = false
+    var userName: String = ""
+    var errorMessage: String?
+
     func GoogleLogin() {
         // SwiftUI에서는 현재 뷰의 UIViewController를 찾아와야 구글 로그인창이 뜸
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
@@ -37,7 +36,6 @@ class LoginViewModel: ObservableObject {
                 self?.errorMessage = "구글 로그인 실패: idToken 없음"
                 return
             }
-            
             Task {
                 await self?.requestServerAuth(idToken: idToken)
             }
@@ -54,17 +52,16 @@ class LoginViewModel: ObservableObject {
                     self?.userName = data.user?.name ?? "사용자"
                     self?.isLoginSuccess = true
                     
-                    if let router = self?.rootRouter {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                            router.root = .main
-                            self?.objectWillChange.send()
-                        }
-                    }
+                    // 로그인 성공 후 목표 설정 온보딩 화면으로 이동하는 경우도 있어 일단 주석처리해두었습니다
+//                    if let router = self?.rootRouter {
+//                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+//                            router.root = .main
+//                            self?.objectWillChange.send()
+//                        }
+//                    }
                 } else {
                     self?.errorMessage = "로그인 실패"
                 }
-                
-                
             }
         })
     }
