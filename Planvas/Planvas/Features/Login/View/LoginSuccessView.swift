@@ -34,14 +34,7 @@ struct LoginSuccessView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            container.appState.isLoggedIn = true
-            let hasCompletedOnboarding = UserDefaults.standard.bool(forKey: OnboardingKeys.hasCompletedOnboarding)
-            let hasActiveGoal = UserDefaults.standard.bool(forKey: OnboardingKeys.hasActiveGoal)
-            if hasCompletedOnboarding && hasActiveGoal {
-                container.rootRouter.root = .main
-            } else {
-                 container.rootRouter.root = .onboarding
-            }
+            viewModel.rootRouter?.triggerLoginSuccess()
         }
     }
 }
