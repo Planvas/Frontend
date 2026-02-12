@@ -82,6 +82,38 @@ final class CalendarNetworkService: @unchecked Sendable {
         return success
     }
 
+    // MARK: - 일정 추가/수정/삭제
+
+    /// 일정 추가 POST /api/calendar/event
+    func createEvent(title: String, startAt: String, endAt: String, type: String = "FIXED") async throws -> CreateEventSuccess {
+        let body = CreateEventRequestDTO(title: title, startAt: startAt, endAt: endAt, type: type)
+        let response: CreateEventResponse = try await request(.postEvent(body: body))
+        if let error = response.error {
+            throw CalendarAPIError.serverFail(reason: error.reason)
+        }
+        guard let success = response.success else {
+            throw CalendarAPIError.invalidResponse
+        }
+        return success
+    }
+
+    /// 일정 수정 PATCH /api/calendar/event/{id}
+    func updateEvent(id: Int, title: String, startAt: String, endAt: String, type: String = "FIXED") async throws {
+        let body = UpdateEventRequestDTO(title: title, startAt: startAt, endAt: endAt, type: type)
+        let response: UpdateEventResponse = try await request(.patchEvent(id: id, body: body))
+        if let error = response.error {
+            throw CalendarAPIError.serverFail(reason: error.reason)
+        }
+    }
+
+    /// 일정 삭제 DELETE /api/calendar/event/{id}
+    func deleteEvent(id: Int) async throws {
+        let response: DeleteEventResponse = try await request(.deleteEvent(id: id))
+        if let error = response.error {
+            throw CalendarAPIError.serverFail(reason: error.reason)
+        }
+    }
+
     // MARK: - Private
 
     private func request<T: Decodable>(_ target: CalendarAPI) async throws -> T {
