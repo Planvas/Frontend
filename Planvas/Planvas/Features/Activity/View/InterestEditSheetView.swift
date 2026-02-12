@@ -65,7 +65,7 @@ struct InterestEditSheetView: View {
             PrimaryButton(title: "적용하기") {
                 let items = goalVM.interestActivityTypes
                 let selectedNumbers = items.enumerated().compactMap { index, item in
-                    goalVM.selectedInterestIds.contains(item.id) ? (index + 1) : nil
+                    tempSelectedIds.contains(item.id) ? (index + 1) : nil
                 }
                 let text = selectedNumbers.map(String.init).joined(separator: ",")
                 print("재설정된 관심 분야 : \(text)")
