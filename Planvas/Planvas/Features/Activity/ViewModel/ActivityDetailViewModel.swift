@@ -35,7 +35,18 @@ class ActivityDetailViewModel {
     }
 
     var date: String {
-        activity?.date ?? ""
+        guard let activity,
+              let start = activity.startDate,
+              let end = activity.endDate
+        else { return activity?.date ?? "" }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M/d"
+
+        let startString = formatter.string(from: start)
+        let endString = formatter.string(from: end)
+
+        return "\(startString) ~ \(endString)"
     }
 
     var categoryText: String {
@@ -49,8 +60,9 @@ class ActivityDetailViewModel {
         activity?.description ?? ""
     }
 
-    var thumbnailUrl: String {
-        activity?.thumbnailUrl ?? ""
+    var thumbnailURL: URL? {
+        guard let urlString = activity?.thumbnailUrl else { return nil }
+        return URL(string: urlString)
     }
     
     private let provider = APIManager.shared.createProvider(for: ActivityAPI.self)
