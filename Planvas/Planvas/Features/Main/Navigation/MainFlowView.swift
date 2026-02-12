@@ -17,6 +17,8 @@ struct MainFlowView: View {
                     switch route {
                     case .main:
                         MainView()
+                    case .activityDetail(let activityId):
+                        ActivityDetailView(activityId: activityId)
                     }
                 }
         }

@@ -9,7 +9,7 @@ import SwiftUI
 
 // MARK: - 메인 바디 그룹
 struct MainBodyView: View {
-    @ObservedObject var viewModel: MainViewModel
+    @Bindable var viewModel: MainViewModel
     
     var body: some View {
         VStack {

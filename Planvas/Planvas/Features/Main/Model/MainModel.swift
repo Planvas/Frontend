@@ -124,6 +124,7 @@ enum ToDoTypeColor: String, Codable {
 // MARK: - 오늘의 인기 성장 활동
 struct ActivityItem: Identifiable {
     let id = UUID()
+    let activityId: Int
     let title: String
     let subtitle: String
     let imageName: String

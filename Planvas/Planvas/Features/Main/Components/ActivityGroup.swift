@@ -10,7 +10,7 @@ import SwiftUI
 // MARK: - 바디 / 활동 그룹
 struct ActivityGroup: View {
     @State private var recommended: Bool = false
-    @ObservedObject var viewModel: MainViewModel
+    @Bindable var viewModel: MainViewModel
     @State private var currentIndex: Int? = 0 
     
     var body: some View {

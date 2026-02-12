@@ -73,8 +73,4 @@ struct DateItem: View {
         }
     }
 }
-   
 
-#Preview {
-    MainView()
-}
