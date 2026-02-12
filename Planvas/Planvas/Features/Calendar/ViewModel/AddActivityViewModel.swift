@@ -17,7 +17,7 @@ final class AddActivityViewModel: ActivitySettingsBindable {
     var endDate: Date = Date()
     var currentAchievementPercent: Int = 10
     var activityValue: Int = 20
-    var recommendationPoint: Int = 30
+    var recommendedPoint: Int = 20
     var goalPercent: Int = 60
     var growthLabel: String = "성장"
 
