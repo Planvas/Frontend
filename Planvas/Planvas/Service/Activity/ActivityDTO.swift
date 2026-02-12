@@ -41,6 +41,31 @@ struct ActivityDetailSuccess: Decodable {
     let point: Int
     let description: String
     let thumbnailUrl: String?
+//    let type: ActivityType
+    let startDate: String
+    let endDate: String
+    let dDay: Int
+    let scheduleStatus: ScheduleAvailable
+    let tipMessage: String?
+    let categoryId: Int?
+    let externalUrl: String?
+    let minPoint: Int
+    let maxPoint: Int
+    let defaultPoint: Int
+}
+
+extension ActivityDetailSuccess {
+    func toDomain() -> ActivityDetail {
+        ActivityDetail(
+            title: title,
+            dDay: dDay,
+            date: "\(startDate) ~ \(endDate)",
+            category: category,
+            point: point,
+            description: description,
+            thumbnailUrl: thumbnailUrl ?? "",
+        )
+    }
 }
 
 // MARK: - 활동 적용(내 일정 반영)
