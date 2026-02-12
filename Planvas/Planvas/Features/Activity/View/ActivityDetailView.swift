@@ -8,29 +8,10 @@
 import SwiftUI
 
 struct ActivityDetailView: View {
-    @State private var viewModel: ActivityDetailViewModel
-    @Environment(NavigationRouter<ActivityRoute>.self) var router
-    
-    init() {
-        let mockData = ActivityDetail(
-            title: "SK 하이닉스 2025 하반기 청년 Hy-Five 14기 모집",
-            dDay: 16,
-            date: "11/15 ~ 12/3",
-            category: .growth,
-            point: 30,
-            description: "SK 하이닉스 2025 하반기 청년 Hy-Five 14기 모집합니다.",
-            thumbnailUrl: ""
-        )
-
-        _viewModel = State(
-            initialValue: ActivityDetailViewModel(activity: mockData)
-        )
-    }
-    
     /// 활동 상세 조회·내 일정 추가 API에 사용. nil이면 로컬 샘플 데이터만 표시.
     var activityId: Int?
 
-    @Environment(OnboardingViewModel.self) private var onboardingVM
+    @Environment(NavigationRouter<ActivityRoute>.self) var router
     @State var viewModel: ActivityDetailViewModel
 
     /// 활동 상세 데이터 (옵셔널 바인딩 편의용)
@@ -53,11 +34,8 @@ struct ActivityDetailView: View {
             .padding()
         }
         .navigationBarBackButtonHidden(true)
-    }
-    
         .task {
             viewModel.activityId = activityId
-            viewModel.goalId = onboardingVM.currentGoalId
             await viewModel.loadDetailIfNeeded()
         }
         .sheet(isPresented: $viewModel.showAddActivity) {
@@ -98,18 +76,15 @@ struct ActivityDetailView: View {
     // MARK: - Header
 
     private var HeaderGroup: some View {
-        ZStack{
-            HStack{
-                Button(action:{
-                    router.pop()
-                }, label:{
         ZStack {
             HStack {
-                Button(action: {}, label: {
+                Button {
+                    router.pop()
+                } label: {
                     Image(systemName: "chevron.left")
                         .foregroundStyle(.black1)
                         .frame(width: 11, height: 18)
-                })
+                }
                 Spacer()
             }
             HStack {
@@ -129,9 +104,6 @@ struct ActivityDetailView: View {
             Text(activity?.title ?? "")
                 .textStyle(.semibold22)
                 .foregroundStyle(.black1)
-            
-            HStack(spacing: 9){
-                Text(viewModel.dDayText)
 
             HStack(spacing: 9) {
                 Text(activity?.dDayLabel ?? "")
@@ -158,7 +130,7 @@ struct ActivityDetailView: View {
                     .scaledToFit()
             }
             .overlay(alignment: .topTrailing) {
-                Text(viewModel.categoryText)
+                Text(activity?.pointBadge ?? "")
                     .textStyle(.semibold16)
                     .foregroundStyle(.fff)
                     .padding(.horizontal, 10)
@@ -220,7 +192,7 @@ struct ActivityDetailView: View {
 
 #Preview {
     let router = NavigationRouter<ActivityRoute>()
-    
+
     ActivityDetailView()
         .environment(router)
 }

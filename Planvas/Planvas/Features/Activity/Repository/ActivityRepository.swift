@@ -11,6 +11,9 @@ import Foundation
 // MARK: - Protocol
 
 protocol ActivityRepositoryProtocol {
+    /// 현재 목표 ID 조회 (GET /api/goals/current)
+    func getCurrentGoalId() async throws -> Int?
+
     /// 활동 상세 조회 (GET /api/activities/{activityId})
     func getActivityDetail(activityId: Int) async throws -> ActivityDetail
 
@@ -25,6 +28,10 @@ final class ActivityAPIRepository: ActivityRepositoryProtocol {
 
     init(networkService: ActivityNetworkService = ActivityNetworkService()) {
         self.networkService = networkService
+    }
+
+    func getCurrentGoalId() async throws -> Int? {
+        try await networkService.getCurrentGoalId()
     }
 
     func getActivityDetail(activityId: Int) async throws -> ActivityDetail {

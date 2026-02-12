@@ -9,6 +9,6 @@ import Foundation
 
 enum ActivityRoute: Hashable {
     case activityList
-    case activityDetail(UUID)
+    case activityDetail(activityId: Int)
     case activityCart
 }

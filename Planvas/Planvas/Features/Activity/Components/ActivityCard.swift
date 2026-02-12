@@ -14,7 +14,7 @@ struct ActivityCardView: View {
 
     var body: some View {
         Button{
-            router.push(.activityDetail(item.id))
+            router.push(.activityDetail(activityId: item.activityId))
         } label: {
             VStack(spacing: 12) {
                 
@@ -92,6 +92,7 @@ struct ActivityCardView: View {
 #Preview {
     ActivityCardView(
         item: ActivityCard(
+            activityId: 1,
             imageURL: nil,
             badgeText: "일정 가능",
             badgeColor: .blue1,

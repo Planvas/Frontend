@@ -11,37 +11,6 @@ import Observation
 @Observable
 @MainActor
 class ActivityDetailViewModel {
-
-    private let activity: ActivityDetail
-
-    init(activity: ActivityDetail) {
-        self.activity = activity
-    }
-    
-    var title: String {
-        activity.title
-    }
-    
-    var dDayText: String {
-        "D-\(activity.dDay)"
-    }
-    
-    var date: String {
-        activity.date
-    }
-    
-    var categoryText: String {
-        activity.category == .growth
-        ? "성장 +\(activity.point)"
-        : "휴식 +\(activity.point)"
-    }
-    
-    var description: String {
-        activity.description
-    }
-    
-    var thumbnailUrl: String {
-        activity.thumbnailUrl
     // MARK: - 도메인 모델
     var activityId: Int?
     var goalId: Int?
@@ -66,14 +35,17 @@ class ActivityDetailViewModel {
         self.repository = repository
     }
 
-    // MARK: - 활동 상세 로드 (GET /api/activities/{activityId})
+    // MARK: - 활동 상세 로드 + 현재 goalId 조회
     func loadDetailIfNeeded() async {
         guard let id = activityId else { return }
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
         do {
-            activity = try await repository.getActivityDetail(activityId: id)
+            async let detailTask = repository.getActivityDetail(activityId: id)
+            async let goalTask = repository.getCurrentGoalId()
+            activity = try await detailTask
+            goalId = try await goalTask
         } catch {
             errorMessage = (error as? ActivityAPIError)?.reason ?? error.localizedDescription
         }
