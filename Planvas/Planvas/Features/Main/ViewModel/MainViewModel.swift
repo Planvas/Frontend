@@ -144,7 +144,7 @@ class MainViewModel: ObservableObject {
                                 self.items = recs.map {
                                     ActivityItem(
                                         title: $0.title,
-                                        subtitle: $0.subTitle,
+                                        subtitle: $0.subTitle ?? "",
                                         imageName: ""
                                     )
                                 }

@@ -74,8 +74,8 @@ struct TodayTodo: Decodable {
 struct Recommendation: Decodable {
     let activityId: Int
     let title: String
-    let subTitle: String
-    let dDay: String
+    let subTitle: String?
+    let dDay: Int?
     let imageUrl: String
-    let tags: [String]
+    let tags: [String]?
 }
