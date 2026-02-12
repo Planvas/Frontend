@@ -7,39 +7,64 @@
 
 import Foundation
 import Observation
+import Moya
 
 @Observable
 class ActivityDetailViewModel {
 
-    private let activity: ActivityDetail
+    var activity: ActivityDetail?
 
-    init(activity: ActivityDetail) {
+    init(activity: ActivityDetail? = nil) {
         self.activity = activity
     }
     
     var title: String {
-        activity.title
+        activity?.title ?? ""
     }
-    
+
     var dDayText: String {
-        "D-\(activity.dDay)"
+        guard let dDay = activity?.dDay else { return "" }
+        return "D-\(dDay)"
     }
-    
+
     var date: String {
-        activity.date
+        activity?.date ?? ""
     }
-    
+
     var categoryText: String {
-        activity.category == .growth
-        ? "성장 +\(activity.point)"
-        : "휴식 +\(activity.point)"
+        guard let activity else { return "" }
+        return activity.category == .growth
+            ? "성장 +\(activity.point)"
+            : "휴식 +\(activity.point)"
     }
-    
+
     var description: String {
-        activity.description
+        activity?.description ?? ""
+    }
+
+    var thumbnailUrl: String {
+        activity?.thumbnailUrl ?? ""
     }
     
-    var thumbnailUrl: String {
-        activity.thumbnailUrl
+    private let provider = APIManager.shared.createProvider(for: ActivityAPI.self)
+    
+    func fetchActivityDetail(activityId: Int) {
+        provider.request(.getActivityDetail(activityId: activityId)) { result in
+            switch result {
+            case .success(let response):
+                do {
+                    let decodedData = try JSONDecoder().decode(ActivityDetailResponse.self, from: response.data)
+                    DispatchQueue.main.async {
+                        if let success = decodedData.success {
+                            self.activity = success.toDomain()
+                        }
+                    }
+                } catch {
+                    print("Main 디코더 오류: \(error)")
+                }
+            case .failure(let error):
+                print("Main API 오류: \(error)")
+            }
+        }
     }
 }

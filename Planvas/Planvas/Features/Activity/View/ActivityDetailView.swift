@@ -11,7 +11,10 @@ struct ActivityDetailView: View {
     @State private var viewModel: ActivityDetailViewModel
     @Environment(NavigationRouter<ActivityRoute>.self) var router
     
-    init() {
+    let activityId: Int
+    
+    init(activityId: Int) {
+        self.activityId = activityId
         let mockData = ActivityDetail(
             title: "SK 하이닉스 2025 하반기 청년 Hy-Five 14기 모집",
             dDay: 16,
@@ -39,6 +42,7 @@ struct ActivityDetailView: View {
             .padding()
         }
         .navigationBarBackButtonHidden(true)
+        .task{viewModel.fetchActivityDetail(activityId: activityId)}
     }
     
     private var HeaderGroup: some View {
@@ -153,6 +157,6 @@ struct ActivityDetailView: View {
 #Preview {
     let router = NavigationRouter<ActivityRoute>()
     
-    ActivityDetailView()
+    ActivityDetailView(activityId: 1)
         .environment(router)
 }
