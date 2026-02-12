@@ -41,17 +41,17 @@ struct ActivityDetailSuccess: Decodable {
     let point: Int
     let description: String
     let thumbnailUrl: String?
-    let type: String?
-    let startDate: String?
-    let endDate: String?
-    let dDay: Int?
-    let scheduleStatus: String?
+    let type:  String?
+    let startDate: String
+    let endDate: String
+    let dDay: Int
+    let scheduleStatus: ScheduleAvailable
     let tipMessage: String?
     let categoryId: Int?
     let externalUrl: String?
-    let minPoint: Int?
-    let maxPoint: Int?
-    let defaultPoint: Int?
+    let minPoint: Int
+    let maxPoint: Int
+    let defaultPoint: Int
 }
 
 // MARK: - 활동을 내 일정에 추가 (POST /api/activities/{activityId}/my-activities)
