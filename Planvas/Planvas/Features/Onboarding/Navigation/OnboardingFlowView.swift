@@ -9,8 +9,8 @@ import SwiftUI
 
 struct OnboardingFlowView: View {
     @State private var router = NavigationRouter<OnboardingRoute>()
+    @Environment(RootRouter.self) private var rootRouter
     @EnvironmentObject private var container: DIContainer
-    @State private var showOnboardingSuccessSheet = false
     
     var body: some View {
         NavigationStack(path: $router.path) {
@@ -49,19 +49,15 @@ struct OnboardingFlowView: View {
                         case .interest:
                             InterestActivitySelectionView(
                                 onFinish: {
-                                    // 먼저 메인으로 push
-                                    router.push(.mainPage)
-                                    
-                                    // 그 다음 프레임에 sheet 띄우기
-                                    DispatchQueue.main.async {
-                                        showOnboardingSuccessSheet = true
-                                    }
+                                    UserDefaults.standard.set(true, forKey: "shouldShowOnboardingSuccessSheet")
+
+                                  rootRouter.root = .main
                                 }
                             )
                         
-                        // 메인 페이지
-                        case .mainPage:
-                            TabBar()
+
+                        case .activityList:
+                            ActivityFlowView()
                     }
                 }
         }
@@ -69,14 +65,6 @@ struct OnboardingFlowView: View {
         .environment(container.goalVM)
         .environment(container.onboardingVM)
         .environment(container.loginVM)
-        .sheet(isPresented: $showOnboardingSuccessSheet, onDismiss: {
-            showOnboardingSuccessSheet = false
-        }) {
-            OnboardingSuccessView()
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
-                .presentationBackground(.white)
-        }
     }
 }
 

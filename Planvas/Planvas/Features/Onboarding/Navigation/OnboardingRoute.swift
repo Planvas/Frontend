@@ -15,5 +15,5 @@ enum OnboardingRoute {
     case recommendation    // 유형별 비율 추천 선택
     case calendar   // 캘린더
     case interest   // 관심 분야 선택
-    case mainPage    // 메인 페이지
+    case activityList    // 활동 추천
 }

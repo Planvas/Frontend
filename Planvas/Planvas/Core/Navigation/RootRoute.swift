@@ -12,4 +12,5 @@ enum RootRoute {
     case login
     case onboarding
     case main
+    case loading
 }
