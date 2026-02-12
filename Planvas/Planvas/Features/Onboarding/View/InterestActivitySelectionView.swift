@@ -6,11 +6,30 @@
 //
 
 import SwiftUI
+import Moya
 
 struct InterestActivitySelectionView: View {
     // TODO: 캘린더까지 연동 완료 후 이 페이지로 이동하도록 라우팅 연결해야 함
     @Environment(LoginViewModel.self) private var loginVM
     @Environment(GoalSetupViewModel.self) private var viewModel
+    
+    @State private var fetchedUserName: String = ""
+    @State private var didFetchName = false
+
+    private let provider = APIManager.shared.createProvider(for: MainAPI.self)
+
+    private var displayName: String {
+        // loginVM (로그인 직후엔 여기 있을 수 있음)
+        if !loginVM.userName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return loginVM.userName
+        }
+        // 온보딩에서 fetch한 이름
+        if !fetchedUserName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return fetchedUserName
+        }
+        // fallback
+        return "사용자"
+    }
 
     var onFinish: (() -> Void)?
         
@@ -76,6 +95,28 @@ struct InterestActivitySelectionView: View {
             .padding(.bottom, 66)
             .zIndex(1)
         }
+        .task {
+            // 중복 호출 방지
+            guard !didFetchName else { return }
+            didFetchName = true
+
+            // loginVM이 비었을 때만 서버에서 이름 fetch
+            guard loginVM.userName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+
+            provider.request(.getMainData) { result in
+                switch result {
+                case .success(let response):
+                    if let decoded = try? JSONDecoder().decode(MainDataResponse.self, from: response.data),
+                       let name = decoded.success?.userName {
+                        DispatchQueue.main.async {
+                            self.fetchedUserName = name
+                        }
+                    }
+                case .failure:
+                    break
+                }
+            }
+        }
         .padding(.top, 125)
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
@@ -86,7 +127,7 @@ struct InterestActivitySelectionView: View {
     private var InfoGroup: some View {
         VStack(alignment: .leading, spacing: 0) {
             // 사용자 이름 연동
-            Text("\(loginVM.userName.isEmpty ? "사용자" : loginVM.userName)님,")
+            Text("\(displayName)님,")
                 .textStyle(.semibold30)
                 .foregroundStyle(.black1)
             

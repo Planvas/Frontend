@@ -6,11 +6,30 @@
 //
 
 import SwiftUI
+import Moya
 
 struct GoalInfoSetupView: View {
     @Environment(GoalSetupViewModel.self) private var viewModel
     @Environment(LoginViewModel.self) private var loginVM
     @Environment(NavigationRouter<OnboardingRoute>.self) private var router
+    
+    @State private var fetchedUserName: String = ""
+    @State private var didFetchName = false
+
+    private let provider = APIManager.shared.createProvider(for: MainAPI.self)
+
+    private var displayName: String {
+        // loginVM (로그인 직후엔 여기 있을 수 있음)
+        if !loginVM.userName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return loginVM.userName
+        }
+        // 온보딩에서 fetch한 이름
+        if !fetchedUserName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return fetchedUserName
+        }
+        // fallback
+        return "사용자"
+    }
     
     // 버튼 활성화 조건: 이름이 있고 + 시작일이 있고 + 종료일이 있을 때
     private var isSetupCompleted: Bool {
@@ -47,6 +66,29 @@ struct GoalInfoSetupView: View {
             }
             .padding(.top, 125)
         }
+        .task {
+            // 중복 호출 방지
+            guard !didFetchName else { return }
+            didFetchName = true
+
+            // loginVM이 비었을 때만 서버에서 이름 fetch
+            guard loginVM.userName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+
+            provider.request(.getMainData) { result in
+                switch result {
+                case .success(let response):
+                    if let decoded = try? JSONDecoder().decode(MainDataResponse.self, from: response.data),
+                       let name = decoded.success?.userName {
+                        DispatchQueue.main.async {
+                            self.fetchedUserName = name
+                        }
+                    }
+                case .failure:
+                    break
+                }
+            }
+        }
+
         .ignoresSafeArea()
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
@@ -62,7 +104,7 @@ struct GoalInfoSetupView: View {
             // 이름 카드가 열려있거나, 이름이 아직 없을 때 (이름 설정히더록)
             if viewModel.expandedSection == .name || !isNameValid {
                 // 사용자 이름 적용
-                Text("\(loginVM.userName.isEmpty ? "사용자" : loginVM.userName)의")
+                Text("\(displayName)님의")
                     .textStyle(.semibold30)
                     .foregroundStyle(.black1)
 
