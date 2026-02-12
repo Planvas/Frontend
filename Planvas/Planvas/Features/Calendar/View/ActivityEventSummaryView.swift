@@ -114,10 +114,12 @@ struct ActivityEventSummaryView: View {
         }
     }
 
+    /// "D-day" → 0, "D-N" → N, "D+N" → -N
     private func parseDaysUntil(_ label: String) -> Int? {
         if label == "D-day" { return 0 }
-        guard label.hasPrefix("D-"), let n = Int(label.dropFirst(2)) else { return nil }
-        return n
+        if label.hasPrefix("D-"), let n = Int(label.dropFirst(2)), n >= 0 { return n }
+        if label.hasPrefix("D+"), let n = Int(label.dropFirst(2)), n >= 0 { return -n }
+        return nil
     }
 
     private var headerView: some View {

@@ -61,8 +61,14 @@ final class ActivityEventSummaryViewModel {
 
     /// Event(활동일정)로부터 ViewModel 생성. category가 growth/rest일 때 해당 라벨 + activityPoint 사용.
     /// progressMinPercent/goalPercent/currentPercent는 API 연동 전 기본값 사용.
+    /// daysUntil: 양수면 "D-N", 0이면 "D-day", 음수(지난 일정)면 "D+N" 형식.
     static func from(event: Event, daysUntil: Int?) -> ActivityEventSummaryViewModel {
-        let label: String? = daysUntil != nil ? (daysUntil == 0 ? "D-day" : "D-\(daysUntil!)") : nil
+        let label: String?
+        if let d = daysUntil {
+            label = d == 0 ? "D-day" : (d > 0 ? "D-\(d)" : "D+\(-d)")
+        } else {
+            label = nil
+        }
         let activityLabel: String?
         switch event.category {
         case .growth: activityLabel = "성장"
