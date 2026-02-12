@@ -17,3 +17,14 @@ struct ActivityCard: Identifiable {
     let dday: Int
     let title: String
 }
+
+// MARK: - 활동 디테일 모델
+struct ActivityDetail {
+    let title: String
+    let dDay: Int
+    let date: String
+    let category: TodoCategory
+    let point: Int
+    let description: String
+    let thumbnailUrl: String
+}
