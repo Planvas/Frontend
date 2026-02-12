@@ -104,7 +104,7 @@ struct GoogleCalendarTime: Decodable {
     let date: String?
 }
 
-// MARK: - 월간 캘린더 조회 (GET /api/calendar/month) — API 확정 후 필드 수정 예정
+// MARK: - 월간 캘린더 조회 (GET /api/calendar/month)
 struct MonthlyCalendarResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
@@ -122,44 +122,28 @@ struct CalendarDayDTO: Decodable {
     let hasItems: Bool
     let itemCount: Int
     let schedulesPreview: [SchedulePreviewDTO]
+    let moreCount: Int?
 }
 
+/// api.md 기준: itemId는 String, 색상 필드명은 eventColor
 struct SchedulePreviewDTO: Decodable {
-    /// 서버에서 숫자로 내려줌 (월간 API)
-    let itemId: Int
+    let itemId: String
     let title: String
     let isFixed: Bool
-    /// 반복 일정 여부. 없으면 false
-    let isRepeating: Bool
     let type: String
-    /// 색상 (1~10). 프론트에서 EventColorType으로 매핑
-    let color: Int?
+    let eventColor: Int?
 
-    init(itemId: Int, title: String, isFixed: Bool, isRepeating: Bool = false, type: String, color: Int?) {
+    /// 프리뷰용 수동 생성 init
+    init(itemId: String, title: String, isFixed: Bool, type: String, eventColor: Int?) {
         self.itemId = itemId
         self.title = title
         self.isFixed = isFixed
-        self.isRepeating = isRepeating
         self.type = type
-        self.color = color
-    }
-
-    init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        itemId = try c.decode(Int.self, forKey: .itemId)
-        title = try c.decode(String.self, forKey: .title)
-        isFixed = try c.decode(Bool.self, forKey: .isFixed)
-        isRepeating = try c.decodeIfPresent(Bool.self, forKey: .isRepeating) ?? false
-        type = try c.decode(String.self, forKey: .type)
-        color = try c.decodeIfPresent(Int.self, forKey: .color)
-    }
-
-    private enum CodingKeys: String, CodingKey {
-        case itemId, title, isFixed, isRepeating, type, color
+        self.eventColor = eventColor
     }
 }
 
-// MARK: - 일간 캘린더 조회 — API 확정 후 필드 수정 예정
+// MARK: - 일간 캘린더 조회 (GET /api/calendar/day)
 struct DailyCalendarResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
@@ -171,22 +155,70 @@ struct DailyCalendarSuccessDTO: Decodable {
     let items: [CalendarItemDTO]
 }
 
+/// api.md 기준: itemId String, startAt/endAt ISO, isFixed, eventColor, recurrenceRule
 struct CalendarItemDTO: Decodable {
-    /// 서버에서 숫자로 내려줌 (일간 API)
-    let itemId: Int
-    let type: String
+    let itemId: String
     let title: String
-    /// 일간 API: 날짜+시간(ISO8601). 서버 필드명은 startAt/endAt일 수 있음.
-    let startDateTime: String?
-    let endDateTime: String?
-    /// startDateTime/endDateTime 없을 때 사용: 해당 날짜의 시:분 ("HH:mm")
-    let startTime: String?
-    let endTime: String?
-    let completed: Bool?
+    let startAt: String?
+    let endAt: String?
+    let isFixed: Bool?
+    let type: String
+    let eventColor: Int?
+    let recurrenceRule: String?
+}
 
-    enum CodingKeys: String, CodingKey {
-        case itemId, type, title, startTime, endTime, completed
-        case startDateTime = "startAt"
-        case endDateTime = "endAt"
-    }
+// MARK: - 일정 추가 (POST /api/calendar/event)
+struct CreateEventRequestDTO: Encodable {
+    let title: String
+    let startAt: String   // ISO 8601 (e.g. "2026-02-12T18:10:00+09:00")
+    let endAt: String
+    let type: String      // "FIXED"
+}
+
+struct CreateEventResponse: Decodable {
+    let resultType: String
+    let error: ErrorDTO?
+    let success: CreateEventSuccess?
+}
+
+struct CreateEventSuccess: Decodable {
+    let id: Int
+    let title: String
+    let startAt: String?
+    let endAt: String?
+    let type: String?
+    let status: String?
+}
+
+// MARK: - 일정 수정 (PATCH /api/calendar/event/{id})
+struct UpdateEventRequestDTO: Encodable {
+    let title: String
+    let startAt: String
+    let endAt: String
+    let type: String
+}
+
+struct UpdateEventResponse: Decodable {
+    let resultType: String
+    let error: ErrorDTO?
+    let success: UpdateEventSuccess?
+}
+
+struct UpdateEventSuccess: Decodable {
+    let id: Int?
+    let title: String?
+    let startAt: String?
+    let endAt: String?
+    let type: String?
+}
+
+// MARK: - 일정 삭제 (DELETE /api/calendar/event/{id})
+struct DeleteEventResponse: Decodable {
+    let resultType: String
+    let error: ErrorDTO?
+    let success: DeleteEventSuccess?
+}
+
+struct DeleteEventSuccess: Decodable {
+    let message: String
 }
