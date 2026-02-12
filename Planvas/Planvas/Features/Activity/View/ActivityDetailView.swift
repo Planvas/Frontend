@@ -12,7 +12,7 @@ struct ActivityDetailView: View {
     var activityId: Int?
 
     @Environment(NavigationRouter<ActivityRoute>.self) var router
-    @State var viewModel: ActivityDetailViewModel
+    @State private var viewModel: ActivityDetailViewModel
 
     /// 활동 상세 데이터 (옵셔널 바인딩 편의용)
     private var activity: ActivityDetail? { viewModel.activity }
