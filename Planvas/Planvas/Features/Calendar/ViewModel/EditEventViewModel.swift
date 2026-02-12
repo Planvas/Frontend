@@ -130,8 +130,8 @@ final class EditEventViewModel: RepeatOptionConfigurable {
     // MARK: - Initializer
     init() {}
     
-    /// 수정할 이벤트로 초기화 (event.startDate/startTime, endDate/endTime 기준)
-    func configure(with event: Event, startDate: Date, endDate: Date) {
+    /// 수정할 이벤트로 초기화 (event의 startDate/startTime, endDate/endTime 기준)
+    func configure(with event: Event) {
         self.originalEvent = event
         self.eventName = event.title
         self.startDate = event.startDateTime(calendar: calendar)
@@ -189,9 +189,9 @@ final class EditEventViewModel: RepeatOptionConfigurable {
     
     func decrementActivityValue() {
         if selectedActivityType == .growth {
-            if growthValue > 0 { growthValue -= 10 }
+            growthValue = max(0, growthValue - 10)
         } else {
-            if restValue > 0 { restValue -= 10 }
+            restValue = max(0, restValue - 10)
         }
     }
     
