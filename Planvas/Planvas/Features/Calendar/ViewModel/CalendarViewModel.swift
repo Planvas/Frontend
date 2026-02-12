@@ -267,7 +267,8 @@ final class CalendarViewModel {
             do {
                 try await repository.updateEvent(event)
             } catch {
-                await MainActor.run { applyEventsFromRepository() }
+                // API 연동 전까지 롤백 비활성화. notImplemented 등 실패 시에도 낙관적 업데이트 유지.
+                // applyEventsFromRepository() 호출 시 refreshEvents()로 서버 데이터가 로컬을 덮어써 수정 내용이 사라짐.
                 print("이벤트 수정 실패: \(error)")
             }
         }
