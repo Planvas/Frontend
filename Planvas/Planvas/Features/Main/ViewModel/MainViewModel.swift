@@ -145,7 +145,6 @@ class MainViewModel {
                                         result[date, default: []].append(schedule)
                                     }
                                 }
-
                                 self.weeklySchedules = result
                             }
                             
