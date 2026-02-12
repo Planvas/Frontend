@@ -42,32 +42,70 @@ protocol CalendarRepositoryProtocol {
 
 enum CalendarRepositoryError: Error {
     case missingServerId(message: String)
+    /// API 미연동 메서드 (추가/수정/삭제 등 완성 후 재연결용)
+    case notImplemented(message: String)
 }
 
-/// TODO : 현재는 샘플 데이터를 사용
+/// TODO : 현재는 샘플 데이터를 사용 (프리뷰용 활동/고정 일정 포함)
 final class CalendarRepository: CalendarRepositoryProtocol {
-    // 샘플 데이터 (API 연동 전까지)
-    private var sampleEvents: [String: [Event]] = [
-        "2026-01-02": [
-            Event(title: "이벤트", time: "하루종일", color: .purple1)
-        ],
-        "2026-01-13": [
-            Event(title: "카페 알바", time: "매주 수요일 18:00 - 22:00", isFixed: true, color: .red),
-            Event(title: "엄마생신", time: "하루종일", isAllDay: true, color: .purple2)
-        ],
-        "2026-01-15": [
-            Event(title: "베트남 여행", time: "하루종일", color: .blue1)
-        ],
-        "2026-01-16": [
-            Event(title: "베트남 여행", time: "10:00 - 20:00", color: .blue2)
-        ],
-        "2026-01-18": [
-            Event(title: "동아리송별", time: "하루종일", color: .blue3)
-        ],
-        "2026-01-20": [
-            Event(title: "이벤트", time: "하루종일", isFixed: true, color: .pink)
-        ]
-    ]
+    private static let cal = Calendar.current
+
+    /// 날짜만 (00:00) 또는 날짜+시간. 시간 있는 일정은 startDateTime/endDateTime처럼 시·분 반영.
+    private static func date(_ y: Int, _ m: Int, _ d: Int, hour: Int? = nil, minute: Int? = nil) -> Date {
+        var comps = DateComponents(year: y, month: m, day: d)
+        if let h = hour { comps.hour = h }
+        if let mn = minute { comps.minute = mn }
+        return cal.date(from: comps) ?? Date()
+    }
+
+    /// 프리뷰용: 이벤트를 한 번만 정의한 뒤 날짜 구간에 맞춰 배치 (멀티데이 중복 없음).
+    private lazy var sampleEvents: [String: [Event]] = Self.buildPreviewSampleEvents()
+
+    private static func buildPreviewSampleEvents() -> [String: [Event]] {
+        let calendar = Calendar.current
+        func date(_ y: Int, _ m: Int, _ d: Int, hour: Int? = nil, minute: Int? = nil) -> Date {
+            var c = DateComponents(year: y, month: m, day: d)
+            if let h = hour { c.hour = h }
+            if let mn = minute { c.minute = mn }
+            return calendar.date(from: c) ?? Date()
+        }
+
+        // 이벤트 한 번만 생성 (멀티데이/반복도 인스턴스 하나)
+        let event1 = Event(title: "이벤트", isFixed: true, isAllDay: true, color: .purple1, type: .fixed, startDate: date(2026, 1, 2), endDate: date(2026, 1, 2))
+        let cafeAlba = Event(title: "카페 알바", isFixed: true, isAllDay: false, color: .red, type: .fixed, startDate: date(2026, 1, 13), endDate: date(2026, 1, 13), startTime: Time(hour: 18, minute: 0), endTime: Time(hour: 22, minute: 0), isRepeating: true, repeatOption: .weekly, repeatEndDate: date(2026, 2, 28))
+        let momBirthday = Event(title: "엄마생신", isFixed: true, isAllDay: true, color: .purple2, type: .fixed, startDate: date(2026, 1, 13), endDate: date(2026, 1, 13))
+        let seminar = Event(title: "패스트캠퍼스 AI 세미나", isAllDay: false, color: .purple2, type: .activity, startDate: date(2026, 1, 13), endDate: date(2026, 1, 13), startTime: Time(hour: 14, minute: 0), endTime: Time(hour: 17, minute: 0), category: .growth, activityPoint: 30)
+        let vietnam = Event(title: "베트남 여행", isFixed: true, isAllDay: true, color: .blue1, type: .fixed, startDate: date(2026, 1, 15), endDate: date(2026, 1, 16))
+        let yoga = Event(title: "요가 클래스", isFixed: true, isAllDay: false, color: .green, type: .fixed, startDate: date(2026, 1, 15), endDate: date(2026, 1, 15), startTime: Time(hour: 10, minute: 0), endTime: Time(hour: 11, minute: 0), category: .rest, activityPoint: 20)
+        let club = Event(title: "동아리송별", isFixed: true, isAllDay: true, color: .blue3, type: .fixed, startDate: date(2026, 1, 18), endDate: date(2026, 1, 18))
+        let samsung = Event(title: "삼성전자 대학생 프로그래밍 경진대회", isAllDay: false, color: .purple2, type: .activity, startDate: date(2026, 1, 18), endDate: date(2026, 1, 20), startTime: Time(hour: 9, minute: 0), endTime: Time(hour: 18, minute: 0), category: .growth, activityPoint: 30)
+        let eventPink = Event(title: "이벤트", isFixed: true, isAllDay: true, color: .pink, type: .fixed, startDate: date(2026, 1, 20), endDate: date(2026, 1, 20))
+
+        let allEvents = [event1, cafeAlba, momBirthday, seminar, vietnam, yoga, club, samsung, eventPink]
+        var result: [String: [Event]] = [:]
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        for event in allEvents {
+            var current = calendar.startOfDay(for: event.startDate)
+            let endDay = calendar.startOfDay(for: event.endDate)
+            while current <= endDay {
+                let key = formatter.string(from: current)
+                if result[key] == nil { result[key] = [] }
+                result[key]?.append(event)
+                guard let next = calendar.date(byAdding: .day, value: 1, to: current) else { break }
+                current = next
+            }
+        }
+        // 반복 일정: 매주 수요일(1/13 기준) 1월 내 추가
+        for day in [20, 27] {
+            let key = String(format: "2026-01-%02d", day)
+            if result[key] == nil { result[key] = [] }
+            if result[key]?.contains(where: { $0.id == cafeAlba.id }) == false {
+                result[key]?.append(cafeAlba)
+            }
+        }
+        return result
+    }
     
     private func dateKeyString(from date: Date) -> String {
         let formatter = DateFormatter()
@@ -85,15 +123,15 @@ final class CalendarRepository: CalendarRepositoryProtocol {
                 date: dateStr,
                 hasItems: hasKey,
                 itemCount: list.count,
-                schedulesPreview: list.prefix(3).map { CalendarRepository.preview(from: $0, itemId: "\($0.id)") },
-                moreCount: max(0, list.count - 3)
+                schedulesPreview: list.prefix(3).map { CalendarRepository.preview(from: $0, itemId: "\(abs($0.id.hashValue) % 1_000_000)") },
+                moreCount: max(list.count - 3, 0)
             )
         }
         return MonthlyCalendarSuccessDTO(year: year, month: month, days: days)
     }
 
     private static func preview(from event: Event, itemId: String) -> SchedulePreviewDTO {
-        SchedulePreviewDTO(itemId: itemId, title: event.title, isFixed: event.isFixed, type: "MANUAL")
+        SchedulePreviewDTO(itemId: itemId, title: event.title, isFixed: event.isFixed, type: "FIXED", eventColor: event.color.serverColor)
     }
     
     func getEvents(for date: Date) async throws -> [Event] {

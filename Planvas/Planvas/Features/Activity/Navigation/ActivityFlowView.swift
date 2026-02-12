@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ActivityFlowView: View {
     @State private var router = NavigationRouter<ActivityRoute>()
+    @State private var goalVM = GoalSetupViewModel()
     
     var body: some View {
         NavigationStack(path: $router.path) {
@@ -17,10 +18,15 @@ struct ActivityFlowView: View {
                     switch route {
                     case .activityList:
                         ActivityListView()
+                    case .activityDetail(let activityId):
+                        ActivityDetailView(activityId: activityId)
+                    case .activityCart:
+                        CartView()
                     }
                 }
         }
         .environment(router)
+        .environment(goalVM)
     }
 }
 

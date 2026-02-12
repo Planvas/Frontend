@@ -11,3 +11,10 @@ enum TodoCategory: String, Codable {
     case rest = "REST"
     case manual = "MANUAL"
 }
+
+// 활동 일정 가능 여부
+enum ScheduleAvailable: String, Codable {
+    case available = "AVAILABLE"
+    case warning = "WARNING"
+    case conflict = "CONFILCT"
+}
