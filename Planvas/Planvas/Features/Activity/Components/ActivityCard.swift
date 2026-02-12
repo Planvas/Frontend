@@ -9,83 +9,91 @@ import SwiftUI
 import Kingfisher
 
 struct ActivityCardView: View {
+    @Environment(NavigationRouter<ActivityRoute>.self) var router
     let item: ActivityCard
 
     var body: some View {
-        VStack(spacing: 12) {
-
-            HStack(alignment: .top, spacing: 10) {
-
-                // 이미지
-                ZStack(alignment: .topTrailing) {
-                    Group {
-                        if let urlString = item.imageURL,
-                           let url = URL(string: urlString) {
-                            
-                            KFImage(url)
-                                .resizable()
-                                .scaledToFill()
-                            
-                        } else {
-                            Color.ccc
+        Button{
+            router.push(.activityDetail(item.id))
+        } label: {
+            VStack(spacing: 12) {
+                
+                HStack(alignment: .top, spacing: 10) {
+                    
+                    // 이미지
+                    ZStack(alignment: .topTrailing) {
+                        Group {
+                            if let urlString = item.imageURL,
+                               let url = URL(string: urlString) {
+                                
+                                KFImage(url)
+                                    .resizable()
+                                    .scaledToFill()
+                                
+                            } else {
+                                Color.ccc
+                            }
                         }
-                    }
-                    .frame(width: 175, height: 111)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-
-                    // 배지
-                    Text(item.badgeText)
-                        .textStyle(.semibold14)
-                        .foregroundStyle(.fff)
-                        .padding(.horizontal, 15)
-                        .padding(.vertical, 4)
-                        .background(item.badgeColor)
+                        .frame(width: 175, height: 111)
                         .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .overlay(RoundedRectangle(cornerRadius: 10)
-                            .stroke(.ccc, lineWidth: 0.5))
-                        .padding(7)
-                }
-                .padding(.top, 13)
-                .padding(.bottom, item.tip == nil ? 13 : 0)
-
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .top, spacing: 0) {
-                        Text("성장 +\(item.growth)")
+                        
+                        // 배지
+                        Text(item.badgeText)
                             .textStyle(.semibold14)
-                            .foregroundStyle(.primary1)
-                            .padding(.top, 21)
-
-                        Spacer()
-
-                        Text("D-\(item.dday)")
-                            .textStyle(.medium14)
                             .foregroundStyle(.fff)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 5)
-                            .background(.primary1)
+                            .padding(.horizontal, 15)
+                            .padding(.vertical, 4)
+                            .background(item.badgeColor)
                             .clipShape(RoundedRectangle(cornerRadius: 10))
-                            .padding(.top, 16)
+                            .overlay(RoundedRectangle(cornerRadius: 10)
+                                .stroke(.ccc, lineWidth: 0.5))
+                            .padding(7)
                     }
-
-                    Text(item.title)
-                        .textStyle(.semibold16)
+                    .padding(.top, 13)
+                    .padding(.bottom, item.tip == nil ? 13 : 0)
+                    
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(alignment: .top, spacing: 0) {
+                            Text("성장 +\(item.growth)")
+                                .textStyle(.semibold14)
+                                .foregroundStyle(.primary1)
+                                .padding(.top, 21)
+                            
+                            Spacer()
+                            
+                            Text("D-\(item.dday)")
+                                .textStyle(.medium14)
+                                .foregroundStyle(.fff)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 5)
+                                .background(.primary1)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                .padding(.top, 16)
+                        }
+                        
+                        Text(item.title)
+                            .textStyle(.semibold16)
+                            .foregroundStyle(.black1)
+                            .lineLimit(nil)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                
+                if let tip = item.tip {
+                    TipMessageView(tip: tip)
                 }
             }
-            
-            if let tip = item.tip {
-                TipMessageView(tip: tip)
-            }
-            
+            .padding(.horizontal, 13)
+            .background(.white)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(.ccc, lineWidth: 0.6)
+            )
+            .shadow(color: .ccc, radius: 4, x:0, y: 2)
+            .frame(maxWidth: .infinity)
         }
-        .padding(.horizontal, 13)
-        .background(.white)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(.ccc, lineWidth: 0.6)
-        )
-        .shadow(color: .ccc, radius: 4, x:0, y: 2)
-        .frame(maxWidth: .infinity)
     }
     
     private struct TipMessageView: View {
@@ -127,7 +135,7 @@ struct ActivityCardView: View {
                     Spacer()
                 }
                 .padding(.vertical, 7)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, 7)
             }
             .frame(height: 36)
             .padding(.bottom, 12)
@@ -136,7 +144,9 @@ struct ActivityCardView: View {
 }
 
 #Preview {
-    VStack(spacing: 12) {
+    let router = NavigationRouter<ActivityRoute>()
+    
+    return VStack(spacing: 12) {
         ActivityCardView(
             item: ActivityCard(
                 imageURL: nil,
@@ -185,4 +195,5 @@ struct ActivityCardView: View {
     }
     .padding()
     .background(Color.fff)
+    .environment(router)
 }

@@ -6,15 +6,40 @@
 //
 
 import Foundation
-import Combine
+import Observation
 
 @Observable
 class ActivityDetailViewModel {
-    var title: String = "SK 하이닉스 2025 하반기 청년 Hy-Five 14기 모집"
-    var dDay: Int = 16
-    var date: String = "11/15 ~ 12/3"
-    var category: TodoCategory = .growth
-    var point: Int = 30
-    var description: String = "SK 하이닉스 2025 하반기 청년 Hy-Five 14기 모집합니다. 본문 들어갈 자리"
-    var thumbnailUrl: String = ""
+
+    private let activity: ActivityDetail
+
+    init(activity: ActivityDetail) {
+        self.activity = activity
+    }
+    
+    var title: String {
+        activity.title
+    }
+    
+    var dDayText: String {
+        "D-\(activity.dDay)"
+    }
+    
+    var date: String {
+        activity.date
+    }
+    
+    var categoryText: String {
+        activity.category == .growth
+        ? "성장 +\(activity.point)"
+        : "휴식 +\(activity.point)"
+    }
+    
+    var description: String {
+        activity.description
+    }
+    
+    var thumbnailUrl: String {
+        activity.thumbnailUrl
+    }
 }
