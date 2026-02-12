@@ -22,8 +22,9 @@ enum ActivityAPI {
         tab: TodoCategory,
         date: String?
     )
-    case getActivityDetail(activityId: Int) // 활동 상세 조회
+    case getActivityDetail(activityId: Int) // 활동 상세 조회 GET /api/activities/{id}
     case postActivity(activityId: Int, GetActivityRequestDTO: GetActivityRequestDTO) // 활동 적용(내 일정 반영)
+    case postAddToMyActivities(activityId: Int, body: AddMyActivityRequestDTO) // 활동을 내 일정에 추가 POST /api/activities/{id}/my-activities
     case getCartList(tab: TodoCategory) // 장바구니 조회
     case postCart(GetCartItemDTO: GetCartItemDTO) // 장바구니 담기
     case deleteCart(cartItemId: Int) // 장바구니 삭제
@@ -43,6 +44,8 @@ extension ActivityAPI: APITargetType {
             return "\(Self.activitiesPath)/\(activityId)"
         case .postActivity(let activityId, _):
             return "\(Self.activitiesPath)/\(activityId)/apply"
+        case .postAddToMyActivities(let activityId, _):
+            return "\(Self.activitiesPath)/\(activityId)/my-activities"
         case .getCartList:
             return "\(Self.cartPath)"
         case .postCart:
@@ -54,7 +57,7 @@ extension ActivityAPI: APITargetType {
     
     var method: Moya.Method {
         switch self {
-        case .postActivity, .postCart:
+        case .postActivity, .postAddToMyActivities, .postCart:
             return .post
         case .getActivityList, .getActivityRecommend, .getActivityDetail, .getCartList:
             return .get
@@ -104,6 +107,8 @@ extension ActivityAPI: APITargetType {
             return .requestPlain
         case .postActivity(_, let GetActivityRequestDTO):
             return .requestJSONEncodable(GetActivityRequestDTO)
+        case .postAddToMyActivities(_, let body):
+            return .requestJSONEncodable(body)
         case .getCartList(let tab):
             return .requestParameters(
                 parameters: ["tab": tab.rawValue],

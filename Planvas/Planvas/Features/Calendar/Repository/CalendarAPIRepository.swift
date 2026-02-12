@@ -10,18 +10,13 @@
 import Foundation
 import CryptoKit
 
-/// API 기반 캘린더 Repository (CalendarNetworkService + SchedulesNetworkService)
+/// API 기반 캘린더 Repository. 월간/일간 조회 + 구글 캘린더 연동만 연동. 일정 추가/수정/삭제는 API 완성 후 재연결용 구조만 둠.
 final class CalendarAPIRepository: CalendarRepositoryProtocol {
     private let networkService: CalendarNetworkService
-    private let schedulesService: SchedulesNetworkService
     private let calendar = Calendar.current
 
-    init(
-        networkService: CalendarNetworkService = CalendarNetworkService(),
-        schedulesService: SchedulesNetworkService = SchedulesNetworkService()
-    ) {
+    init(networkService: CalendarNetworkService = CalendarNetworkService()) {
         self.networkService = networkService
-        self.schedulesService = schedulesService
     }
 
     /// 월간 캘린더 조회 (GET /api/calendar/month) - 해당 월 날짜별 메타·프리뷰만
@@ -58,41 +53,27 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         }
     }
 
-    /// 일정 추가: 고정 일정(반복) → fixed-schedules, 반복 없음 → my-activities
+    /// 일정 추가 (POST /api/calendar/event)
     func addEvent(_ event: Event) async throws {
-        if event.isRepeating {
-            // 고정 일정 = 반복 일정
-            let dto = buildCreateScheduleRequest(from: event)
-            _ = try await schedulesService.postAddSchedule(dto)
-        } else {
-            // 반복하지 않는 일정 = 내 활동
-            let dto = buildCreateMyActivityRequest(from: event)
-            _ = try await schedulesService.postMyActivity(dto)
-        }
+        let (startAt, endAt) = formatEventTimes(event)
+        _ = try await networkService.createEvent(title: event.title, startAt: startAt, endAt: endAt, type: "FIXED")
     }
 
-    /// 일정 수정: fixedScheduleId → PATCH fixed-schedules, myActivityId → PATCH my-activities
+    /// 일정 수정 (PATCH /api/calendar/event/{id})
     func updateEvent(_ event: Event) async throws {
-        if let id = event.fixedScheduleId {
-            let dto = buildEditScheduleRequest(from: event)
-            try await schedulesService.patchSchedule(id: id, dto)
-        } else if let id = event.myActivityId {
-            let dto = buildEditMyActivityRequest(from: event)
-            try await schedulesService.patchMyActivity(id: id, dto)
-        } else {
-            throw CalendarRepositoryError.missingServerId(message: "수정할 일정에 서버 ID(fixedScheduleId/myActivityId)가 없습니다.")
+        guard let serverId = event.fixedScheduleId ?? event.myActivityId else {
+            throw CalendarRepositoryError.missingServerId(message: "서버 일정 ID가 없어 수정할 수 없습니다.")
         }
+        let (startAt, endAt) = formatEventTimes(event)
+        try await networkService.updateEvent(id: serverId, title: event.title, startAt: startAt, endAt: endAt, type: "FIXED")
     }
 
-    /// 일정 삭제: fixedScheduleId → DELETE fixed-schedules, myActivityId → DELETE my-activities
+    /// 일정 삭제 (DELETE /api/calendar/event/{id})
     func deleteEvent(_ event: Event) async throws {
-        if let id = event.fixedScheduleId {
-            try await schedulesService.deleteSchedule(id: id)
-        } else if let id = event.myActivityId {
-            try await schedulesService.deleteMyActivity(id: id)
-        } else {
-            throw CalendarRepositoryError.missingServerId(message: "삭제할 일정에 서버 ID(fixedScheduleId/myActivityId)가 없습니다.")
+        guard let serverId = event.fixedScheduleId ?? event.myActivityId else {
+            throw CalendarRepositoryError.missingServerId(message: "서버 일정 ID가 없어 삭제할 수 없습니다.")
         }
+        try await networkService.deleteEvent(id: serverId)
     }
 
     /// 구글 캘린더에서 가져올 수 있는 일정 목록 (GET events → ImportableSchedule, 일정 선택 화면용)
@@ -161,54 +142,90 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         return serverEventColorPalette[safeIndex]
     }
 
-    /// 일간 일정 DTO → 캘린더 표시용 Event (날짜+시간 조합, 서버 ID 매핑).
-    /// API는 startAt/endAt(ISO8601) 또는 startTime/endTime(시:분) 중 하나로 옴. 종일이면 "하루종일" 표시.
+    /// 일간 일정 DTO → 캘린더 표시용 Event (api.md 기준: itemId String, startAt/endAt ISO, eventColor)
     private func mapToEvent(item: CalendarItemDTO, date: String) -> Event {
-        let isFixed = item.type == "FIXED_SCHEDULE" || item.type == "FIXED"
-        let serverId = Int(item.itemId)
+        let isFixed = item.isFixed ?? (item.type == "FIXED")
+        let serverIdInt = Int(item.itemId)
         let id = Self.stableUUID(from: "\(item.type)-\(item.itemId)")
 
-        let (startDate, endDate, timeString, isAllDay): (Date, Date, String, Bool)
-        if let startAt = item.startAt, let endAt = item.endAt,
-           let start = parseDayDateTimeAsLocal(startAt), let end = parseDayDateTimeAsLocal(endAt) {
-            let allDay = isAllDayEvent(start: start, end: end)
-            let timeStr = allDay ? "하루종일" : "\(Self.timeFormatter.string(from: start)) - \(Self.timeFormatter.string(from: end))"
-            (startDate, endDate, timeString, isAllDay) = (start, end, timeStr, allDay)
+        let (startDate, endDate, startTime, endTime, isAllDay): (Date, Date, Time, Time, Bool)
+        if let startDt = item.startAt, let endDt = item.endAt,
+           !startDt.isEmpty, !endDt.isEmpty,
+           let start = parseISO8601Date(startDt), let end = parseISO8601Date(endDt) {
+
+            // 1) UTC 하루종일 패턴 감지: start=00:00Z, end=23:59Z → UTC 날짜를 로컬 날짜로 변환
+            let utcCal = Self.utcCalendar
+            let isUTCAllDay = utcCal.component(.hour, from: start) == 0
+                && utcCal.component(.minute, from: start) == 0
+                && utcCal.component(.hour, from: end) == 23
+                && utcCal.component(.minute, from: end) >= 59
+
+            if isUTCAllDay {
+                // UTC 날짜 숫자를 로컬 캘린더에 그대로 적용 (2/2 UTC → 2/2 로컬)
+                let startComps = utcCal.dateComponents([.year, .month, .day], from: start)
+                let endComps = utcCal.dateComponents([.year, .month, .day], from: end)
+                let localStart = calendar.date(from: startComps).flatMap { calendar.startOfDay(for: $0) }
+                    ?? calendar.startOfDay(for: start)
+                let localEnd = calendar.date(from: endComps).flatMap { calendar.startOfDay(for: $0) }
+                    ?? calendar.startOfDay(for: end)
+                (startDate, endDate, startTime, endTime, isAllDay) = (
+                    localStart, localEnd, .midnight, .endOfDay, true
+                )
+            } else {
+                // 2) 로컬 시간 기준 하루종일 감지 (기존 +09:00 형식으로 저장된 일정 호환)
+                let allDay = isAllDayEvent(start: start, end: end)
+                let startDay = calendar.startOfDay(for: start)
+                let endDay = calendar.startOfDay(for: end)
+                (startDate, endDate, startTime, endTime, isAllDay) = (
+                    startDay,
+                    endDay,
+                    allDay ? .midnight : Time(from: start, calendar: calendar),
+                    allDay ? .endOfDay : Time(from: end, calendar: calendar),
+                    allDay
+                )
+            }
         } else {
-            let st = item.startTime ?? ""
-            let et = item.endTime ?? ""
-            let (s, e) = parseDayTime(date: date, startTime: st, endTime: et)
-            let allDay = st.isEmpty && et.isEmpty
-            let timeStr = allDay ? "하루종일" : "\(st) - \(et)"
-            (startDate, endDate, timeString, isAllDay) = (s, e, timeStr, allDay)
+            // startAt/endAt 없으면 해당 날짜의 종일 일정으로 처리
+            let day = Self.dateOnlyFormatter.date(from: date) ?? Date()
+            let startDay = calendar.startOfDay(for: day)
+            let endDay = startDay
+            (startDate, endDate, startTime, endTime, isAllDay) = (
+                startDay, endDay, .midnight, .endOfDay, true
+            )
         }
+
+        let color: EventColorType = item.eventColor.map { EventColorType.from(serverColor: $0) }
+            ?? (isFixed ? .purple1 : Self.colorForServerItem(type: item.type, itemId: item.itemId))
 
         return Event(
             id: id,
             title: item.title,
-            time: timeString,
             isFixed: isFixed,
             isAllDay: isAllDay,
-            color: isFixed ? .purple1 : Self.colorForServerItem(type: item.type, itemId: item.itemId),
+            color: color,
+            type: isFixed ? .fixed : .activity,
             startDate: startDate,
             endDate: endDate,
+            startTime: startTime,
+            endTime: endTime,
             category: .none,
-            isCompleted: item.completed ?? false,
-            isRepeating: isFixed,
-            fixedScheduleId: isFixed ? serverId : nil,
-            myActivityId: isFixed ? nil : serverId
+            isCompleted: false,
+            isRepeating: false,
+            fixedScheduleId: isFixed ? serverIdInt : nil,
+            myActivityId: isFixed ? nil : serverIdInt
         )
     }
 
-    /// startAt/endAt 기준으로 종일 일정 여부 (시작 00:00 + 종료 당일 23:59 또는 다음날 00:00)
+    /// startDateTime/endDateTime 기준으로 종일 일정 여부 (시작 00:00 + 종료 당일 23:59 또는 다음날 00:00)
     private func isAllDayEvent(start: Date, end: Date) -> Bool {
         let startOfDay = calendar.startOfDay(for: start)
         let isStartMidnight = start.timeIntervalSince(startOfDay) < 60
         guard isStartMidnight else { return false }
-        let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: start) ?? start
+        // 종료가 같은 날 23:59(:00 이상) 이거나 다음날 자정 부근(±60초)이면 종일
+        let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 0, of: start) ?? start
         let nextDayStart = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? start
         let isEndSameDayEOD = calendar.isDate(end, inSameDayAs: start) && end >= endOfDay
-        let isEndNextDayStart = abs(end.timeIntervalSince(nextDayStart)) < 60
+        let isEndNextDayStart = abs(end.timeIntervalSince(nextDayStart)) <= 60
         return isEndSameDayEOD || isEndNextDayStart
     }
 
@@ -226,7 +243,59 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         return UUID(uuid: (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7], bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]))
     }
 
-    // MARK: - Event → Schedules DTO (고정 일정 / 내 활동)
+    // MARK: - Event → ISO 변환 (일정 추가/수정 요청용)
+
+    /// Event의 isAllDay 여부에 따라 ISO 문자열 포맷을 분기.
+    /// - 하루종일: UTC 자정 기준으로 전송 ("2026-02-02T00:00:00Z" ~ "2026-02-02T23:59:00Z")
+    ///   → 서버가 UTC 날짜로 매칭하므로 날짜가 밀리지 않음
+    /// - 일반: 로컬 타임존 포함 ("2026-02-02T18:21:00+09:00")
+    private func formatEventTimes(_ event: Event) -> (startAt: String, endAt: String) {
+        if event.isAllDay {
+            // 로컬 날짜의 year/month/day를 UTC 자정으로 변환
+            let startComps = calendar.dateComponents([.year, .month, .day], from: event.startDate)
+            let endComps = calendar.dateComponents([.year, .month, .day], from: event.endDate)
+            guard let utcStart = Self.utcCalendar.date(from: startComps),
+                  let utcEndDay = Self.utcCalendar.date(from: endComps),
+                  let utcEnd = Self.utcCalendar.date(bySettingHour: 23, minute: 59, second: 0, of: utcEndDay) else {
+                // fallback: 로컬 포맷
+                return (formatToISO(event.startDateTime()), formatToISO(event.endDateTime()))
+            }
+            return (Self.utcISO8601Formatter.string(from: utcStart),
+                    Self.utcISO8601Formatter.string(from: utcEnd))
+        } else {
+            return (formatToISO(event.startDateTime()), formatToISO(event.endDateTime()))
+        }
+    }
+
+    /// Date → "2026-02-12T18:10:00+09:00" (로컬 타임존 포함 ISO 8601)
+    private func formatToISO(_ date: Date) -> String {
+        Self.localISO8601Formatter.string(from: date)
+    }
+
+    private static let localISO8601Formatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd'T'HH:mm:ssXXX"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone.current
+        return f
+    }()
+
+    /// UTC ISO 8601 포맷터 (하루종일 일정 전송용)
+    private static let utcISO8601Formatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        f.timeZone = TimeZone(identifier: "UTC")!
+        return f
+    }()
+
+    /// UTC 기준 Calendar (하루종일 날짜 변환용)
+    private static let utcCalendar: Calendar = {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "UTC")!
+        return cal
+    }()
+
+    // MARK: - Formatters (일간 조회·구글 일정 매핑용)
 
     private static let dateOnlyFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -249,92 +318,7 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         return f
     }()
 
-    /// 0=월…6=일 → DayOfWeek
-    private static func dayOfWeek(from index: Int) -> DayOfWeek {
-        switch index {
-        case 0: return .mon
-        case 1: return .tue
-        case 2: return .wed
-        case 3: return .thu
-        case 4: return .fri
-        case 5: return .sat
-        case 6: return .sun
-        default: return .mon
-        }
-    }
-
-    /// 고정 일정 생성: 시작일·종료일·요일만 그대로 전달 (매일=월~일, 매주=선택 요일만)
-    private func buildCreateScheduleRequest(from event: Event) -> CreateScheduleRequestDTO {
-        let startDateStr = Self.dateOnlyFormatter.string(from: event.startDate)
-        let endDateStr = Self.dateOnlyFormatter.string(from: event.repeatEndDate ?? event.startDate)
-        let daysOfWeek: [DayOfWeek] = event.repeatType == .daily
-            ? [.mon, .tue, .wed, .thu, .fri, .sat, .sun]
-            : (event.repeatWeekdays ?? [(calendar.component(.weekday, from: event.startDate) - 2 + 7) % 7]).map { Self.dayOfWeek(from: $0) }
-        let (startTime, endTime) = event.isAllDay ? ("", "") : (Self.timeFormatter.string(from: event.startDate), Self.timeFormatter.string(from: event.endDate))
-        return CreateScheduleRequestDTO(
-            title: event.title,
-            startDate: startDateStr,
-            endDate: endDateStr,
-            daysOfWeek: daysOfWeek,
-            startTime: startTime,
-            endTime: endTime
-        )
-    }
-
-    private func buildCreateMyActivityRequest(from event: Event) -> CreateMyActivityRequestDTO {
-        let startDateStr = Self.dateOnlyFormatter.string(from: event.startDate)
-        let endDateStr = Self.dateOnlyFormatter.string(from: event.endDate)
-        let (startTime, endTime) = event.isAllDay ? ("", "") : (Self.timeFormatter.string(from: event.startDate), Self.timeFormatter.string(from: event.endDate))
-        return CreateMyActivityRequestDTO(
-            activityId: nil,
-            title: event.title,
-            category: eventCategoryToTodoCategory(event.category),
-            point: event.activityPoint ?? 10,
-            startDate: startDateStr,
-            endDate: endDateStr,
-            startTime: startTime,
-            endTime: endTime
-        )
-    }
-
-    /// 고정 일정 수정: 시작일·종료일·요일만 그대로 전달
-    private func buildEditScheduleRequest(from event: Event) -> EditScheduleRequestDTO {
-        let (startTime, endTime) = event.isAllDay ? ("", "") : (Self.timeFormatter.string(from: event.startDate), Self.timeFormatter.string(from: event.endDate))
-        let daysOfWeek: [DayOfWeek]? = event.repeatType == .daily
-            ? [.mon, .tue, .wed, .thu, .fri, .sat, .sun]
-            : (event.repeatWeekdays ?? [(calendar.component(.weekday, from: event.startDate) - 2 + 7) % 7]).map { Self.dayOfWeek(from: $0) }
-        return EditScheduleRequestDTO(
-            title: event.title,
-            startDate: Self.dateOnlyFormatter.string(from: event.startDate),
-            endDate: Self.dateOnlyFormatter.string(from: event.repeatEndDate ?? event.startDate),
-            daysOfWeek: daysOfWeek,
-            startTime: startTime,
-            endTime: endTime
-        )
-    }
-
-    private func buildEditMyActivityRequest(from event: Event) -> EditMyActivityRequestDTO {
-        let (startTime, endTime) = event.isAllDay ? ("", "") : (Self.timeFormatter.string(from: event.startDate), Self.timeFormatter.string(from: event.endDate))
-        return EditMyActivityRequestDTO(
-            title: event.title,
-            category: eventCategoryToTodoCategory(event.category),
-            point: event.activityPoint,
-            startDate: Self.dateOnlyFormatter.string(from: event.startDate),
-            endDate: Self.dateOnlyFormatter.string(from: event.endDate),
-            startTime: startTime,
-            endTime: endTime
-        )
-    }
-
-    private func eventCategoryToTodoCategory(_ category: EventCategory) -> TodoCategory {
-        switch category {
-        case .growth: return .growth
-        case .rest: return .rest
-        case .none: return .growth
-        }
-    }
-
-    /// 종일/시간형·반복 여부에 따라 표시용 시간 문자열 생성 (예: "09:00 - 18:00", "M/d - M/d (반복)")
+    /// 종일/시간형·반복 여부에 따라 표시용 시간 문자열 생성 (구글 일정 → ImportableSchedule)
     private func buildTimeDescription(allDay: Bool, start: Date, end: Date, recurrence: String?) -> String {
         if allDay {
             if Calendar.current.isDate(start, inSameDayAs: end) {
@@ -366,50 +350,6 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         if let d = Self.iso8601WithFraction.date(from: string) { return d }
         if let d = Self.iso8601NoFraction.date(from: string) { return d }
         return Self.dateOnlyFormatter.date(from: string)
-    }
-
-    /// 일간 API startAt/endAt: 서버가 로컬 시간을 Z로 보내는 경우를 위해, 날짜·시간을 로컬 타임존으로 해석.
-    /// (예: "2026-02-19T16:10:00.000Z" → 16:10 로컬, UTC로 해석하면 KST에서 01:10으로 나옴)
-    private static let dayDateTimeAsLocalFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
-        f.timeZone = TimeZone.current
-        f.locale = Locale(identifier: "en_US_POSIX")
-        return f
-    }()
-
-    private static let dayDateTimeAsLocalFormatterNoFraction: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
-        f.timeZone = TimeZone.current
-        f.locale = Locale(identifier: "en_US_POSIX")
-        return f
-    }()
-
-    private func parseDayDateTimeAsLocal(_ string: String) -> Date? {
-        guard !string.isEmpty else { return nil }
-        if let d = Self.dayDateTimeAsLocalFormatter.date(from: string) { return d }
-        return Self.dayDateTimeAsLocalFormatterNoFraction.date(from: string)
-    }
-
-    /// "yyyy-MM-dd" + "HH:mm" 조합으로 해당 날짜의 시작/종료 Date 생성 (종일이면 00:00~다음날 00:00)
-    private func parseDayTime(date: String, startTime: String, endTime: String) -> (Date, Date) {
-        let day = Self.dateOnlyFormatter.date(from: date) ?? Date()
-        if startTime.isEmpty && endTime.isEmpty {
-            let start = calendar.startOfDay(for: day)
-            let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start
-            return (start, end)
-        }
-        let start = combine(date: day, time: startTime, formatter: Self.timeFormatter) ?? day
-        let end = combine(date: day, time: endTime, formatter: Self.timeFormatter) ?? day
-        return (start, end)
-    }
-
-    /// 날짜에 시:분 적용해 하나의 Date 반환
-    private func combine(date: Date, time: String, formatter: DateFormatter) -> Date? {
-        guard let t = formatter.date(from: time) else { return nil }
-        let comps = calendar.dateComponents([.hour, .minute], from: t)
-        return calendar.date(bySettingHour: comps.hour ?? 0, minute: comps.minute ?? 0, second: 0, of: date)
     }
 
     /// Date → "yyyy-MM-dd" (API 쿼리/키용)

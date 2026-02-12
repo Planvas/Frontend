@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct ActivityListView: View {
+    @Environment(NavigationRouter<ActivityRoute>.self) var router
+    @EnvironmentObject var container: DIContainer
+    
     @Environment(GoalSetupViewModel.self) private var goalVM
     @State private var vm = ActivityListViewModel()
 
@@ -310,7 +313,9 @@ struct ActivityListView: View {
 // MARK: - 프리뷰
 #Preview {
     let goalVM = GoalSetupViewModel()
-
+    let container = DIContainer()
+    let router = NavigationRouter<ActivityRoute>()
+    
     // 프리뷰용 더미 선택
     goalVM.selectedInterestIds = [
         goalVM.interestActivityTypes[0].id,
@@ -319,4 +324,6 @@ struct ActivityListView: View {
 
     return ActivityListView()
         .environment(goalVM)
+        .environmentObject(container)
+        .environment(router)
 }

@@ -122,17 +122,28 @@ struct CalendarDayDTO: Decodable {
     let hasItems: Bool
     let itemCount: Int
     let schedulesPreview: [SchedulePreviewDTO]
-    let moreCount: Int
+    let moreCount: Int?
 }
 
+/// api.md 기준: itemId는 String, 색상 필드명은 eventColor
 struct SchedulePreviewDTO: Decodable {
     let itemId: String
     let title: String
     let isFixed: Bool
     let type: String
+    let eventColor: Int?
+
+    /// 프리뷰용 수동 생성 init
+    init(itemId: String, title: String, isFixed: Bool, type: String, eventColor: Int?) {
+        self.itemId = itemId
+        self.title = title
+        self.isFixed = isFixed
+        self.type = type
+        self.eventColor = eventColor
+    }
 }
 
-// MARK: - 일간 캘린더 조회
+// MARK: - 일간 캘린더 조회 (GET /api/calendar/day)
 struct DailyCalendarResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
@@ -144,14 +155,70 @@ struct DailyCalendarSuccessDTO: Decodable {
     let items: [CalendarItemDTO]
 }
 
+/// api.md 기준: itemId String, startAt/endAt ISO, isFixed, eventColor, recurrenceRule
 struct CalendarItemDTO: Decodable {
     let itemId: String
-    let type: String
     let title: String
-    /// 일간 API: ISO8601 (startAt/endAt) 또는 시:분 (startTime/endTime) 둘 중 하나로 옴
     let startAt: String?
     let endAt: String?
-    let startTime: String?
-    let endTime: String?
-    let completed: Bool?
+    let isFixed: Bool?
+    let type: String
+    let eventColor: Int?
+    let recurrenceRule: String?
+}
+
+// MARK: - 일정 추가 (POST /api/calendar/event)
+struct CreateEventRequestDTO: Encodable {
+    let title: String
+    let startAt: String   // ISO 8601 (e.g. "2026-02-12T18:10:00+09:00")
+    let endAt: String
+    let type: String      // "FIXED"
+}
+
+struct CreateEventResponse: Decodable {
+    let resultType: String
+    let error: ErrorDTO?
+    let success: CreateEventSuccess?
+}
+
+struct CreateEventSuccess: Decodable {
+    let id: Int
+    let title: String
+    let startAt: String?
+    let endAt: String?
+    let type: String?
+    let status: String?
+}
+
+// MARK: - 일정 수정 (PATCH /api/calendar/event/{id})
+struct UpdateEventRequestDTO: Encodable {
+    let title: String
+    let startAt: String
+    let endAt: String
+    let type: String
+}
+
+struct UpdateEventResponse: Decodable {
+    let resultType: String
+    let error: ErrorDTO?
+    let success: UpdateEventSuccess?
+}
+
+struct UpdateEventSuccess: Decodable {
+    let id: Int?
+    let title: String?
+    let startAt: String?
+    let endAt: String?
+    let type: String?
+}
+
+// MARK: - 일정 삭제 (DELETE /api/calendar/event/{id})
+struct DeleteEventResponse: Decodable {
+    let resultType: String
+    let error: ErrorDTO?
+    let success: DeleteEventSuccess?
+}
+
+struct DeleteEventSuccess: Decodable {
+    let message: String
 }

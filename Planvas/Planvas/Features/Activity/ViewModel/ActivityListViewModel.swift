@@ -24,33 +24,49 @@ final class ActivityListViewModel {
     func selectCategory(_ category: String) {
         selectedCategory = category
     }
-    
-    // TODO: API 연동 후 이거 지우기 - 활동 더미 데이터
+
+    // TODO: 목록 조회 API 연동 후 더미 데이터 교체
     var activities: [ActivityCard] = [
         ActivityCard(
+            activityId: 1,
             imageURL: nil,
             badgeText: "일정 가능",
             badgeColor: .blue1,
             growth: 10,
             dday: 9,
-            title: "패스트 캠퍼스 2026 AI 대전환 오픈 세미나"
+            title: "패스트 캠퍼스 2026 AI 대전환 오픈 세미나",
+            tip: nil
         ),
         ActivityCard(
+            activityId: 2,
             imageURL: nil,
             badgeText: "일정 주의",
             badgeColor: .yellow1,
             growth: 20,
-            dday: 5,
-            title: "2026 빅데이터 분석 자격증 온라인 교육생 모집"
+            dday: 15,
+            title: "2026 빅데이터 분석 자격증 온라인 교육생 모집",
+            tip: ActivityTip(
+                label: "Tip",
+                tag: "[카페 알바]",
+                message: "일정이 있어요! 시간을 쪼개서 계획해 보세요",
+                labelColor: .primary1
+            )
         ),
         ActivityCard(
+            activityId: 3,
             imageURL: nil,
             badgeText: "일정 겹침",
             badgeColor: .red1,
             growth: 30,
             dday: 20,
-            title: "제 4회 2026 블레이버스 MVP 개발 해커톤"
-        )
+            title: "제4회 2026 블레이버스 MVP 개발 해커톤",
+            tip: ActivityTip(
+                label: "주의",
+                tag: "[일본 여행]",
+                message: "일정과 겹쳐요!",
+                labelColor: .red1
+            )
+        ),
     ]
 
     // 필터 함수
@@ -69,7 +85,7 @@ final class ActivityListViewModel {
         }
 
         // TODO: 가능한 일정만 보기 필터
-        
+
         return result
     }
 }
