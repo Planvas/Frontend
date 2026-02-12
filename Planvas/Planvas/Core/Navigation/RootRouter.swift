@@ -48,7 +48,7 @@ final class RootRouter {
     }
 
     private func routeByServer() {
-        root = .loading // RootRoute에 loading 추가 추천
+        root = .loading
 
         onboardingVM.checkHasCurrentGoal { [weak self] hasGoal in
             guard let self else { return }

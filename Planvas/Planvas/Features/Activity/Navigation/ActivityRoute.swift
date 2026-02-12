@@ -8,5 +8,5 @@
 import Foundation
 
 enum ActivityRoute {
-    case activity
+    case activityList
 }
