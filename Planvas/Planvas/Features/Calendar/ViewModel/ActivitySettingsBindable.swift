@@ -15,6 +15,8 @@ protocol ActivitySettingsBindable: AnyObject {
     var currentAchievementPercent: Int { get }
     /// 목표 퍼센트
     var goalPercent: Int { get }
+    /// 추천 활동치 (API defaultPoint)
+    var recommendedPoint: Int { get }
     /// 활동치 값 (10 단위 조절)
     var activityValue: Int { get set }
     /// 추가 활동치 문구 (예: "+20%")
