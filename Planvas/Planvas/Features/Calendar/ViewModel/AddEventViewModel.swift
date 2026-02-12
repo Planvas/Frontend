@@ -87,14 +87,15 @@ final class AddEventViewModel: RepeatOptionConfigurable {
     }
     
     func createEvent() -> Event {
-        let timeString = isAllDay ? "하루종일" : "\(startDate.timeString()) - \(endDate.timeString())"
         // 반복 일정은 시작일 == 종료일만 허용 (같은 날 기준으로 startTime/endTime만 사용)
         let effectiveEndDate: Date = isRepeatEnabled && !Self.calendar.isDate(startDate, inSameDayAs: endDate)
             ? Self.calendar.date(bySettingHour: Self.calendar.component(.hour, from: endDate), minute: Self.calendar.component(.minute, from: endDate), second: 0, of: startDate) ?? startDate
             : endDate
-        // 반복 종료일 = 반복 종료일 선택값 (날짜만). API endDate로 전달
+        let startDay = Self.calendar.startOfDay(for: startDate)
+        let endDay = Self.calendar.startOfDay(for: effectiveEndDate)
+        let startTime: Time = isAllDay ? .midnight : Time(from: startDate, calendar: Self.calendar)
+        let endTime: Time = isAllDay ? .endOfDay : Time(from: effectiveEndDate, calendar: Self.calendar)
         let repeatEnd: Date? = isRepeatEnabled ? Self.calendar.startOfDay(for: repeatEndDate) : nil
-        // 매주/격주인데 요일 미선택 시 시작일 요일 하나로 설정 (해당 요일만 반복)
         let weekdays: [Int]? = {
             guard isRepeatEnabled else { return nil }
             let w = Array(selectedWeekdays).sorted()
@@ -106,18 +107,20 @@ final class AddEventViewModel: RepeatOptionConfigurable {
         }()
         return Event(
             title: eventName.isEmpty ? "이름 없음" : eventName,
-            time: timeString,
             isFixed: false,
             isAllDay: isAllDay,
             color: selectedColor,
-            startDate: startDate,
-            endDate: effectiveEndDate,
+            type: .activity,
+            startDate: startDay,
+            endDate: endDay,
+            startTime: startTime,
+            endTime: endTime,
             category: .none,
             isCompleted: false,
             isRepeating: isRepeatEnabled,
+            repeatOption: isRepeatEnabled ? repeatType : nil,
             repeatWeekdays: weekdays,
-            repeatEndDate: repeatEnd,
-            repeatType: isRepeatEnabled ? repeatType : nil
+            repeatEndDate: repeatEnd
         )
     }
     

@@ -104,7 +104,7 @@ struct GoogleCalendarTime: Decodable {
     let date: String?
 }
 
-// MARK: - 월간 캘린더 조회 (GET /api/calendar/month)
+// MARK: - 월간 캘린더 조회 (GET /api/calendar/month) — API 확정 후 필드 수정 예정
 struct MonthlyCalendarResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
@@ -122,17 +122,44 @@ struct CalendarDayDTO: Decodable {
     let hasItems: Bool
     let itemCount: Int
     let schedulesPreview: [SchedulePreviewDTO]
-    let moreCount: Int
 }
 
 struct SchedulePreviewDTO: Decodable {
-    let itemId: String
+    /// 서버에서 숫자로 내려줌 (월간 API)
+    let itemId: Int
     let title: String
     let isFixed: Bool
+    /// 반복 일정 여부. 없으면 false
+    let isRepeating: Bool
     let type: String
+    /// 색상 (1~10). 프론트에서 EventColorType으로 매핑
+    let color: Int?
+
+    init(itemId: Int, title: String, isFixed: Bool, isRepeating: Bool = false, type: String, color: Int?) {
+        self.itemId = itemId
+        self.title = title
+        self.isFixed = isFixed
+        self.isRepeating = isRepeating
+        self.type = type
+        self.color = color
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        itemId = try c.decode(Int.self, forKey: .itemId)
+        title = try c.decode(String.self, forKey: .title)
+        isFixed = try c.decode(Bool.self, forKey: .isFixed)
+        isRepeating = try c.decodeIfPresent(Bool.self, forKey: .isRepeating) ?? false
+        type = try c.decode(String.self, forKey: .type)
+        color = try c.decodeIfPresent(Int.self, forKey: .color)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case itemId, title, isFixed, isRepeating, type, color
+    }
 }
 
-// MARK: - 일간 캘린더 조회
+// MARK: - 일간 캘린더 조회 — API 확정 후 필드 수정 예정
 struct DailyCalendarResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
@@ -145,13 +172,21 @@ struct DailyCalendarSuccessDTO: Decodable {
 }
 
 struct CalendarItemDTO: Decodable {
-    let itemId: String
+    /// 서버에서 숫자로 내려줌 (일간 API)
+    let itemId: Int
     let type: String
     let title: String
-    /// 일간 API: ISO8601 (startAt/endAt) 또는 시:분 (startTime/endTime) 둘 중 하나로 옴
-    let startAt: String?
-    let endAt: String?
+    /// 일간 API: 날짜+시간(ISO8601). 서버 필드명은 startAt/endAt일 수 있음.
+    let startDateTime: String?
+    let endDateTime: String?
+    /// startDateTime/endDateTime 없을 때 사용: 해당 날짜의 시:분 ("HH:mm")
     let startTime: String?
     let endTime: String?
     let completed: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case itemId, type, title, startTime, endTime, completed
+        case startDateTime = "startAt"
+        case endDateTime = "endAt"
+    }
 }

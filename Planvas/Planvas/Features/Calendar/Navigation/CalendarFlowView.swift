@@ -16,31 +16,19 @@ struct CalendarFlowView: View {
     @State private var router = NavigationRouter<CalendarRoute>()
     @State private var viewModel = CalendarViewModel()
     @State private var syncViewModel = CalendarSyncViewModel()
-    @State private var isCalendarOnly = false
 
     var body: some View {
         Group {
-            if isCalendarOnly {
-                CalendarView(
-                    onConnectGoogleCalendar: {
-                        Task {
-                            await syncViewModel.performGoogleCalendarConnect(onSuccess: {
-                                await viewModel.refreshAfterGoogleConnect()
-                            })
-                        }
-                    },
-                    onFinish: onFinishFromOnboarding
-                )
-            } else {
-                    CalendarSyncView(
-                        viewModel: syncViewModel,
-                        onDirectInput: { isCalendarOnly = true },
-                        onImportSchedules: { schedules in
-                            viewModel.importSchedules(schedules)
-                            isCalendarOnly = true
-                        }
-                    )
-            }
+            CalendarView(
+                onConnectGoogleCalendar: {
+                    Task {
+                        await syncViewModel.performGoogleCalendarConnect(onSuccess: {
+                            await viewModel.refreshAfterGoogleConnect()
+                        })
+                    }
+                },
+                onFinish: onFinishFromOnboarding
+            )
         }
         .environment(viewModel)
         .onChange(of: selectedTab) { _, newValue in

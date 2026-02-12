@@ -21,6 +21,8 @@ struct CalendarView: View {
     @State private var showAddEvent = false
     @State private var selectedEvent: Event?
     @State private var showEventDetail = false
+    @State private var showCompleteAlert = false
+    @State private var completeAlertViewModel: ActivityCompleteAlertViewModel?
     @State private var slideDirection: SlideDirection = .none
     
     enum SlideDirection {
@@ -69,21 +71,43 @@ struct CalendarView: View {
         }
         .sheet(isPresented: $showEventDetail) {
             if let event = selectedEvent {
-                EventSummaryView(
-                    event: event,
-                    startDate: viewModel.getStartDate(for: event),
-                    endDate: viewModel.getEndDate(for: event),
-                    daysUntil: viewModel.getDaysUntil(for: event),
-                    onDelete: {
-                        viewModel.deleteEvent(event)
-                        showEventDetail = false
-                    },
-                    onEdit: { /* 수정하기 → EventDetailView 내부에서 처리 */ },
-                    onUpdateEvent: { updatedEvent in
-                        viewModel.updateEvent(updatedEvent)
-                        showEventDetail = false
+                Group {
+                    if event.category == .growth || event.category == .rest {
+                        ActivityEventSummaryView(
+                            viewModel: ActivityEventSummaryViewModel.from(event: event, daysUntil: viewModel.getDaysUntil(for: event)),
+                            event: event,
+                            onDelete: {
+                                viewModel.deleteEvent(event)
+                                showEventDetail = false
+                            },
+                            onUpdateEvent: { updatedEvent in
+                                viewModel.updateEvent(updatedEvent)
+                                showEventDetail = false
+                            },
+                            onCompleteRequested: { alertVM in
+                                showEventDetail = false
+                                completeAlertViewModel = alertVM
+                                showCompleteAlert = true
+                            }
+                        )
+                    } else {
+                        EventSummaryView(
+                            event: event,
+                            startDate: viewModel.getStartDate(for: event),
+                            endDate: viewModel.getEndDate(for: event),
+                            daysUntil: viewModel.getDaysUntil(for: event),
+                            onDelete: {
+                                viewModel.deleteEvent(event)
+                                showEventDetail = false
+                            },
+                            onEdit: nil,
+                            onUpdateEvent: { updatedEvent in
+                                viewModel.updateEvent(updatedEvent)
+                                showEventDetail = false
+                            }
+                        )
                     }
-                )
+                }
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
             }
@@ -91,6 +115,21 @@ struct CalendarView: View {
         .overlay {
             if showImportAlert {
                 importAlertView
+            }
+        }
+        .overlay {
+            if showCompleteAlert, let alertVM = completeAlertViewModel {
+                ZStack {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+                        .onTapGesture { showCompleteAlert = false }
+                    ActivityCompleteAlertView(
+                        viewModel: alertVM,
+                        onConfirm: { showCompleteAlert = false },
+                        onDismiss: { showCompleteAlert = false }
+                    )
+                    .padding(.horizontal, 24)
+                }
             }
         }
     }
@@ -310,7 +349,7 @@ struct CalendarView: View {
                     if isCurrentMonth && !repeatingEvents.isEmpty {
                         ForEach(Array(repeatingEvents.prefix(3))) { event in
                             Circle()
-                                .fill(event.color.uiColor)
+                                .fill(.primary1)
                                 .frame(width: 5, height: 5)
                                 .offset(x:13)
                         }
@@ -439,7 +478,7 @@ struct CalendarView: View {
             .cornerRadius(12)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(event.isFixed == true ? .primary1 : .ccc60, lineWidth: 1)
+                    .stroke(.ccc60, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -453,11 +492,11 @@ struct CalendarView: View {
                 Image(systemName: "plus")
                     .textStyle(.bold20)
                     .foregroundColor(.gray444)
-                
+
                 Text("직접 추가하기")
                     .textStyle(.regular18)
                     .foregroundColor(.gray444)
-                
+
                 Spacer()
             }
             .padding(16)
@@ -491,7 +530,16 @@ struct CalendarView: View {
     }
 }
 
-#Preview {
-    CalendarView(onFinish: {})
-        .environment(CalendarViewModel())
+#Preview("캘린더 (활동/고정 샘플)") {
+    struct PreviewWrapper: View {
+        @State private var viewModel = CalendarViewModel(repository: CalendarRepository())
+        var body: some View {
+            CalendarView(onFinish: {})
+                .environment(viewModel)
+                .task {
+                    await viewModel.prepareForPreview(year: 2026, month: 1, day: 13)
+                }
+        }
+    }
+    return PreviewWrapper()
 }
