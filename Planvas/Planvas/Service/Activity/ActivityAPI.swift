@@ -1,10 +1,3 @@
-//
-//  ActivityAPI.swift
-//  Planvas
-//
-//  Created by 정서영 on 2/2/26.
-//
-
 import Foundation
 import Moya
 import Alamofire
@@ -135,35 +128,50 @@ extension ActivityAPI: APITargetType {
                             {
                                 "cartItemId": 1,
                                 "activityId": 101,
-                                "category": "GROWTH",
-                                "dDay": 16,
-                                "point": 30,
                                 "title": "AI 세미나",
-                                "subTitle": "2025 AI 대전환 오픈 세미나",
-                                "subMessage": null,
-                                "endDate": "2026-02-28"
+                                "description": "2025 AI 대전환 오픈 세미나",
+                                "category": "GROWTH",
+                                "point": 30,
+                                "type": "NORMAL",
+                                "categoryId": 1,
+                                "externalUrl": "https://example.com",
+                                "startDate": "2026-02-15",
+                                "endDate": "2026-02-28",
+                                "dDay": 16,
+                                "scheduleStatus": "AVAILABLE",
+                                "tipMessage": null
                             },
                             {
                                 "cartItemId": 2,
                                 "activityId": 102,
-                                "category": "GROWTH",
-                                "dDay": 9,
-                                "point": 10,
                                 "title": "SK 하이닉스",
-                                "subTitle": "SK 하이닉스 2025 하반기 청년 Hy-Five 14기 모집",
-                                "subMessage": "[카페 알바] 일정이 있어요!\\n시간을 쪼개서 계획해 보세요",
-                                "endDate": "2026-02-21"
+                                "description": "SK 하이닉스 2025 하반기 청년 Hy-Five 14기 모집",
+                                "category": "GROWTH",
+                                "point": 10,
+                                "type": "CONTEST",
+                                "categoryId": null,
+                                "externalUrl": "https://skhynix.com",
+                                "startDate": "2026-02-10",
+                                "endDate": "2026-02-14",
+                                "dDay": 2,
+                                "scheduleStatus": "CAUTION",
+                                "tipMessage": "[카페 알바] 일정이 있어요!\\n시간을 쪼개서 계획해 보세요"
                             },
                             {
                                 "cartItemId": 3,
                                 "activityId": 103,
+                                "title": "엑셀 특강",
+                                "description": "드림 온 아카데미 마스터 스킬 - 엑셀 활용법 단기 특강",
                                 "category": "REST",
-                                "dDay": 15,
                                 "point": 10,
-                                "title": "엑셀",
-                                "subTitle": "드림 온 아카데미 마스터 스킬 - 엑셀 활용법 단기 특강",
-                                "subMessage": "[카페 알바] 일정과 겹쳐요!",
-                                "endDate": "2026-02-27"
+                                "type": "NORMAL",
+                                "categoryId": 2,
+                                "externalUrl": null,
+                                "startDate": "2026-02-01",
+                                "endDate": "2026-02-11",
+                                "dDay": -1,
+                                "scheduleStatus": "UNAVAILABLE",
+                                "tipMessage": "마감된 활동입니다."
                             }
                         ]
                     }
