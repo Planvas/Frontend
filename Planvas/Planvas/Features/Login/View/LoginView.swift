@@ -48,10 +48,12 @@ struct LoginView: View {
             }
         }
         .onAppear {
+            // ✅ 로그인 화면 재진입시 성공 플래그 초기화
             viewModel.isLoginSuccess = false
         }
         .fullScreenCover(isPresented: $viewModel.isLoginSuccess) {
             LoginSuccessView()
+                .environmentObject(container)
         }
     }
 }
