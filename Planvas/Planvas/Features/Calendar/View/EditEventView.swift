@@ -14,7 +14,9 @@ struct EditEventView: View {
     @State private var showEndDatePicker = false
     @State private var showRepeatPicker = false
     @State private var showRepeatEndDatePicker = false
-    
+    /// 활동치 설정을 꺼짐→켬으로 사용자가 바꿀 때만 성장/휴식 0으로 설정. configure 로딩으로 켜진 경우는 제외.
+    @State private var skipFirstEnableFromOff = false
+
     let event: Event
     let startDate: Date
     let endDate: Date
@@ -68,9 +70,21 @@ struct EditEventView: View {
         }
         .background(.white)
         .onAppear {
-            viewModel.configure(with: event, startDate: startDate, endDate: endDate)
+            viewModel.configure(with: event)
             // 반복 설정 상태 초기화
             showRepeatPicker = event.isRepeating
+            // 활동치가 이미 켜져 있으면, 그 후 첫 번째 (꺼짐→켬) 전환은 configure 때문이므로 0으로 덮어쓰지 않음
+            skipFirstEnableFromOff = viewModel.isActivityEnabled
+        }
+        .onChange(of: viewModel.isActivityEnabled) { oldValue, newValue in
+            if !oldValue && newValue {
+                if skipFirstEnableFromOff {
+                    skipFirstEnableFromOff = false
+                } else {
+                    viewModel.growthValue = 0
+                    viewModel.restValue = 0
+                }
+            }
         }
     }
     

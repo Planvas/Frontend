@@ -2,13 +2,14 @@
 //  ActivitySettingsSectionView.swift
 //  Planvas
 //
-//  AddActivityView 전용 활동치 설정 섹션.
+//  활동치 설정 섹션. AddActivityView, ActivityEventDetailView 등에서 공통 사용.
+//  ActivitySettingsBindable을 준수하는 ViewModel과 함께 사용합니다.
 //
 
 import SwiftUI
 
-struct ActivitySettingsSectionView: View {
-    @Bindable var viewModel: AddActivityViewModel
+struct ActivitySettingsSectionView<VM: ActivitySettingsBindable & Observable>: View {
+    @Bindable var viewModel: VM
     var showRecommendation: Bool = true
 
     var body: some View {
