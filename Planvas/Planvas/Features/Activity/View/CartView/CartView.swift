@@ -20,6 +20,14 @@ struct CartView: View {
         .onChange(of: selectedBar) { _, newValue in
             viewModel.fetchCartList(for: newValue)
         }
+        .sheet(isPresented: $viewModel.showAddActivity) {
+            if let addVM = viewModel.addActivityViewModel {
+                AddActivityView(viewModel: addVM) {
+                    print("서버에 일정을 추가합니다!")
+                    viewModel.showAddActivity = false
+                }
+            }
+        }
     }
     // 탭 버튼 컴포넌트
     @ViewBuilder
