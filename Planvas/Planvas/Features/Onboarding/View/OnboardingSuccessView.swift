@@ -10,6 +10,9 @@ import SwiftUI
 struct OnboardingSuccessView: View {
     @Environment(\.dismiss) private var dismiss
     
+    let onGoActivityList: () -> Void
+    let onGoHome: () -> Void
+    
     var body: some View {
         VStack (alignment: .center, spacing: 0) {
             Text("모든 준비가 끝났어요!")
@@ -42,12 +45,15 @@ struct OnboardingSuccessView: View {
                 print("추천 활동으로 채우기")
                 
                 // TODO: 추천 활동 뷰로 이동
+                dismiss()
+                onGoActivityList()
             }
             .padding(.bottom, 38)
             
             Button(action: {
                 print("홈으로 가기")
                 dismiss()
+                onGoHome()
             }) {
                 Text("홈으로 가기")
                     .textStyle(.semibold18)
@@ -64,8 +70,4 @@ struct OnboardingSuccessView: View {
         .padding(.horizontal, 24)
         .ignoresSafeArea()
     }
-}
-
-#Preview {
-    OnboardingSuccessView()
 }

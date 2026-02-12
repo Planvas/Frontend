@@ -9,7 +9,7 @@ struct RootView: View {
         case .splash:
             ProgressView()
                 .onAppear {
-                    router.updateRootRoute()
+                    router.refresh()
                 }
         case .login:
             LoginView()
@@ -18,6 +18,8 @@ struct RootView: View {
             OnboardingFlowView()
         case .main:
             TabBar()
+        case .loading:
+            ProgressView()
         }
     }
 }

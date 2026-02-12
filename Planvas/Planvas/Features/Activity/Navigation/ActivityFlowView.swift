@@ -12,11 +12,11 @@ struct ActivityFlowView: View {
     
     var body: some View {
         NavigationStack(path: $router.path) {
-            ActivityView()
+            ActivityListView()
                 .navigationDestination(for: ActivityRoute.self) { route in
                     switch route {
-                    case .activity:
-                        ActivityView()
+                    case .activityList:
+                        ActivityListView()
                     }
                 }
         }

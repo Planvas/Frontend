@@ -21,15 +21,16 @@ final class DIContainer: ObservableObject {
     
     init() {
         self.appState = AppState()
-        self.rootRouter = RootRouter(appState: appState)
         
         self.apiManager = APIManager.shared
         self.calendarProvider = apiManager.createProvider(for: CalendarAPI.self)
         self.onboardingProvider = apiManager.createProvider(for: OnboardingAPI.self)
         
         self.loginVM = LoginViewModel()
-        self.loginVM.rootRouter = self.rootRouter
         self.goalVM = GoalSetupViewModel()
         self.onboardingVM = OnboardingViewModel(provider: onboardingProvider)
+        
+        self.rootRouter = RootRouter(appState: appState, onboardingVM: onboardingVM)
+        self.loginVM.rootRouter = self.rootRouter
     }
 }
