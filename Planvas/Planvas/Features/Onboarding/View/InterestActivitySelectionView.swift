@@ -19,15 +19,16 @@ struct InterestActivitySelectionView: View {
     private let provider = APIManager.shared.createProvider(for: MainAPI.self)
 
     private var displayName: String {
-        // loginVM (로그인 직후엔 여기 있을 수 있음)
-        if !loginVM.userName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return loginVM.userName
+        let fetched = fetchedUserName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !fetched.isEmpty {
+            return fetched
         }
-        // 온보딩에서 fetch한 이름
-        if !fetchedUserName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return fetchedUserName
+        
+        let stored = loginVM.userName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !stored.isEmpty {
+            return stored
         }
-        // fallback
+        
         return "사용자"
     }
 
@@ -110,6 +111,7 @@ struct InterestActivitySelectionView: View {
                        let name = decoded.success?.userName {
                         DispatchQueue.main.async {
                             self.fetchedUserName = name
+                            self.loginVM.userName = name
                         }
                     }
                 case .failure:

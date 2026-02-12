@@ -25,6 +25,8 @@ struct Activity: Decodable {
     let category: TodoCategory
     let point: Int
     let thumbnailUrl: String?
+    let scheduleStatus: ScheduleAvailable?  // 일정 가능?주의?
+    let dDay: Int?
 }
 
 // MARK: - 활동 상세 조회 (GET /api/activities/{activityId})
