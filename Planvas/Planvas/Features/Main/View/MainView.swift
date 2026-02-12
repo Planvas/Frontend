@@ -8,7 +8,9 @@
 import SwiftUI
 
 struct MainView: View {
-    @StateObject private var viewModel = MainViewModel()
+    @State private var viewModel = MainViewModel()
+    @Environment(NavigationRouter<MainRoute>.self) var router
+    @EnvironmentObject var container: DIContainer
     
     var body: some View {
         ScrollView {

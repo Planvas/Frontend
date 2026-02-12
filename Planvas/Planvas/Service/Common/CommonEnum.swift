@@ -12,6 +12,7 @@ import SwiftUI
 enum TodoCategory: String, Codable {
     case growth = "GROWTH"
     case rest = "REST"
+    case manual = "MANUAL"
 }
 
 // 활동 일정 가능 여부
