@@ -117,10 +117,10 @@ final class CalendarViewModel {
         getEvents(for: date).filter(\.isRepeating)
     }
     
-    /// 여러 날에 걸친 고정 일정만 막대로 표시 (시작일~종료일). 활동 일정 멀티데이는 막대 없이 종료일에 바+이름만 표시.
+    /// 여러 날에 걸친 고정 일정만 막대로 표시 (시작일~종료일). 반복 고정 일정은 점으로만 표시하므로 막대/이름 제외.
     func getMultiDayEventSegments(for date: Date) -> [(event: Event, isStart: Bool, isEnd: Bool)] {
         getEvents(for: date)
-            .filter { $0.isFixed }
+            .filter { $0.isFixed && !$0.isRepeating }
             .filter { !calendar.isDate($0.startDate, inSameDayAs: $0.endDate) }
             .map { event in
                 let isStart = calendar.isDate(date, inSameDayAs: event.startDate)
