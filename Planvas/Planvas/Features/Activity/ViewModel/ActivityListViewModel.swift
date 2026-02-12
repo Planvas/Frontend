@@ -24,10 +24,11 @@ final class ActivityListViewModel {
     func selectCategory(_ category: String) {
         selectedCategory = category
     }
-    
-    // TODO: API 연동 후 이거 지우기 - 활동 더미 데이터
+
+    // TODO: 목록 조회 API 연동 후 더미 데이터 교체
     var activities: [ActivityCard] = [
         ActivityCard(
+            activityId: 1,
             imageURL: nil,
             badgeText: "일정 가능",
             badgeColor: .blue1,
@@ -36,6 +37,7 @@ final class ActivityListViewModel {
             title: "패스트 캠퍼스 2026 AI 대전환 오픈 세미나"
         ),
         ActivityCard(
+            activityId: 2,
             imageURL: nil,
             badgeText: "일정 주의",
             badgeColor: .yellow1,
@@ -44,6 +46,7 @@ final class ActivityListViewModel {
             title: "2026 빅데이터 분석 자격증 온라인 교육생 모집"
         ),
         ActivityCard(
+            activityId: 3,
             imageURL: nil,
             badgeText: "일정 겹침",
             badgeColor: .red1,
@@ -69,7 +72,7 @@ final class ActivityListViewModel {
         }
 
         // TODO: 가능한 일정만 보기 필터
-        
+
         return result
     }
 }
