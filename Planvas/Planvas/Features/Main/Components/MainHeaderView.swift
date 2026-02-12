@@ -9,7 +9,7 @@ import SwiftUI
 
 // MARK: - 메인 헤더 그룹
 struct MainHeaderView: View {
-    @ObservedObject var viewModel: MainViewModel
+    @Bindable var viewModel: MainViewModel
     
     var body: some View {
         VStack {
@@ -28,7 +28,7 @@ struct MainHeaderView: View {
                 
                 HStack{
                     Group{
-                        Text("D-\(viewModel.dDay)")
+                        Text(viewModel.dDay)
                             .textStyle(.medium14)
                             .foregroundStyle(.fff)
                             .padding(.horizontal, 8)
@@ -173,8 +173,4 @@ struct WaveBackground: Shape {
             path.closeSubpath()
         }
     }
-}
-
-#Preview {
-    MainView()
 }

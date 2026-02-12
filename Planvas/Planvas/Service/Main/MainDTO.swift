@@ -32,7 +32,7 @@ struct CurrentGoal: Decodable {
     let title: String
     let startDate: String
     let endDate: String
-    let dDay: Int
+    let dDay: String
     let growthRatio: Int
     let restRatio: Int
 }
@@ -59,7 +59,11 @@ struct WeeklyDay: Decodable {
 struct ScheduleDTO: Decodable {
     let id: Int
     let title: String
+    let type: String
     let category: TodoCategory
+    let startTime: String
+    let endTime: String
+    let completed: Bool
 }
 
 // TodayTodo

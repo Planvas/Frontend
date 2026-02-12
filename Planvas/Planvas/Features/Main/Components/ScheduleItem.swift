@@ -42,7 +42,7 @@ private extension ScheduleItem {
 
     @ViewBuilder
     var leadingBar: some View {
-        if position != .middle {
+        if position == .start || position == .single {
             RoundedRectangle(cornerRadius: 5)
                 .fill(schedule.type.color)
                 .frame(width: 3)

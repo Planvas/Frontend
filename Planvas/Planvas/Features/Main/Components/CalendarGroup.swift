@@ -9,7 +9,7 @@ import SwiftUI
 
 // MARK: - 바디 / 캘린더 그룹
 struct CalendarGroup: View {
-    @ObservedObject var viewModel: MainViewModel
+    @Bindable var viewModel: MainViewModel
     
     var body: some View {
         VStack(alignment: .leading){
