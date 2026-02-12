@@ -34,6 +34,9 @@ final class EventDetailViewModel: ActivitySettingsBindable {
     var targetGrowthAchievement: Int = 60
     var targetRestAchievement: Int = 50
 
+    // 추천 활동치 (API defaultPoint)
+    var recommendedPoint: Int = 20
+
     enum ActivityType {
         case growth
         case rest
