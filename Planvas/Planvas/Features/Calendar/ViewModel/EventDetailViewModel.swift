@@ -108,8 +108,8 @@ final class EventDetailViewModel: ActivitySettingsBindable {
         targetPeriod: String?
     ) {
         self.event = event
-        self.startDate = startDate
-        self.endDate = endDate
+        self.startDate = calendar.startOfDay(for: event.startDate)
+        self.endDate = calendar.startOfDay(for: event.endDate)
         self.daysUntil = daysUntil
         self.targetPeriod = targetPeriod
 

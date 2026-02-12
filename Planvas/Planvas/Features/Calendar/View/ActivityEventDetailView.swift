@@ -177,7 +177,7 @@ struct ActivityEventDetailView: View {
                 get: { viewModel.startDate },
                 set: { viewModel.startDate = $0 }
             ),
-            in: Date()...viewModel.endDate,
+            in: Date.distantPast...viewModel.endDate,
             displayedComponents: .date
         )
         .datePickerStyle(.wheel)
