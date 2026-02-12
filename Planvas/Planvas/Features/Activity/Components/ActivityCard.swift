@@ -61,7 +61,7 @@ struct ActivityCardView: View {
                             
                             Spacer()
                             
-                            Text("D-\(item.dday)")
+                            Text(item.dday < 0 ? "마감" : "D-\(item.dday)")
                                 .textStyle(.medium14)
                                 .foregroundStyle(.fff)
                                 .padding(.horizontal, 8)
