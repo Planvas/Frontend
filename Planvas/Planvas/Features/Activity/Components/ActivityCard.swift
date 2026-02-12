@@ -14,7 +14,7 @@ struct ActivityCardView: View {
 
     var body: some View {
         Button{
-            router.push(.activityDetail(item.id))
+            router.push(.activityDetail(activityId: item.activityId))
         } label: {
             VStack(spacing: 12) {
                 
@@ -135,7 +135,7 @@ struct ActivityCardView: View {
                     Spacer()
                 }
                 .padding(.vertical, 7)
-                .padding(.horizontal, 7)
+                .padding(.leading, 7)
             }
             .frame(height: 36)
             .padding(.bottom, 12)
@@ -144,56 +144,17 @@ struct ActivityCardView: View {
 }
 
 #Preview {
-    let router = NavigationRouter<ActivityRoute>()
-    
-    return VStack(spacing: 12) {
-        ActivityCardView(
-            item: ActivityCard(
-                imageURL: nil,
-                badgeText: "일정 가능",
-                badgeColor: .blue1,
-                growth: 10,
-                dday: 9,
-                title: "패스트 캠퍼스 2026 AI 대전환 오픈 세미나",
-                tip: nil
-            )
+    ActivityCardView(
+        item: ActivityCard(
+            activityId: 1,
+            imageURL: nil,
+            badgeText: "일정 가능",
+            badgeColor: .blue1,
+            growth: 20,
+            dday: 5,
+            title: "패스트 캠퍼스 2026 AI 대전환 오픈 세미나",
+            tip: nil
         )
-
-        ActivityCardView(
-            item: ActivityCard(
-                imageURL: nil,
-                badgeText: "일정 주의",
-                badgeColor: .yellow1,
-                growth: 20,
-                dday: 15,
-                title: "2026 빅데이터 분석 자격증 온라인 교육생 모집",
-                tip: ActivityTip(
-                    label: "Tip",
-                    tag: "[카페 알바]",
-                    message: "일정이 있어요! 시간을 쪼개서 계획해 보세요",
-                    labelColor: .primary1
-                )
-            )
-        )
-
-        ActivityCardView(
-            item: ActivityCard(
-                imageURL: nil,
-                badgeText: "일정 겹침",
-                badgeColor: .red1,
-                growth: 30,
-                dday: 20,
-                title: "제4회 2026 블레이버스 MVP 개발 해커톤",
-                tip: ActivityTip(
-                    label: "주의",
-                    tag: "[일본 여행]",
-                    message: "일정과 겹쳐요!",
-                    labelColor: .red1
-                )
-            )
-        )
-    }
+    )
     .padding()
-    .background(Color.fff)
-    .environment(router)
 }

@@ -27,7 +27,7 @@ struct Activity: Decodable {
     let thumbnailUrl: String?
 }
 
-// MARK: - 활동 상세 조회
+// MARK: - 활동 상세 조회 (GET /api/activities/{activityId})
 struct ActivityDetailResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
@@ -41,6 +41,41 @@ struct ActivityDetailSuccess: Decodable {
     let point: Int
     let description: String
     let thumbnailUrl: String?
+    let type: String?
+    let startDate: String?
+    let endDate: String?
+    let dDay: Int?
+    let scheduleStatus: String?
+    let tipMessage: String?
+    let categoryId: Int?
+    let externalUrl: String?
+    let minPoint: Int?
+    let maxPoint: Int?
+    let defaultPoint: Int?
+}
+
+// MARK: - 활동을 내 일정에 추가 (POST /api/activities/{activityId}/my-activities)
+struct AddMyActivityRequestDTO: Encodable {
+    let goalId: Int
+    let startDate: String
+    let endDate: String
+    let point: Int
+}
+
+struct AddMyActivityResponse: Decodable {
+    let resultType: String
+    let error: ErrorDTO?
+    let success: AddMyActivitySuccess?
+}
+
+struct AddMyActivitySuccess: Decodable {
+    let myActivityId: Int
+    let activityId: Int
+    let title: String
+    let category: TodoCategory
+    let point: Int
+    let startDate: String
+    let endDate: String
 }
 
 // MARK: - 활동 적용(내 일정 반영)
