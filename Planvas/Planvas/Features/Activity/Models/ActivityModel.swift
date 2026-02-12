@@ -17,6 +17,15 @@ struct ActivityCard: Identifiable, Hashable {
     let growth: Int
     let dday: Int
     let title: String
+    
+    let tip: ActivityTip?
+}
+
+struct ActivityTip: Hashable {
+    let label: String      // "Tip" 또는 "주의"
+    let tag: String        // "[카페 알바]" 같은 태그
+    let message: String    // "일정이 있어요! ..."
+    let labelColor: Color  // Tip/주의 색
 }
 
 // MARK: - 활동 디테일 모델

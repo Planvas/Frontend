@@ -116,6 +116,12 @@ extension TextStyle {
         letterSpacing: nil
     )
     
+    static let bold12 = TextStyle(
+        weight: .bold,
+        size: 12,
+        letterSpacing: nil
+    )
+    
     // semibold
     static let semibold30 = TextStyle(
         weight: .semibold,
@@ -150,6 +156,12 @@ extension TextStyle {
     static let semibold14 = TextStyle(
         weight: .semibold,
         size: 14,
+        letterSpacing: nil
+    )
+    
+    static let semibold12 = TextStyle(
+        weight: .semibold,
+        size: 12,
         letterSpacing: nil
     )
     
@@ -199,6 +211,12 @@ extension TextStyle {
     static let medium14 = TextStyle(
         weight: .medium,
         size: 14,
+        letterSpacing: nil
+    )
+    
+    static let medium12 = TextStyle(
+        weight: .medium,
+        size: 12,
         letterSpacing: nil
     )
     
