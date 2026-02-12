@@ -8,7 +8,23 @@
 import SwiftUI
 
 struct ActivityDetailView: View {
-    @State private var viewModel = ActivityDetailViewModel()
+    @State private var viewModel: ActivityDetailViewModel
+    
+    init() {
+        let mockData = ActivityDetail(
+            title: "SK 하이닉스 2025 하반기 청년 Hy-Five 14기 모집",
+            dDay: 16,
+            date: "11/15 ~ 12/3",
+            category: .growth,
+            point: 30,
+            description: "SK 하이닉스 2025 하반기 청년 Hy-Five 14기 모집합니다.",
+            thumbnailUrl: ""
+        )
+
+        _viewModel = State(
+            initialValue: ActivityDetailViewModel(activity: mockData)
+        )
+    }
     
     var body: some View {
         ScrollView{
@@ -50,7 +66,7 @@ struct ActivityDetailView: View {
                 .foregroundStyle(.black1)
             
             HStack(spacing: 9){
-                Text("D-\(viewModel.dDay)")
+                Text(viewModel.dDayText)
                     .textStyle(.medium14)
                     .foregroundStyle(.fff)
                     .padding(.horizontal, 8)
@@ -74,7 +90,7 @@ struct ActivityDetailView: View {
                     .scaledToFit()
             }
             .overlay(alignment: .topTrailing) {
-                Text(viewModel.category == .growth ? "성장 +\(viewModel.point)" : "휴식 +\(viewModel.point)")
+                Text(viewModel.categoryText)
                     .textStyle(.semibold16)
                     .foregroundStyle(.fff)
                     .padding(.horizontal, 10)
