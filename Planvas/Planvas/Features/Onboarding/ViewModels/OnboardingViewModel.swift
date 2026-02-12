@@ -213,4 +213,29 @@ final class OnboardingViewModel {
         selectedPresetId = nil
         selectedPresetStep = nil
     }
+    
+    func checkHasCurrentGoal(completion: @escaping (Bool) -> Void) {
+        provider.request(.getCurrentGoal) { result in
+            switch result {
+            case .success(let response):
+                if response.statusCode == 404 {
+                    DispatchQueue.main.async { completion(false) }
+                    return
+                }
+                do {
+                    let decoded = try JSONDecoder().decode(GoalDetailResponse.self, from: response.data)
+                    DispatchQueue.main.async { completion(decoded.success?.goalId != nil) }
+                } catch {
+                    DispatchQueue.main.async { completion(false) }
+                }
+
+            case .failure(let error):
+                if error.response?.statusCode == 404 {
+                    DispatchQueue.main.async { completion(false) }
+                } else {
+                    DispatchQueue.main.async { completion(false) }
+                }
+            }
+        }
+    }
 }

@@ -15,28 +15,22 @@ final class RootRouter {
     var root: RootRoute = .splash
 
     private let appState: AppState
+    private let onboardingVM: OnboardingViewModel
     private var cancellables = Set<AnyCancellable>()
     
-    init(appState: AppState) {
+    init(appState: AppState, onboardingVM: OnboardingViewModel) {
         self.appState = appState
+        self.onboardingVM = onboardingVM
 
         let hasSeenOnboarding =
             UserDefaults.standard.bool(forKey: OnboardingKeys.hasSeenOnboarding)
-        let hasCompletedOnboarding =
-            UserDefaults.standard.bool(forKey: OnboardingKeys.hasCompletedOnboarding)
-        let hasActiveGoal =
-            UserDefaults.standard.bool(forKey: OnboardingKeys.hasActiveGoal)
 
         if !hasSeenOnboarding {
             root = .splash
         } else if !appState.isLoggedIn {
             root = .login
-        } else if hasCompletedOnboarding && hasActiveGoal {
-            // 로그인 + 목표 설정 완료 → 메인
-            root = .main
         } else {
-            // 로그인은 했지만 목표 설정 안 함
-            root = .onboarding
+            routeByServer()
         }
 
         appState.$isLoggedIn
@@ -44,11 +38,21 @@ final class RootRouter {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isLoggedIn in
                 guard let self else { return }
-
                 if !isLoggedIn {
                     self.root = .login
+                } else {
+                    self.routeByServer()
                 }
             }
             .store(in: &cancellables)
+    }
+
+    private func routeByServer() {
+        root = .loading // RootRoute에 loading 추가 추천
+
+        onboardingVM.checkHasCurrentGoal { [weak self] hasGoal in
+            guard let self else { return }
+            self.root = hasGoal ? .main : .onboarding
+        }
     }
 }

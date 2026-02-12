@@ -13,6 +13,8 @@ struct RootView: View {
             OnboardingFlowView()
         case .main:
             TabBar()
+        case .loading:
+            ProgressView()
         }
     }
 }

@@ -28,7 +28,6 @@ final class DIContainer: ObservableObject {
     
     init() {
         self.appState = AppState()
-        self.rootRouter = RootRouter(appState: appState)
         
         self.apiManager = APIManager.shared
         self.calendarProvider = apiManager.createProvider(for: CalendarAPI.self)
@@ -37,5 +36,8 @@ final class DIContainer: ObservableObject {
         self.loginVM = LoginViewModel()
         self.goalVM = GoalSetupViewModel()
         self.onboardingVM = OnboardingViewModel(provider: onboardingProvider)
+        
+        self.rootRouter = RootRouter(appState: appState, onboardingVM: onboardingVM)
+
     }
 }
