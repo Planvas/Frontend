@@ -134,9 +134,10 @@ struct EventSummaryView: View {
                 }
             }
             
-            //뱃지
+            //뱃지 (양수: D-N, 0: D-day, 음수: D+N)
             if let daysUntil = daysUntil {
-                Text("D-\(daysUntil)")
+                let badgeText = daysUntil == 0 ? "D-day" : (daysUntil > 0 ? "D-\(daysUntil)" : "D+\(-daysUntil)")
+                Text(badgeText)
                     .textStyle(.semibold14)
                     .foregroundColor(.white)
                     .padding(.horizontal, 8)
