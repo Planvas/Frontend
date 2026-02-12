@@ -34,7 +34,8 @@ final class ActivityListViewModel {
             badgeColor: .blue1,
             growth: 10,
             dday: 9,
-            title: "패스트 캠퍼스 2026 AI 대전환 오픈 세미나"
+            title: "패스트 캠퍼스 2026 AI 대전환 오픈 세미나",
+            tip: nil
         ),
         ActivityCard(
             activityId: 2,
@@ -42,8 +43,14 @@ final class ActivityListViewModel {
             badgeText: "일정 주의",
             badgeColor: .yellow1,
             growth: 20,
-            dday: 5,
-            title: "2026 빅데이터 분석 자격증 온라인 교육생 모집"
+            dday: 15,
+            title: "2026 빅데이터 분석 자격증 온라인 교육생 모집",
+            tip: ActivityTip(
+                label: "Tip",
+                tag: "[카페 알바]",
+                message: "일정이 있어요! 시간을 쪼개서 계획해 보세요",
+                labelColor: .primary1
+            )
         ),
         ActivityCard(
             activityId: 3,
@@ -52,8 +59,14 @@ final class ActivityListViewModel {
             badgeColor: .red1,
             growth: 30,
             dday: 20,
-            title: "제 4회 2026 블레이버스 MVP 개발 해커톤"
-        )
+            title: "제4회 2026 블레이버스 MVP 개발 해커톤",
+            tip: ActivityTip(
+                label: "주의",
+                tag: "[일본 여행]",
+                message: "일정과 겹쳐요!",
+                labelColor: .red1
+            )
+        ),
     ]
 
     // 필터 함수
