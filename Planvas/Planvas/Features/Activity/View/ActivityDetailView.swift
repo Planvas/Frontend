@@ -6,30 +6,31 @@
 //
 
 import SwiftUI
+import Kingfisher
 
 struct ActivityDetailView: View {
     @State private var viewModel: ActivityDetailViewModel
     @Environment(NavigationRouter<ActivityRoute>.self) var router
-
+    
     let activityId: Int
-
+    
     /// 옵셔널 바인딩 편의용
     private var activity: ActivityDetail? {
         viewModel.activity
     }
-
+    
     init(activityId: Int) {
         self.activityId = activityId
         _viewModel = State(
             initialValue: ActivityDetailViewModel()
         )
     }
-
+    
     var body: some View {
-        ScrollView {
-            VStack {
-                HeaderGroup
-                Spacer()
+        VStack {
+            HeaderGroup
+            Spacer()
+            ScrollView {
                 BodyGroup
                 BottomGroup
                 Spacer()
@@ -99,9 +100,9 @@ struct ActivityDetailView: View {
             Text(viewModel.errorMessage ?? "")
         }
     }
-
+    
     // MARK: - Header
-
+    
     private var HeaderGroup: some View {
         ZStack {
             HStack {
@@ -114,25 +115,25 @@ struct ActivityDetailView: View {
                 }
                 Spacer()
             }
-
+            
             HStack {
-                Text(activity?.title ?? "")
+                Text(activity?.category == .growth ? "성장 활동" : "휴식 활동")
                     .foregroundStyle(.black1)
                     .textStyle(.bold20)
             }
         }
-        .padding(.vertical)
+        .padding()
         .padding(.bottom, 20)
     }
-
+    
     // MARK: - Body
-
+    
     private var BodyGroup: some View {
         VStack(alignment: .leading, spacing: 9) {
-            Text(activity?.title ?? "")
+            Text(viewModel.title)
                 .textStyle(.semibold22)
                 .foregroundStyle(.black1)
-
+            
             HStack(spacing: 9) {
                 Text(viewModel.dDayText)
                     .textStyle(.medium14)
@@ -143,20 +144,25 @@ struct ActivityDetailView: View {
                         RoundedRectangle(cornerRadius: 5)
                             .foregroundStyle(.primary1)
                     )
-
-                Text(activity?.date ?? "")
+                
+                Text(viewModel.date)
                     .textStyle(.semibold18)
                     .foregroundStyle(.primary1)
             }
-
+            
             ZStack {
                 RoundedRectangle(cornerRadius: 15)
                     .aspectRatio(contentMode: .fit)
-
-                Image(.banner1)
-                    .resizable()
-                    .scaledToFit()
+                
+                if let url = viewModel.thumbnailURL {
+                    KFImage(url)
+                        .resizable()
+                        .scaledToFit()
+                }
             }
+            .frame(maxWidth: .infinity)
+            .aspectRatio(1, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: 15))
             .overlay(alignment: .topTrailing) {
                 Text(activity?.pointBadge ?? "")
                     .textStyle(.semibold16)
@@ -171,21 +177,27 @@ struct ActivityDetailView: View {
             }
         }
     }
-
+    
     // MARK: - Bottom
-
+    
     private var BottomGroup: some View {
         VStack(alignment: .leading) {
-            Text(activity?.title ?? "")
+            Text(viewModel.title)
                 .textStyle(.semibold18)
                 .foregroundStyle(.black1)
                 .padding(.top, 26)
-
-            Text(activity?.description ?? "")
+            
+            Text(viewModel.description)
                 .textStyle(.medium14)
-                .foregroundStyle(.black1)
+                .foregroundStyle(.gray444)
+                .padding(.vertical, 12)
+                .padding(.horizontal, 13.5)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(.ccc, lineWidth: 1)
+                )
                 .padding(.bottom, 26)
-
+            
             HStack(spacing: 5) {
                 Button {
                 } label: {
@@ -199,7 +211,7 @@ struct ActivityDetailView: View {
                                 .foregroundStyle(.primary1)
                         )
                 }
-
+                
                 Button {
                     viewModel.openAddActivitySheet()
                 } label: {
@@ -214,7 +226,6 @@ struct ActivityDetailView: View {
                         )
                 }
             }
-            .padding(.bottom, 60)
         }
     }
 }
