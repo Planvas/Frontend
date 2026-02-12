@@ -9,4 +9,5 @@
 enum TodoCategory: String, Codable {
     case growth = "GROWTH"
     case rest = "REST"
+    case manual = "MANUAL"
 }
