@@ -47,12 +47,26 @@ struct ActivityListView: View {
                 .padding(.bottom, 20)
             
             // 활동 리스트
-            activityList
+            if vm.isLoading {
+                ProgressView().padding(.top, 50)
+                Spacer()
+            } else {
+                activityList
+            }
                 
         }
         .ignoresSafeArea()
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .task {
+            await vm.fetchActivities(tab: selectedActivityType)
+        }
+        .onChange(of: selectedActivityType) { _, newValue in
+            Task { await vm.fetchActivities(tab: newValue, searchText: searchText) }
+        }
+        .onChange(of: searchText) { _, newValue in
+            Task { await vm.fetchActivities(tab: selectedActivityType, searchText: newValue) }
+        }
         .sheet(isPresented: $showActivitySheet) {
             ActivitySelectionView(
                 selectedType: $selectedActivityType
@@ -190,7 +204,9 @@ struct ActivityListView: View {
                     HStack(spacing: 8) {
                         ForEach(vm.categoryChips, id: \.self) { category in
                             Button {
-                                vm.selectCategory(category)
+                                Task {
+                                    await vm.selectCategory(category, tab: selectedActivityType, searchText: searchText)
+                                }
                             } label: {
                                 Text(category)
                                     .textStyle(.medium16)

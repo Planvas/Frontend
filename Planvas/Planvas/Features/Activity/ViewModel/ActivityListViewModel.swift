@@ -10,9 +10,19 @@ import SwiftUI
 
 @Observable
 final class ActivityListViewModel {
+    private let service = ActivityNetworkService()
+    
+    var activities: [ActivityCard] = []
+    var isLoading: Bool = false
+    var selectedCategoryId: Int? = nil // 카테고리 ID 매핑 필요
 
     // 현재 선택된 카테고리
     var selectedCategory: String = "전체"
+    
+    // 서버 DB와 맞춘 카테고리 ID 매핑
+    private let categoryMapping: [String: Int] = [
+        "공모전": 1, "학회/동아리": 2, "대외활동": 3, "어학/자격증": 4, "인턴십": 5, "교육/강연": 6
+    ]
 
     // 카테고리 칩 리스트
     let categoryChips: [String] = [
@@ -21,71 +31,35 @@ final class ActivityListViewModel {
     ]
 
     // 카테고리 선택
-    func selectCategory(_ category: String) {
+    func selectCategory(_ category: String, tab: String, searchText: String) async {
         selectedCategory = category
+        selectedCategoryId = categoryMapping[category] // "전체"면 nil
+        
+        // 카테고리 변경 후 즉시 서버 호출
+        await fetchActivities(tab: tab, searchText: searchText)
     }
 
-    // TODO: 목록 조회 API 연동 후 더미 데이터 교체
-    var activities: [ActivityCard] = [
-        ActivityCard(
-            activityId: 1,
-            imageURL: nil,
-            badgeText: "일정 가능",
-            badgeColor: .blue1,
-            growth: 10,
-            dday: 9,
-            title: "패스트 캠퍼스 2026 AI 대전환 오픈 세미나",
-            tip: nil
-        ),
-        ActivityCard(
-            activityId: 2,
-            imageURL: nil,
-            badgeText: "일정 주의",
-            badgeColor: .yellow1,
-            growth: 20,
-            dday: 15,
-            title: "2026 빅데이터 분석 자격증 온라인 교육생 모집",
-            tip: ActivityTip(
-                label: "Tip",
-                tag: "[카페 알바]",
-                message: "일정이 있어요! 시간을 쪼개서 계획해 보세요",
-                labelColor: .primary1
-            )
-        ),
-        ActivityCard(
-            activityId: 3,
-            imageURL: nil,
-            badgeText: "일정 겹침",
-            badgeColor: .red1,
-            growth: 30,
-            dday: 20,
-            title: "제4회 2026 블레이버스 MVP 개발 해커톤",
-            tip: ActivityTip(
-                label: "주의",
-                tag: "[일본 여행]",
-                message: "일정과 겹쳐요!",
-                labelColor: .red1
-            )
-        ),
-    ]
-
     // 필터 함수
-    func filteredActivities(
-        searchText: String,
-        onlyAvailable: Bool
-    ) -> [ActivityCard] {
-
-        var result = activities
-
-        // 검색 필터
-        if !searchText.isEmpty {
-            result = result.filter {
-                $0.title.contains(searchText)
-            }
+    func fetchActivities(tab: String, searchText: String = "") async {
+        isLoading = true
+        let categoryEnum: TodoCategory = (tab == "성장") ? .growth : .rest
+        do {
+            self.activities = try await service.getActivityList(
+                tab: categoryEnum,
+                categoryId: selectedCategoryId,
+                q: searchText.isEmpty ? nil : searchText
+            )
+        } catch {
+            print("로드 실패: \(error)")
         }
+        isLoading = false
+    }
 
-        // TODO: 가능한 일정만 보기 필터
-
+    func filteredActivities(searchText: String, onlyAvailable: Bool) -> [ActivityCard] {
+        var result = activities
+        if onlyAvailable {
+            result = result.filter { $0.badgeText == "일정 가능" }
+        }
         return result
     }
 }
