@@ -7,6 +7,7 @@
 
 import Foundation
 import Observation
+import Moya
 
 @Observable
 @MainActor
@@ -16,6 +17,77 @@ class ActivityDetailViewModel {
     var goalId: Int?
     private(set) var activity: ActivityDetail?
 
+    init(
+        activity: ActivityDetail? = nil,
+        repository: ActivityRepositoryProtocol = ActivityAPIRepository()
+    ) {
+        self.activity = activity
+        self.repository = repository
+    }
+    
+    var title: String {
+        activity?.title ?? ""
+    }
+
+    var dDayText: String {
+        guard let dDay = activity?.dDay else { return "" }
+        return "D-\(dDay)"
+    }
+
+    var date: String {
+        guard let activity,
+              let start = activity.startDate,
+              let end = activity.endDate
+        else { return activity?.date ?? "" }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M/d"
+
+        let startString = formatter.string(from: start)
+        let endString = formatter.string(from: end)
+
+        return "\(startString) ~ \(endString)"
+    }
+
+    var categoryText: String {
+        guard let activity else { return "" }
+        return activity.category == .growth
+            ? "성장 +\(activity.point)"
+            : "휴식 +\(activity.point)"
+    }
+
+    var description: String {
+        activity?.description ?? ""
+    }
+
+    var thumbnailURL: URL? {
+        guard let urlString = activity?.thumbnailUrl else { return nil }
+        return URL(string: urlString)
+    }
+    
+    private let provider = APIManager.shared.createProvider(for: ActivityAPI.self)
+    
+    func fetchActivityDetail(activityId: Int) {
+        provider.request(.getActivityDetail(activityId: activityId)) { result in
+            switch result {
+            case .success(let response):
+                do {
+                    let decodedData = try JSONDecoder().decode(ActivityDetailResponse.self, from: response.data)
+                    DispatchQueue.main.async {
+                        if let success = decodedData.success {
+                            self.activity = success.toDomain()
+                        }
+                    }
+                } catch {
+                    print("Main 디코더 오류: \(error)")
+                }
+            case .failure(let error):
+                print("Main API 오류: \(error)")
+            }
+        }
+    }
+    
+    // 활동 -> 일정
     // MARK: - UI 상태
     var isLoading = false
     var errorMessage: String?

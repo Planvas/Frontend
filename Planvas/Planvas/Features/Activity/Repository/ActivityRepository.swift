@@ -36,7 +36,7 @@ final class ActivityAPIRepository: ActivityRepositoryProtocol {
 
     func getActivityDetail(activityId: Int) async throws -> ActivityDetail {
         let dto = try await networkService.getActivityDetail(activityId: activityId)
-        return ActivityDetail(from: dto)
+        return dto.toDomain()
     }
 
     func addToMyActivities(activityId: Int, goalId: Int, startDate: String, endDate: String, point: Int) async throws -> AddMyActivitySuccess {
