@@ -591,21 +591,39 @@ final class CalendarViewModel {
             let color: EventColorType = (preview.eventColor.map { EventColorType.from(serverColor: $0) })
                 ?? (preview.isFixed ? .purple1 : Self.colorForServerItem(itemId: itemId, type: preview.type))
 
+            // category 매핑
+            let category: EventCategory = {
+                switch preview.category?.uppercased() {
+                case "GROWTH": return .growth
+                case "REST": return .rest
+                default: return .none
+                }
+            }()
+
+            // type 매핑
+            let eventType: EventType = (preview.type == "ACTIVITY") ? .activity : .fixed
+
+            // recurrenceRule 파싱
+            let (repeatType, repeatWeekdays) = CalendarAPIRepository.parseRecurrenceRule(preview.recurrenceRule)
+            let isRepeating = repeatType != nil
+
             let event = Event(
                 id: id,
                 title: preview.title,
                 isFixed: preview.isFixed,
                 isAllDay: true,
                 color: color,
-                type: preview.isFixed ? .fixed : .activity,
+                type: eventType,
                 startDate: startDay,
                 endDate: endDay,
                 startTime: .midnight,
                 endTime: .endOfDay,
-                category: .none,
+                category: category,
                 isCompleted: false,
-                isRepeating: false,
-                fixedScheduleId: Int(itemId)
+                isRepeating: isRepeating,
+                repeatOption: repeatType,
+                fixedScheduleId: Int(itemId),
+                repeatWeekdays: repeatWeekdays
             )
 
             // 해당 일정이 존재하는 모든 날짜에 추가
@@ -625,6 +643,7 @@ final class CalendarViewModel {
             let events = try await repository.getEvents(for: date)
             selectedDateEvents = events
         } catch {
+            print("일간 일정 조회 실패 (\(date)): \(error)")
             selectedDateEvents = []
         }
     }
