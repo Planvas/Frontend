@@ -7,6 +7,8 @@
 
 import Foundation
 
-enum ActivityRoute {
+enum ActivityRoute: Hashable {
     case activityList
+    case activityDetail(UUID)
+    case activityCart
 }
