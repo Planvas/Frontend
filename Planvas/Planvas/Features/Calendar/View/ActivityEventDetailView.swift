@@ -2,7 +2,8 @@
 //  ActivityEventDetailView.swift
 //  Planvas
 //
-//  활동 일정 상세 뷰. AddActivityView와 동일한 구조(헤더 → 목표기간 → 진행기간 → 활동치 설정 → 버튼).
+//  활동 일정 수정 뷰. 수정 가능한 항목은 날짜(진행기간)와 활동치뿐.
+//  고정 일정 수정은 EditEventView로, 활동 일정 수정은 이 뷰로 연결됩니다.
 //
 
 import SwiftUI
@@ -16,7 +17,8 @@ struct ActivityEventDetailView: View {
 
     @State private var viewModel = EventDetailViewModel()
     @Environment(\.dismiss) private var dismiss
-    @State private var showEditEventView = false
+    @State private var showStartDatePicker = false
+    @State private var showEndDatePicker = false
 
     var onEdit: (() -> Void)?
     var onDelete: (() -> Void)?
@@ -38,8 +40,11 @@ struct ActivityEventDetailView: View {
 
                 activitySettingsSection
 
-                PrimaryButton(title: "일정 수정하기") {
-                    showEditEventView = true
+                PrimaryButton(title: "저장") {
+                    if let updated = viewModel.buildUpdatedEvent() {
+                        onUpdateEvent?(updated)
+                        onSave?()
+                    }
                 }
                 .padding(.vertical, 10)
             }
@@ -47,7 +52,6 @@ struct ActivityEventDetailView: View {
             .padding(.vertical, 10)
         }
         .background(.white)
-        .background(editEventSheet)
         .onAppear {
             viewModel.configure(
                 event: event,
@@ -57,6 +61,8 @@ struct ActivityEventDetailView: View {
                 targetPeriod: targetPeriod
             )
         }
+        .onChange(of: viewModel.startDate) { viewModel.updateTargetPeriodFromDates() }
+        .onChange(of: viewModel.endDate) { viewModel.updateTargetPeriodFromDates() }
     }
 
     // MARK: - Header (AddActivityView와 동일: 보라 세로바 + 제목)
@@ -76,7 +82,7 @@ struct ActivityEventDetailView: View {
         }
     }
 
-    // MARK: - 진행기간 (AddActivityView와 동일 구조, 수정하기 → EditEvent 시트)
+    // MARK: - 진행기간 (AddActivityView와 동일: 수정하기 탭 시 휠 픽커 표시)
     private var periodSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("진행기간")
@@ -90,9 +96,12 @@ struct ActivityEventDetailView: View {
                         .foregroundColor(.gray444)
                     Text(viewModel.startDate.monthDayString())
                         .textStyle(.semibold20)
-                        .foregroundColor(.black1)
+                        .foregroundColor(showStartDatePicker ? .primary1 : .black1)
                     Button {
-                        showEditEventView = true
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            showEndDatePicker = false
+                            showStartDatePicker.toggle()
+                        }
                     } label: {
                         Text("수정하기")
                             .textStyle(.semibold14)
@@ -120,9 +129,12 @@ struct ActivityEventDetailView: View {
                         .foregroundColor(.gray444)
                     Text(viewModel.endDate.monthDayString())
                         .textStyle(.semibold20)
-                        .foregroundColor(.black1)
+                        .foregroundColor(showEndDatePicker ? .primary1 : .black1)
                     Button {
-                        showEditEventView = true
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            showStartDatePicker = false
+                            showEndDatePicker.toggle()
+                        }
                     } label: {
                         Text("수정하기")
                             .textStyle(.semibold14)
@@ -147,149 +159,54 @@ struct ActivityEventDetailView: View {
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(.ccc, lineWidth: 0.5)
             )
+
+            if showStartDatePicker {
+                startDatePicker
+            }
+
+            if showEndDatePicker {
+                endDatePicker
+            }
         }
     }
 
-    // MARK: - 활동치 설정 (AddActivityView와 동일 구조, EventDetailViewModel 사용)
+    private var startDatePicker: some View {
+        DatePicker(
+            "",
+            selection: Binding(
+                get: { viewModel.startDate },
+                set: { viewModel.startDate = $0 }
+            ),
+            in: Date()...viewModel.endDate,
+            displayedComponents: .date
+        )
+        .datePickerStyle(.wheel)
+        .labelsHidden()
+        .environment(\.locale, Locale(identifier: "ko_KR"))
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+    }
+
+    private var endDatePicker: some View {
+        DatePicker(
+            "",
+            selection: Binding(
+                get: { viewModel.endDate },
+                set: { viewModel.endDate = $0 }
+            ),
+            in: viewModel.startDate...Date.distantFuture,
+            displayedComponents: .date
+        )
+        .datePickerStyle(.wheel)
+        .labelsHidden()
+        .environment(\.locale, Locale(identifier: "ko_KR"))
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+    }
+
+    // MARK: - 활동치 설정 (ActivitySettingsSectionView 공통 사용)
     private var activitySettingsSection: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text("활동치 설정")
-                .textStyle(.semibold20)
-                .foregroundColor(.black1)
-
-            Text("목표한 균형치에 반영돼요")
-                .textStyle(.medium14)
-                .foregroundColor(.primary1)
-                .padding(.bottom, 5)
-
-            VStack(alignment: .leading, spacing: 16) {
-                HStack(spacing: 4) {
-                    Text("현재 달성률")
-                        .textStyle(.medium18)
-                        .foregroundColor(.black1)
-                    Text(viewModel.growthLabel)
-                        .textStyle(.medium14)
-                        .foregroundColor(.primary1)
-                }
-
-                progressBar
-
-                HStack(spacing: 12) {
-                    Button {
-                        viewModel.decrementActivityValue()
-                    } label: {
-                        Image(systemName: "minus")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.primary1)
-                            .frame(width: 45, height: 45)
-                            .background(.minus)
-                            .cornerRadius(8)
-                    }
-
-                    Text("\(viewModel.activityValue)")
-                        .textStyle(.semibold20)
-                        .foregroundColor(.black1)
-                        .frame(minWidth: 50)
-
-                    Button {
-                        viewModel.incrementActivityValue()
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(width: 45, height: 45)
-                            .background(.primary1)
-                            .cornerRadius(8)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-            }
-            .padding(16)
-            .background(.white)
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(.primary1, lineWidth: 0.5)
-            )
-        }
-        .padding(.vertical, 10)
-    }
-
-    private var progressBar: some View {
-        GeometryReader { geometry in
-            let totalW = geometry.size.width
-            let goal = CGFloat(max(viewModel.goalPercent, 1))
-            let achievementRatio = CGFloat(viewModel.currentAchievementPercent) / goal
-            let activityRatio = CGFloat(viewModel.activityValue) / goal
-            let totalRatio = min(1.0, achievementRatio + activityRatio)
-            let filledWidth = totalW * totalRatio
-            let w1 = totalW * achievementRatio
-            let w2 = filledWidth - w1
-
-            ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 80)
-                    .fill(.ccc20)
-                    .frame(height: 25)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 80)
-                            .stroke(.ccc, lineWidth: 0.5)
-                    )
-
-                RoundedRectangle(cornerRadius: 80)
-                    .fill(.primary20)
-                    .frame(width: filledWidth + 6, height: 25)
-
-                RoundedRectangle(cornerRadius: 80)
-                    .fill(
-                        LinearGradient(
-                            colors: [.gradprimary1, .primary1],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .frame(width: w1, height: 25)
-
-                HStack(spacing: 0) {
-                    Text("\(viewModel.currentAchievementPercent)%")
-                        .textStyle(.semibold14)
-                        .foregroundColor(.white)
-                        .padding(.leading, 10)
-                        .frame(width: w1, alignment: .leading)
-
-                    Text(viewModel.addedPercentText)
-                        .textStyle(.semibold14)
-                        .foregroundColor(.primary1)
-                        .frame(width: w2, alignment: .center)
-                        .padding(.horizontal, 3)
-
-                    if totalRatio < 1.0 {
-                        Text("\(viewModel.goalPercent)%")
-                            .textStyle(.regular14)
-                            .foregroundColor(.gray444)
-                            .padding(.leading, 4)
-                            .padding(.trailing, 8)
-                            .frame(maxWidth: .infinity, alignment: .trailing)
-                    }
-                }
-                .frame(height: 25)
-            }
-        }
-        .frame(height: 25)
-    }
-
-    private var editEventSheet: some View {
-        EmptyView()
-            .sheet(isPresented: $showEditEventView) {
-                EditEventView(
-                    event: event,
-                    startDate: startDate,
-                    endDate: endDate,
-                    onSave: { updatedEvent in
-                        onUpdateEvent?(updatedEvent)
-                    }
-                )
-                .presentationDragIndicator(.visible)
-            }
+        ActivitySettingsSectionView(viewModel: viewModel, showRecommendation: false)
     }
 }
 

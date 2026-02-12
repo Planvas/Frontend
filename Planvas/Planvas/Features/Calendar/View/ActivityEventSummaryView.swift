@@ -53,9 +53,9 @@ struct ActivityEventSummaryView: View {
                     let alertVM = ActivityCompleteAlertViewModel(
                         category: viewModel.activityPointLabel ?? "성장",
                         growthValue: viewModel.activityPoints ?? 20,
-                        progressMinPercent: 10,
-                        goalPercent: 60,
-                        currentPercent: 40
+                        progressMinPercent: viewModel.progressMinPercent ?? 10,
+                        goalPercent: viewModel.goalPercent ?? 60,
+                        currentPercent: viewModel.currentPercent ?? 40
                     )
                     onCompleteRequested?(alertVM)
                 }
