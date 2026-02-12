@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ActivityDetailView: View {
     @State private var viewModel: ActivityDetailViewModel
+    @Environment(NavigationRouter<ActivityRoute>.self) var router
     
     init() {
         let mockData = ActivityDetail(
@@ -37,12 +38,15 @@ struct ActivityDetailView: View {
             }
             .padding()
         }
+        .navigationBarBackButtonHidden(true)
     }
     
     private var HeaderGroup: some View {
         ZStack{
             HStack{
-                Button(action:{}, label:{
+                Button(action:{
+                    router.pop()
+                }, label:{
                     Image(systemName: "chevron.left")
                         .foregroundStyle(.black1)
                         .frame(width: 11, height: 18)
@@ -147,5 +151,8 @@ struct ActivityDetailView: View {
 }
 
 #Preview {
+    let router = NavigationRouter<ActivityRoute>()
+    
     ActivityDetailView()
+        .environment(router)
 }
