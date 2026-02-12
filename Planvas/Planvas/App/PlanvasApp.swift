@@ -3,7 +3,7 @@ import GoogleSignIn
 
 @main
 struct PlanvasApp: App {
-    @AppStorage("hasSeenOnboarding") var hasSeenOnboarding: Bool = false
+    @AppStorage(OnboardingKeys.hasSeenOnboarding) var hasSeenOnboarding: Bool = false
     @StateObject private var container = DIContainer()
     
     init() {

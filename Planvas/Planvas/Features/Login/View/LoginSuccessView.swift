@@ -34,7 +34,7 @@ struct LoginSuccessView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            container.appState.isLoggedIn = true
+            viewModel.rootRouter?.triggerLoginSuccess()
         }
     }
 }

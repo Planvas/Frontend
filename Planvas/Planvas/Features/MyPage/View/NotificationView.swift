@@ -22,6 +22,12 @@ struct NotificationView: View {
         .task {
             viewModel.fetchReminderState()
         }
+        .onChange(of: viewModel.reminder) { _, _ in
+            viewModel.fetchReminderSetting()
+        }
+        .onChange(of: viewModel.complete) { _, _ in
+            viewModel.fetchReminderSetting()
+        }
     }
     
     // 헤더

@@ -1,32 +1,35 @@
 import SwiftUI
 
 struct LoginView: View {
-    @Environment(LoginViewModel.self) private var viewModel
+    @Environment(LoginViewModel.self) var viewModel
     @EnvironmentObject var container: DIContainer
     
     var body: some View {
+        @Bindable var viewModel = viewModel
+        
         ZStack {
-            Image("background")
+            Image("loginBackground")
                 .resizable()
-                .frame(width: 404, height: 404)
-                .offset(y: -80)
+                .ignoresSafeArea()
+                .offset(y: -450)
             
-            VStack {
-                Spacer()
-                    .frame(height: 100)
+            VStack(spacing: 40) {
+                VStack(spacing: 5) {
+                    Text("채워지는 만큼 목표에 가까워진다는 확신")
+                        .textStyle(.medium18)
+                        .foregroundStyle(Color.primary1)
+                    Text("플랜바스가 함께 만들어 드릴게요")
+                        .textStyle(.medium18)
+                }
                 
                 Image("startImage")
                     .resizable()
-                    .frame(width: 185, height: 185)
-                
-                Spacer()
-                    .frame(height: 40)
+                    .frame(width: 135, height: 135)
+                    .padding()
                 
                 VStack {
-                    Text("Planvas")
-                        .textStyle(.extrabold45)
-                        .linearGradient(startColor: .gradprimary1, endColor: .gradprimary2)
-                        .padding(.vertical, 5)
+                    Image("loginLogo")
+                        .padding()
                     Group {
                         Text("내가 그리는 모습 그대로,")
                         Text("일상을 채워나가는 밸런스 플래너")
@@ -34,36 +37,29 @@ struct LoginView: View {
                     .textStyle(.semibold20)
                 }
                 
-                Spacer()
-                    .frame(height: 70)
-                
                 PlanvasButton(
                     title: "Google로 시작하기",
                     isDisabled: false,
                     action: {
                         viewModel.GoogleLogin()
                     })
-                .padding()
-                .fullScreenCover(isPresented: Binding(
-                    get: { viewModel.isLoginSuccess },
-                    set: { viewModel.isLoginSuccess = $0 }
-                )) {
-                    LoginSuccessView()
-                        .environmentObject(container)
-                }
+                .padding(.top, 30)
+                .padding(.horizontal)
             }
         }
-        .onChange(of: viewModel.isLoginSuccess) { _, isSuccess in
-            guard isSuccess else { return }
-            // 로그인 성공 후 2초 뒤 온보딩·목표 상태에 따라 자동 라우팅 (LoginSuccessView 탭과 동일 로직)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                container.appState.isLoggedIn = true
-            }
+        .onAppear {
+            // ✅ 로그인 화면 재진입시 성공 플래그 초기화
+            viewModel.isLoginSuccess = false
+        }
+        .fullScreenCover(isPresented: $viewModel.isLoginSuccess) {
+            LoginSuccessView()
+                .environmentObject(container)
         }
     }
 }
 
 #Preview {
     LoginView()
+        .environment(LoginViewModel())
         .environmentObject(DIContainer())
 }

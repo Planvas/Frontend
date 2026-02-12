@@ -54,12 +54,9 @@ final class LoginViewModel {
                     self?.userName = data.user?.name ?? "사용자"
                     self?.isLoginSuccess = true
                     
-                    // 로그인 성공 후 목표 설정 온보딩 화면으로 이동하는 경우도 있어 일단 주석처리해두었습니다
-//                    if let router = self?.rootRouter {
-//                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-//                            router.root = .main
-//                        }
-//                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        self?.rootRouter?.triggerLoginSuccess()
+                    }
                 } else {
                     self?.errorMessage = "로그인 실패"
                 }

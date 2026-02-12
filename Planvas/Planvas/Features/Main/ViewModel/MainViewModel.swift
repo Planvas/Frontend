@@ -7,22 +7,31 @@
 
 import SwiftUI
 import Combine
+import Moya
 
 class MainViewModel: ObservableObject {
     // MARK: - 메인 페이지 목표 세팅 상태별 메세지
-    // ing: 진행 중인 목표 존재, end: 활동 기간 종료, none: 목표 없음
-    @Published var goalSetting: GoalSetting = .ing
-    
+    // ACTIVE: 진행 중인 목표 존재, ENDED: 활동 기간 종료, NONE: 목표 없음
+    @Published var goalSetting: GoalSetting = .ACTIVE
+    @Published var username: String = ""
     var stateTitle: String {
         switch goalSetting {
-        case .ing:
-            return "지수님, \n반가워요!"
-        case .end:
-            return "지수님, \n활동 기간이 \n종료되었어요"
-        case .none:
-            return "지수님, \n새로운 목표를 \n세워주세요!"
+        case .ACTIVE:
+            return "\(username)님, \n반가워요!"
+        case .ENDED:
+            return "\(username)님, \n활동 기간이 \n종료되었어요"
+        case .NONE:
+            return "\(username)님, \n새로운 목표를 \n세워주세요!"
         }
     }
+    
+    // MARK: - 현재 목표 정보
+    @Published var goalTitle: String = ""
+    @Published var dDay: Int = 0
+    @Published var growthRatio: Int = 0
+    @Published var restRatio: Int = 0
+    @Published var growthAchieved: Int = 0
+    @Published var restAchieved: Int = 0
     
     // MARK: - 위클리 캘린더
     @Published var centerDate: Date = Date()
@@ -61,26 +70,7 @@ class MainViewModel: ObservableObject {
     @Published var schedules: [Schedule] = []
     
     init() {
-        schedules = [
-            Schedule(
-                startDate: date("2026-02-04"),
-                endDate: nil,
-                title: "동아리 신청",
-                type: .yellow
-            ),
-            Schedule(
-                startDate: date("2026-02-04"),
-                endDate: nil,
-                title: "과제 제출",
-                type: .red
-            ),
-            Schedule(
-                startDate: date("2026-02-06"),
-                endDate: date("2026-02-09"),
-                title: "베트남 여행",
-                type: .blue
-            )
-        ]
+        schedules = []
     }
     
     func schedules(for date: Date) -> [Schedule] {
@@ -94,24 +84,7 @@ class MainViewModel: ObservableObject {
     }
 
     // MARK: - 오늘의 할 일
-    @Published var todayTodos: [ToDo] = [
-        ToDo(
-            typeColor: .calRed,
-            title: "카페 알바",
-            isFixed: true,
-            todoInfo: "매주 수요일 18:00 - 22:00",
-            startTime: "18:00",
-            isCompleted: false
-        ),
-        ToDo(
-            typeColor: .calRed,
-            title: "방탈출 카페",
-            isFixed: false,
-            todoInfo: "휴식 +20",
-            startTime: "17:00",
-            isCompleted: true
-        )
-    ]
+    @Published var todayTodos: [ToDo] = []
     
     // 체크 토글
     func toggleTodo(_ todo: ToDo) {
@@ -120,26 +93,72 @@ class MainViewModel: ObservableObject {
     }
     
     // MARK: - 오늘의 인기 성장 활동
-    @Published var items: [ActivityItem] = [
-        ActivityItem(
-            title: "SK 하이닉스 2025 하반기 \n청년 Hy-Five 14기 모집",
-            subtitle: "고품질의 반도체 직무 교육 \n& SK 하이닉스 협력사 ",
-            imageName: "banner1"
-        ),
-        ActivityItem(
-            title: "SK 하이닉스",
-            subtitle: "청년 Hy-Five",
-            imageName: "banner2"
-        ),
-        ActivityItem(
-            title: "추천 공고 3",
-            subtitle: "설명 3",
-            imageName: "banner3"
-        ),
-        ActivityItem(
-            title: "추천 공고 4",
-            subtitle: "설명 4",
-            imageName: "banner4"
-        )
-    ]
+    @Published var items: [ActivityItem] = []
+    
+    // MARK: - 메인 페이지 API 연동 함수
+    private let provider = APIManager.shared.createProvider(for: MainAPI.self)
+    
+    func fetchMainData() {
+        provider.request(.getMainData) { result in
+            switch result {
+            case .success(let response):
+                do {
+                    let decodedData = try JSONDecoder().decode(MainDataResponse.self, from: response.data)
+                    DispatchQueue.main.async {
+                        if let success = decodedData.success {
+                            // 헤더 데이터
+                            self.username = success.userName
+                            self.goalSetting = success.goalStatus
+                            if let goal = success.currentGoal {
+                                self.goalTitle = goal.title
+                                self.dDay = goal.dDay
+                                self.growthRatio = goal.growthRatio
+                                self.restRatio = goal.restRatio
+                            }
+                            if let achieved = success.progress {
+                                self.growthAchieved = achieved.growthAchieved
+                                self.restAchieved = achieved.restAchieved
+                            }
+                            
+                            // TODO: - 캘린더 UI 백엔드 데이터에 맞게 수정한 후 데이터 가져오기
+                            // 캘린더 데이터
+                            
+                            // 투두 데이터
+                            if let todos = success.todayTodos {
+                                self.todayTodos = todos.map {
+                                    ToDo(
+                                        typeColor: .calRed,
+                                        title: $0.title,
+                                        isFixed: false,
+                                        todoInfo: "",
+                                        startTime: "",
+                                        isCompleted: $0.completed
+                                    )
+                                }
+                            } else {
+                                self.todayTodos = []
+                            }
+                            
+                            // 인기 활동 데이터
+                            if let recs = success.recommendations {
+                                self.items = recs.map {
+                                    ActivityItem(
+                                        title: $0.title,
+                                        subtitle: $0.subTitle ?? "",
+                                        imageName: ""
+                                    )
+                                }
+                            } else {
+                                self.items = []
+                            }
+                        }
+                    }
+                } catch {
+                    print("Main 디코더 오류: \(error)")
+                }
+            case .failure(let error):
+                print("Main API 오류: \(error)")
+            }
+        }
+    }
 }

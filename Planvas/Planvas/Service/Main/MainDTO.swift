@@ -17,11 +17,13 @@ struct MainDataResponse: Decodable {
 // MainDataSuccess
 // TODO: - 현재 목표가 없는 경우 확인 필요
 struct MainDataSuccess: Decodable {
-    let currentGoal: CurrentGoal
-    let progress: Progress
-    let weeklySummary: WeeklySummary
-    let todayTodos: [TodayTodo]
-    let recommendations: [Recommendation]
+    let userName: String
+    let goalStatus: GoalSetting
+    let currentGoal: CurrentGoal?
+    let progress: Progress?
+    let weeklySummary: WeeklySummary?
+    let todayTodos: [TodayTodo]?
+    let recommendations: [Recommendation]?
 }
 
 // CurrentGoal
@@ -51,6 +53,13 @@ struct WeeklyDay: Decodable {
     let date: String
     let hasItems: Bool
     let todoCount: Int
+    let schedules: [ScheduleDTO]
+}
+
+struct ScheduleDTO: Decodable {
+    let id: Int
+    let title: String
+    let category: TodoCategory
 }
 
 // TodayTodo
@@ -65,6 +74,8 @@ struct TodayTodo: Decodable {
 struct Recommendation: Decodable {
     let activityId: Int
     let title: String
-    let category: TodoCategory
-    let point: Int
+    let subTitle: String?
+    let dDay: Int?
+    let imageUrl: String
+    let tags: [String]?
 }
