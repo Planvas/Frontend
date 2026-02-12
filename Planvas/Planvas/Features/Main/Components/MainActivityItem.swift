@@ -6,9 +6,12 @@
 //
 
 import SwiftUI
+import Kingfisher
 
 // MARK: - 인기 성장 활동 아이템
 struct MainActivityItem: View {
+    @Environment(NavigationRouter<MainRoute>.self) var router
+    
     let item: ActivityItem
     let index: Int
     
@@ -36,11 +39,20 @@ struct MainActivityItem: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.bottom, 5)
 
-                Image(item.imageName)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(maxWidth: .infinity, maxHeight: 130)
-                    .clipped()
+                if let url = URL(string: item.imageName) {
+                    KFImage(url)
+                        .placeholder {
+                            ProgressView()
+                        }
+                        .retry(maxCount: 2, interval: .seconds(2))
+                        .resizable()
+                        .scaledToFill()
+                        .frame(maxWidth: .infinity, maxHeight: 130)
+                        .clipped()
+                        
+                } else {
+                    Color.gray
+                }
             }
             .padding(20)
             
@@ -59,7 +71,7 @@ struct MainActivityItem: View {
                 HStack {
                     Spacer()
                     Button {
-                        
+                        router.push(.activityDetail(activityId: item.activityId))
                     } label: {
                         Text("더 알아보기 >")
                             .textStyle(.medium14)
@@ -71,15 +83,12 @@ struct MainActivityItem: View {
                 .frame(maxWidth: .infinity)
                 .background(Color.white)
             }
-        }        .clipShape(RoundedRectangle(cornerRadius: 20))
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 20))
         .overlay(
             RoundedRectangle(cornerRadius: 20)
                 .stroke(.primary1, lineWidth: 0.2)
         )
         .shadow(color: .black20, radius: 6, x: 0, y: 4)
     }
-}
-
-#Preview{
-    MainView()
 }

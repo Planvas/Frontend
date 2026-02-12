@@ -6,14 +6,15 @@
 //
 
 import SwiftUI
-import Combine
+import Observation
 import Moya
 
-class MainViewModel: ObservableObject {
+@Observable
+class MainViewModel {
     // MARK: - 메인 페이지 목표 세팅 상태별 메세지
     // ACTIVE: 진행 중인 목표 존재, ENDED: 활동 기간 종료, NONE: 목표 없음
-    @Published var goalSetting: GoalSetting = .ACTIVE
-    @Published var username: String = ""
+    var goalSetting: GoalSetting = .ACTIVE
+    var username: String = ""
     var stateTitle: String {
         switch goalSetting {
         case .ACTIVE:
@@ -26,16 +27,16 @@ class MainViewModel: ObservableObject {
     }
     
     // MARK: - 현재 목표 정보
-    @Published var goalTitle: String = ""
-    @Published var dDay: Int = 0
-    @Published var growthRatio: Int = 0
-    @Published var restRatio: Int = 0
-    @Published var growthAchieved: Int = 0
-    @Published var restAchieved: Int = 0
+    var goalTitle: String = ""
+    var dDay: String = ""
+    var growthRatio: Int = 0
+    var restRatio: Int = 0
+    var growthAchieved: Int = 0
+    var restAchieved: Int = 0
     
     // MARK: - 위클리 캘린더
-    @Published var centerDate: Date = Date()
-    @Published var selectedDate: Date = Date()
+    var centerDate: Date = Date()
+    var selectedDate: Date = Date()
     
     // 오늘 기준 7일 만들기
     var weekDates: [Date] {
@@ -67,7 +68,7 @@ class MainViewModel: ObservableObject {
     }
     
     // 일정 더미 데이터
-    @Published var weeklySchedules: [Date: [Schedule]] = [:]
+    var weeklySchedules: [Date: [Schedule]] = [:]
     
     init() {
         weeklySchedules = [:]
@@ -79,7 +80,7 @@ class MainViewModel: ObservableObject {
     }
 
     // MARK: - 오늘의 할 일
-    @Published var todayTodos: [ToDo] = []
+    var todayTodos: [ToDo] = []
     
     // 체크 토글
     func toggleTodo(_ todo: ToDo) {
@@ -88,7 +89,7 @@ class MainViewModel: ObservableObject {
     }
     
     // MARK: - 오늘의 인기 성장 활동
-    @Published var items: [ActivityItem] = []
+    var items: [ActivityItem] = []
     
     // MARK: - 메인 페이지 API 연동 함수
     private let provider = APIManager.shared.createProvider(for: MainAPI.self)
@@ -168,9 +169,10 @@ class MainViewModel: ObservableObject {
                             if let recs = success.recommendations {
                                 self.items = recs.map {
                                     ActivityItem(
+                                        activityId: $0.activityId,
                                         title: $0.title,
                                         subtitle: $0.subTitle ?? "",
-                                        imageName: ""
+                                        imageName: $0.imageUrl
                                     )
                                 }
                             } else {

@@ -15,7 +15,7 @@ struct TabBar: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            MainView()
+            MainFlowView()
                 .tabItem { Label("홈", systemImage: "house") }
                 .tag(0)
             CalendarFlowView(selectedTab: $selectedTab, calendarTabTag: 1)
