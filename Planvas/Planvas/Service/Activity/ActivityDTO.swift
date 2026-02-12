@@ -82,10 +82,13 @@ struct CartListSuccess: Decodable {
 struct CartItem: Decodable {
     let cartItemId: Int
     let activityId: Int
-    let title: String
     let category: TodoCategory
+    let dDay: Int
     let point: Int
-    let thumbnailUrl: String?
+    let title: String
+    let subTitle: String
+    let subMessage: String?
+    let endDate: String?
 }
 
 // MARK: - 장바구니 담기
