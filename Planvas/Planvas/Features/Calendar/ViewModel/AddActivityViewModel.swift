@@ -9,7 +9,7 @@ import Foundation
 
 @MainActor
 @Observable
-final class AddActivityViewModel {
+final class AddActivityViewModel: ActivitySettingsBindable {
     var title: String = ""
     var subtitle: String?
     var targetPeriod: String = ""
@@ -46,9 +46,7 @@ final class AddActivityViewModel {
     }
 
     func decrementActivityValue() {
-        if activityValue > 0 {
-            activityValue -= 10
-        }
+        activityValue = max(0, activityValue - 10)
     }
 
     /// targetPeriod를 startDate, endDate 기준으로 갱신 (M/d ~ M/d)

@@ -10,7 +10,7 @@ import Observation
 
 @MainActor
 @Observable
-final class EventDetailViewModel {
+final class EventDetailViewModel: ActivitySettingsBindable {
     // MARK: - Event Data
     var event: Event?
     var startDate: Date = Date()
@@ -98,6 +98,8 @@ final class EventDetailViewModel {
 
     // MARK: - Initialization
     
+    private let calendar = Calendar.current
+
     func configure(
         event: Event,
         startDate: Date,
@@ -126,6 +128,45 @@ final class EventDetailViewModel {
             self.showActivitySettings = false
         }
     }
+
+    /// 진행기간 문자열 갱신 (startDate ~ endDate)
+    func updateTargetPeriodFromDates() {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "M/d"
+        formatter.locale = Locale(identifier: "ko_KR")
+        if calendar.isDate(startDate, inSameDayAs: endDate) {
+            targetPeriod = formatter.string(from: startDate)
+        } else {
+            targetPeriod = "\(formatter.string(from: startDate)) ~ \(formatter.string(from: endDate))"
+        }
+    }
+
+    /// 현재 날짜·활동치로 수정된 Event 생성 (저장 시 사용)
+    func buildUpdatedEvent() -> Event? {
+        guard let event = event else { return nil }
+        let point = selectedActivityType == .growth ? growthValue : restValue
+        return Event(
+            id: event.id,
+            title: event.title,
+            isFixed: event.isFixed,
+            isAllDay: event.isAllDay,
+            color: event.color,
+            type: event.type,
+            startDate: calendar.startOfDay(for: startDate),
+            endDate: calendar.startOfDay(for: endDate),
+            startTime: event.startTime,
+            endTime: event.endTime,
+            category: event.category,
+            isCompleted: event.isCompleted,
+            isRepeating: event.isRepeating,
+            repeatOption: event.repeatOption,
+            fixedScheduleId: event.fixedScheduleId,
+            myActivityId: event.myActivityId,
+            repeatWeekdays: event.repeatWeekdays,
+            repeatEndDate: event.repeatEndDate,
+            activityPoint: point
+        )
+    }
     
     // MARK: - Activity Value Methods
     
@@ -145,9 +186,9 @@ final class EventDetailViewModel {
     
     func decrementActivityValue() {
         if selectedActivityType == .growth {
-            if growthValue > 0 { growthValue -= 10 }
+            growthValue = max(0, growthValue - 10)
         } else {
-            if restValue > 0 { restValue -= 10 }
+            restValue = max(0, restValue - 10)
         }
     }
     
