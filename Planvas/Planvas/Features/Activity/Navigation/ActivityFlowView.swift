@@ -18,8 +18,8 @@ struct ActivityFlowView: View {
                     switch route {
                     case .activityList:
                         ActivityListView()
-                    case .activityDetail(_):
-                        ActivityDetailView() 
+                    case .activityDetail(let activityId):
+                        ActivityDetailView(activityId: activityId)
                     case .activityCart:
                         CartView()
                     }

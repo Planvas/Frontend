@@ -149,7 +149,7 @@ struct AddActivityView: View {
         DatePicker(
             "",
             selection: $viewModel.startDate,
-            in: Date()...viewModel.endDate,
+            in: Date.distantPast...viewModel.endDate,
             displayedComponents: .date
         )
         .datePickerStyle(.wheel)
