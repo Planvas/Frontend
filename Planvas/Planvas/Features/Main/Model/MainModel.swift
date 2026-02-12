@@ -16,27 +16,34 @@ enum GoalSetting: String, Decodable {
 
 // MARK: - 캘린더 일정
 struct Schedule: Identifiable {
-    let id = UUID()
-    let startDate: Date
-    let endDate: Date?
+    let id: Int
     let title: String
     let type: ScheduleType
+    var dates: [Date]
 }
 
 // 일정 색상
-enum ScheduleType: String {
+enum ScheduleType {
     case yellow
-    case red
     case blue
+    case red
+    
+    init(serverCategory: TodoCategory) {
+        switch serverCategory {
+        case .growth:
+            self = .yellow
+        case .rest:
+            self = .blue
+        case .manual:
+            self = .red
+        }
+    }
     
     var color: Color {
         switch self {
-        case .yellow:
-            return .calYellow
-        case .red:
-            return .calRed
-        case .blue:
-            return .calBlue1
+        case .yellow: return .calYellow
+        case .blue: return .calBlue1
+        case .red: return .calRed
         }
     }
 }
@@ -45,23 +52,33 @@ enum ScheduleType: String {
 extension Schedule {
     // 백그라운드 색상 잇기 위한 일정 시작, 끝 구분
     func position(on date: Date) -> SchedulePosition {
-        guard let endDate else { return .single }
-
-        if Calendar.current.isDate(date, inSameDayAs: startDate) {
+        let calendar = Calendar.current
+        
+        let sortedDates = dates.sorted()
+        
+        guard let first = sortedDates.first,
+              let last = sortedDates.last else {
+            return .single
+        }
+        
+        if sortedDates.count == 1 {
+            return .single
+        }
+        
+        if calendar.isDate(date, inSameDayAs: first) {
             return .start
         }
-        if Calendar.current.isDate(date, inSameDayAs: endDate) {
+        
+        if calendar.isDate(date, inSameDayAs: last) {
             return .end
         }
         return .middle
     }
+    
     // 일정 며칠간 이어질 때 하루만 일정 제목이 보이도록 구분
     func shouldShowTitle(on date: Date) -> Bool {
-        if endDate == nil {
-            return Calendar.current.isDate(date, inSameDayAs: startDate)
-        }
-
-        return Calendar.current.isDate(date, inSameDayAs: startDate)
+        guard let first = dates.sorted().first else { return false }
+        return Calendar.current.isDate(date, inSameDayAs: first)
     }
 }
 

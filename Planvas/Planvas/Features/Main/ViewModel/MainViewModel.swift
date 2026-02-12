@@ -67,20 +67,15 @@ class MainViewModel: ObservableObject {
     }
     
     // 일정 더미 데이터
-    @Published var schedules: [Schedule] = []
+    @Published var weeklySchedules: [Date: [Schedule]] = [:]
     
     init() {
-        schedules = []
+        weeklySchedules = [:]
     }
     
     func schedules(for date: Date) -> [Schedule] {
-        schedules.filter { schedule in
-            if let endDate = schedule.endDate {
-                return date >= schedule.startDate && date <= endDate
-            } else {
-                return Calendar.current.isDate(date, inSameDayAs: schedule.startDate)
-            }
-        }
+        let key = Calendar.current.startOfDay(for: date)
+        return weeklySchedules[key] ?? []
     }
 
     // MARK: - 오늘의 할 일
@@ -120,8 +115,38 @@ class MainViewModel: ObservableObject {
                                 self.restAchieved = achieved.restAchieved
                             }
                             
-                            // TODO: - 캘린더 UI 백엔드 데이터에 맞게 수정한 후 데이터 가져오기
                             // 캘린더 데이터
+                            if let weekly = success.weeklySummary {
+                                var result: [Date: [Schedule]] = [:]
+                                var groupedSchedules: [Int: Schedule] = [:]
+
+                                for day in weekly.days {
+                                    let date = self.date(day.date)
+
+                                    for schedule in day.schedules {
+                                        if var existing = groupedSchedules[schedule.id] {
+                                            existing.dates.append(date)
+                                            groupedSchedules[schedule.id] = existing
+                                        } else {
+                                            groupedSchedules[schedule.id] = Schedule(
+                                                id: schedule.id,
+                                                title: schedule.title,
+                                                type: ScheduleType(serverCategory: schedule.category),
+                                                dates: [date]
+                                            )
+                                        }
+                                    }
+                                }
+
+                                // 날짜별로 다시 정리
+                                for schedule in groupedSchedules.values {
+                                    for date in schedule.dates {
+                                        result[date, default: []].append(schedule)
+                                    }
+                                }
+
+                                self.weeklySchedules = result
+                            }
                             
                             // 투두 데이터
                             if let todos = success.todayTodos {
