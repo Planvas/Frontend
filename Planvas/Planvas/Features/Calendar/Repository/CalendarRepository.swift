@@ -131,7 +131,8 @@ final class CalendarRepository: CalendarRepositoryProtocol {
     }
 
     private static func preview(from event: Event, itemId: String) -> SchedulePreviewDTO {
-        SchedulePreviewDTO(itemId: itemId, title: event.title, isFixed: event.isFixed, type: "FIXED", eventColor: event.color.serverColor)
+        SchedulePreviewDTO(itemId: itemId, title: event.title, isFixed: event.isFixed, type: "FIXED",
+                           category: event.category.rawValue, eventColor: event.color.serverColor, recurrenceRule: nil)
     }
     
     func getEvents(for date: Date) async throws -> [Event] {

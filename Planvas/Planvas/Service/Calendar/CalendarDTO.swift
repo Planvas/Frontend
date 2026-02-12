@@ -131,15 +131,19 @@ struct SchedulePreviewDTO: Decodable {
     let title: String
     let isFixed: Bool
     let type: String
+    let category: String?
     let eventColor: Int?
+    let recurrenceRule: String?
 
     /// 프리뷰용 수동 생성 init
-    init(itemId: String, title: String, isFixed: Bool, type: String, eventColor: Int?) {
+    init(itemId: String, title: String, isFixed: Bool, type: String, category: String? = nil, eventColor: Int? = nil, recurrenceRule: String? = nil) {
         self.itemId = itemId
         self.title = title
         self.isFixed = isFixed
         self.type = type
+        self.category = category
         self.eventColor = eventColor
+        self.recurrenceRule = recurrenceRule
     }
 }
 
@@ -152,10 +156,10 @@ struct DailyCalendarResponse: Decodable {
 
 struct DailyCalendarSuccessDTO: Decodable {
     let date: String
-    let items: [CalendarItemDTO]
+    let todayTodos: [CalendarItemDTO]
 }
 
-/// api.md 기준: itemId String, startAt/endAt ISO, isFixed, eventColor, recurrenceRule
+/// api.md 기준: itemId String, startAt/endAt ISO, isFixed, eventColor, recurrenceRule, category, status
 struct CalendarItemDTO: Decodable {
     let itemId: String
     let title: String
@@ -163,8 +167,10 @@ struct CalendarItemDTO: Decodable {
     let endAt: String?
     let isFixed: Bool?
     let type: String
+    let category: String?
     let eventColor: Int?
     let recurrenceRule: String?
+    let status: String?  // "TODO" | "DONE"
 }
 
 // MARK: - 일정 추가 (POST /api/calendar/event)
@@ -173,6 +179,9 @@ struct CreateEventRequestDTO: Encodable {
     let startAt: String   // ISO 8601 (e.g. "2026-02-12T18:10:00+09:00")
     let endAt: String
     let type: String      // "FIXED"
+    let category: String  // "GROWTH" | "REST"
+    let eventColor: Int   // 1~10
+    let recurrenceRule: String?
 }
 
 struct CreateEventResponse: Decodable {
@@ -196,6 +205,9 @@ struct UpdateEventRequestDTO: Encodable {
     let startAt: String
     let endAt: String
     let type: String
+    let category: String
+    let eventColor: Int
+    let recurrenceRule: String?
 }
 
 struct UpdateEventResponse: Decodable {

@@ -72,7 +72,7 @@ struct CalendarView: View {
         .sheet(isPresented: $showEventDetail) {
             if let event = selectedEvent {
                 Group {
-                    if event.category == .growth || event.category == .rest {
+                    if event.type == .activity {
                         ActivityEventSummaryView(
                             viewModel: ActivityEventSummaryViewModel.from(event: event, daysUntil: viewModel.getDaysUntil(for: event)),
                             event: event,
