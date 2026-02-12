@@ -75,7 +75,7 @@ struct ActivitySettingsSectionView<VM: ActivitySettingsBindable & Observable>: V
 
             if showRecommendation {
                 HStack {
-                    Text("해당 활동은 +\(viewModel.goalPercent)%을 추천해요!")
+                    Text("해당 활동은 +\(viewModel.recommendedPoint)%을 추천해요!")
                         .textStyle(.medium14)
                         .foregroundColor(.gray444)
                         .padding(.horizontal, 12)
