@@ -23,7 +23,7 @@ enum ActivitySampleData {
         vm.endDate = end
         vm.currentAchievementPercent = 10
         vm.activityValue = 20
-        vm.recommendationPoint = 30
+        vm.recommendedPoint = 30
         vm.goalPercent = 60
         vm.growthLabel = "성장"
         return vm

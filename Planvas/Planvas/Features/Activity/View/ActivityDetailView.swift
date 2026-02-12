@@ -10,29 +10,24 @@ import SwiftUI
 struct ActivityDetailView: View {
     @State private var viewModel: ActivityDetailViewModel
     @Environment(NavigationRouter<ActivityRoute>.self) var router
-    
+
     let activityId: Int
-    
+
+    /// 옵셔널 바인딩 편의용
+    private var activity: ActivityDetail? {
+        viewModel.activity
+    }
+
     init(activityId: Int) {
         self.activityId = activityId
-        let mockData = ActivityDetail(
-            title: "SK 하이닉스 2025 하반기 청년 Hy-Five 14기 모집",
-            dDay: 16,
-            date: "11/15 ~ 12/3",
-            category: .growth,
-            point: 30,
-            description: "SK 하이닉스 2025 하반기 청년 Hy-Five 14기 모집합니다.",
-            thumbnailUrl: ""
-        )
-
         _viewModel = State(
-            initialValue: ActivityDetailViewModel(activity: mockData)
+            initialValue: ActivityDetailViewModel()
         )
     }
-    
+
     var body: some View {
-        ScrollView{
-            VStack{
+        ScrollView {
+            VStack {
                 HeaderGroup
                 Spacer()
                 BodyGroup
@@ -42,23 +37,86 @@ struct ActivityDetailView: View {
             .padding()
         }
         .navigationBarBackButtonHidden(true)
-        .task{viewModel.fetchActivityDetail(activityId: activityId)}
+        .task {
+            viewModel.fetchActivityDetail(activityId: activityId)
+            viewModel.activityId = activityId
+            await viewModel.loadDetailIfNeeded()
+        }
+        .sheet(isPresented: $viewModel.showAddActivity) {
+            if let addVM = viewModel.addActivityViewModel {
+                AddActivityView(
+                    viewModel: addVM,
+                    onSubmit: {
+                        Task { await viewModel.submitAddToMyActivities() }
+                    }
+                )
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+            }
+        }
+        .onChange(of: viewModel.showAddActivity) { _, isShowing in
+            if !isShowing {
+                viewModel.clearAddActivitySheet()
+            }
+        }
+        .alert(
+            "추가 완료",
+            isPresented: Binding(
+                get: { viewModel.addSuccessMessage != nil },
+                set: { if !$0 { viewModel.addSuccessMessage = nil } }
+            )
+        ) {
+            Button("확인") { viewModel.addSuccessMessage = nil }
+        } message: {
+            Text(viewModel.addSuccessMessage ?? "")
+        }
+        .alert(
+            "추가 실패",
+            isPresented: Binding(
+                get: { viewModel.addErrorMessage != nil },
+                set: { if !$0 { viewModel.addErrorMessage = nil } }
+            )
+        ) {
+            Button("확인") { viewModel.addErrorMessage = nil }
+        } message: {
+            Text(viewModel.addErrorMessage ?? "")
+        }
+        .overlay {
+            if viewModel.isLoading {
+                ProgressView()
+                    .scaleEffect(1.2)
+            }
+        }
+        .alert(
+            "로드 실패",
+            isPresented: Binding(
+                get: { viewModel.errorMessage != nil },
+                set: { if !$0 { viewModel.errorMessage = nil } }
+            )
+        ) {
+            Button("확인") { viewModel.errorMessage = nil }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
     }
-    
+
+    // MARK: - Header
+
     private var HeaderGroup: some View {
-        ZStack{
-            HStack{
-                Button(action:{
+        ZStack {
+            HStack {
+                Button {
                     router.pop()
-                }, label:{
+                } label: {
                     Image(systemName: "chevron.left")
                         .foregroundStyle(.black1)
                         .frame(width: 11, height: 18)
-                })
+                }
                 Spacer()
             }
-            HStack{
-                Text("성장 활동")
+
+            HStack {
+                Text(activity?.title ?? "")
                     .foregroundStyle(.black1)
                     .textStyle(.bold20)
             }
@@ -66,14 +124,16 @@ struct ActivityDetailView: View {
         .padding(.vertical)
         .padding(.bottom, 20)
     }
-    
+
+    // MARK: - Body
+
     private var BodyGroup: some View {
-        VStack(alignment: .leading, spacing: 9){
-            Text(viewModel.title)
+        VStack(alignment: .leading, spacing: 9) {
+            Text(activity?.title ?? "")
                 .textStyle(.semibold22)
                 .foregroundStyle(.black1)
-            
-            HStack(spacing: 9){
+
+            HStack(spacing: 9) {
                 Text(viewModel.dDayText)
                     .textStyle(.medium14)
                     .foregroundStyle(.fff)
@@ -83,22 +143,22 @@ struct ActivityDetailView: View {
                         RoundedRectangle(cornerRadius: 5)
                             .foregroundStyle(.primary1)
                     )
-                
-                Text(viewModel.date)
+
+                Text(activity?.date ?? "")
                     .textStyle(.semibold18)
                     .foregroundStyle(.primary1)
             }
-            
-            ZStack{
+
+            ZStack {
                 RoundedRectangle(cornerRadius: 15)
                     .aspectRatio(contentMode: .fit)
-                
+
                 Image(.banner1)
                     .resizable()
                     .scaledToFit()
             }
             .overlay(alignment: .topTrailing) {
-                Text(viewModel.categoryText)
+                Text(activity?.pointBadge ?? "")
                     .textStyle(.semibold16)
                     .foregroundStyle(.fff)
                     .padding(.horizontal, 10)
@@ -111,21 +171,24 @@ struct ActivityDetailView: View {
             }
         }
     }
-    
+
+    // MARK: - Bottom
+
     private var BottomGroup: some View {
-        VStack(alignment: .leading){
-            Text(viewModel.title)
+        VStack(alignment: .leading) {
+            Text(activity?.title ?? "")
                 .textStyle(.semibold18)
                 .foregroundStyle(.black1)
                 .padding(.top, 26)
-            
-            Text(viewModel.description)
+
+            Text(activity?.description ?? "")
                 .textStyle(.medium14)
                 .foregroundStyle(.black1)
                 .padding(.bottom, 26)
-            
-            HStack(spacing: 5){
-                Button(action: {}, label: {
+
+            HStack(spacing: 5) {
+                Button {
+                } label: {
                     Text("장바구니")
                         .textStyle(.semibold18)
                         .foregroundStyle(.fff)
@@ -135,9 +198,11 @@ struct ActivityDetailView: View {
                             RoundedRectangle(cornerRadius: 10)
                                 .foregroundStyle(.primary1)
                         )
-                })
-                
-                Button(action: {}, label: {
+                }
+
+                Button {
+                    viewModel.openAddActivitySheet()
+                } label: {
                     Text("일정 추가")
                         .textStyle(.semibold18)
                         .foregroundStyle(.black1)
@@ -147,16 +212,9 @@ struct ActivityDetailView: View {
                             RoundedRectangle(cornerRadius: 10)
                                 .foregroundStyle(.subPurple)
                         )
-                })
+                }
             }
             .padding(.bottom, 60)
         }
     }
-}
-
-#Preview {
-    let router = NavigationRouter<ActivityRoute>()
-    
-    ActivityDetailView(activityId: 1)
-        .environment(router)
 }
