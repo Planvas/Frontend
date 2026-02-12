@@ -74,7 +74,7 @@ final class GoalSetupViewModel {
         .init(emoji: "🎨", title: "예술/디자인"),
         .init(emoji: "📋", title: "인문/교육"),
         .init(emoji: "🧬", title: "과학/공학"),
-        .init(emoji: "💰", title: "경제/경제"),
+        .init(emoji: "💰", title: "경영/경제"),
         .init(emoji: "🎬", title: "미디어/영상"),
         .init(emoji: "📝", title: "외국어"),
     ]
