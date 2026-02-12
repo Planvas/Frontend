@@ -86,4 +86,41 @@ final class ActivityNetworkService: @unchecked Sendable {
             }
         }
     }
+    
+    // MARK: - 활동 탐색 목록 조회
+    func getActivityList(
+        tab: TodoCategory,
+        categoryId: Int? = nil,
+        q: String? = nil,
+        page: Int = 0,
+        size: Int = 20
+    ) async throws -> [ActivityCard] {
+        let response: ActivityListResponse = try await request(.getActivityList(
+            tab: tab,
+            categoryId: categoryId,
+            q: q,
+            page: page,
+            size: size
+        ))
+        
+        if let error = response.error {
+            throw ActivityAPIError.serverFail(reason: error.reason)
+        }
+        
+        guard let success = response.success else { return [] }
+        
+        return success.activities.map { dto in
+            let status = dto.scheduleStatus ?? .available
+            return ActivityCard(
+                activityId: dto.activityId,
+                imageURL: dto.thumbnailUrl,
+                badgeText: status.badgeText,
+                badgeColor: status.badgeColor,
+                growth: dto.point,
+                dday: dto.dDay ?? 0,
+                title: dto.title,
+                tip: nil
+            )
+        }
+    }
 }
