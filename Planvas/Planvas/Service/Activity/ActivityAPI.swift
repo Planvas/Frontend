@@ -115,4 +115,59 @@ extension ActivityAPI: APITargetType {
             return .requestPlain
         }
     }
+    
+    // API 연동 전 샘플데이터
+    var sampleData: Data {
+        switch self {
+        case .getCartList(let tab):
+            let jsonString = """
+                {
+                    "resultType": "SUCCESS",
+                    "error": null,
+                    "success": {
+                        "tab": "\(tab.rawValue)",
+                        "items": [
+                            {
+                                "cartItemId": 1,
+                                "activityId": 101,
+                                "category": "GROWTH",
+                                "dDay": 16,
+                                "point": 30,
+                                "title": "AI 세미나",
+                                "subTitle": "2025 AI 대전환 오픈 세미나",
+                                "subMessage": null,
+                                "endDate": "2026-02-28"
+                            },
+                            {
+                                "cartItemId": 2,
+                                "activityId": 102,
+                                "category": "GROWTH",
+                                "dDay": 9,
+                                "point": 10,
+                                "title": "SK 하이닉스",
+                                "subTitle": "SK 하이닉스 2025 하반기 청년 Hy-Five 14기 모집",
+                                "subMessage": "[카페 알바] 일정이 있어요!\\n시간을 쪼개서 계획해 보세요",
+                                "endDate": "2026-02-21"
+                            },
+                            {
+                                "cartItemId": 3,
+                                "activityId": 103,
+                                "category": "REST",
+                                "dDay": 15,
+                                "point": 10,
+                                "title": "엑셀",
+                                "subTitle": "드림 온 아카데미 마스터 스킬 - 엑셀 활용법 단기 특강",
+                                "subMessage": "[카페 알바] 일정과 겹쳐요!",
+                                "endDate": "2026-02-27"
+                            }
+                        ]
+                    }
+                }
+                """
+            return jsonString.data(using: .utf8)!
+            
+        default:
+            return Data()
+        }
+    }
 }
