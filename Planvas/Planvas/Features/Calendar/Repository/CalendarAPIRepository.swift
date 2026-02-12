@@ -28,7 +28,7 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
     func getEvents(for date: Date) async throws -> [Event] {
         let dateKey = dateKeyString(from: date)
         let dayDTO = try await networkService.getDayCalendar(date: dateKey)
-        return dayDTO.items.map { mapToEvent(item: $0, date: dayDTO.date) }
+        return dayDTO.todayTodos.map { mapToEvent(item: $0, date: dayDTO.date) }
     }
 
     /// 날짜 범위 내 일정 조회 (여러 일간 조회용)
@@ -56,7 +56,13 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
     /// 일정 추가 (POST /api/calendar/event)
     func addEvent(_ event: Event) async throws {
         let (startAt, endAt) = formatEventTimes(event)
-        _ = try await networkService.createEvent(title: event.title, startAt: startAt, endAt: endAt, type: "FIXED")
+        let categoryStr = event.category == .none ? "GROWTH" : event.category.rawValue
+        let colorInt = event.color.serverColor
+        let rule = Self.buildRecurrenceRule(from: event)
+        _ = try await networkService.createEvent(
+            title: event.title, startAt: startAt, endAt: endAt, type: "FIXED",
+            category: categoryStr, eventColor: colorInt, recurrenceRule: rule
+        )
     }
 
     /// 일정 수정 (PATCH /api/calendar/event/{id})
@@ -65,7 +71,13 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
             throw CalendarRepositoryError.missingServerId(message: "서버 일정 ID가 없어 수정할 수 없습니다.")
         }
         let (startAt, endAt) = formatEventTimes(event)
-        try await networkService.updateEvent(id: serverId, title: event.title, startAt: startAt, endAt: endAt, type: "FIXED")
+        let categoryStr = event.category == .none ? "GROWTH" : event.category.rawValue
+        let colorInt = event.color.serverColor
+        let rule = Self.buildRecurrenceRule(from: event)
+        try await networkService.updateEvent(
+            id: serverId, title: event.title, startAt: startAt, endAt: endAt, type: "FIXED",
+            category: categoryStr, eventColor: colorInt, recurrenceRule: rule
+        )
     }
 
     /// 일정 삭제 (DELETE /api/calendar/event/{id})
@@ -197,22 +209,43 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         let color: EventColorType = item.eventColor.map { EventColorType.from(serverColor: $0) }
             ?? (isFixed ? .purple1 : Self.colorForServerItem(type: item.type, itemId: item.itemId))
 
+        // category 매핑
+        let category: EventCategory = {
+            switch item.category?.uppercased() {
+            case "GROWTH": return .growth
+            case "REST": return .rest
+            default: return .none
+            }
+        }()
+
+        // type 매핑: ACTIVITY → .activity, FIXED/MANUAL → .fixed
+        let eventType: EventType = (item.type == "ACTIVITY") ? .activity : .fixed
+
+        // status 매핑: "DONE" → true
+        let isCompleted = item.status?.uppercased() == "DONE"
+
+        // recurrenceRule 파싱
+        let (repeatType, repeatWeekdays) = Self.parseRecurrenceRule(item.recurrenceRule)
+        let isRepeating = repeatType != nil
+
         return Event(
             id: id,
             title: item.title,
             isFixed: isFixed,
             isAllDay: isAllDay,
             color: color,
-            type: isFixed ? .fixed : .activity,
+            type: eventType,
             startDate: startDate,
             endDate: endDate,
             startTime: startTime,
             endTime: endTime,
-            category: .none,
-            isCompleted: false,
-            isRepeating: false,
+            category: category,
+            isCompleted: isCompleted,
+            isRepeating: isRepeating,
+            repeatOption: repeatType,
             fixedScheduleId: isFixed ? serverIdInt : nil,
-            myActivityId: isFixed ? nil : serverIdInt
+            myActivityId: isFixed ? nil : serverIdInt,
+            repeatWeekdays: repeatWeekdays
         )
     }
 
@@ -355,5 +388,75 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
     /// Date → "yyyy-MM-dd" (API 쿼리/키용)
     private func dateKeyString(from date: Date) -> String {
         Self.dateOnlyFormatter.string(from: date)
+    }
+
+    // MARK: - recurrenceRule ↔ RepeatType 변환
+
+    /// 요일 인덱스 (앱 내부: 0=월 ~ 6=일) ↔ BYDAY 약자
+    private static let bydayMap: [(index: Int, code: String)] = [
+        (0, "MO"), (1, "TU"), (2, "WE"), (3, "TH"), (4, "FR"), (5, "SA"), (6, "SU")
+    ]
+
+    /// 서버 recurrenceRule → (RepeatType, weekdays)
+    /// 예: "FREQ=WEEKLY;BYDAY=MO,WE" → (.weekly, [0, 2])
+    static func parseRecurrenceRule(_ rule: String?) -> (repeatType: RepeatType?, weekdays: [Int]?) {
+        guard let rule = rule, !rule.isEmpty else { return (nil, nil) }
+        var parts: [String: String] = [:]
+        for component in rule.split(separator: ";") {
+            let kv = component.split(separator: "=", maxSplits: 1)
+            if kv.count == 2 { parts[String(kv[0])] = String(kv[1]) }
+        }
+        guard let freq = parts["FREQ"] else { return (nil, nil) }
+
+        let interval = parts["INTERVAL"].flatMap { Int($0) } ?? 1
+        var weekdays: [Int]?
+        if let byDay = parts["BYDAY"] {
+            weekdays = byDay.split(separator: ",").compactMap { code in
+                bydayMap.first(where: { $0.code == code })?.index
+            }
+        }
+
+        switch freq {
+        case "DAILY":
+            return (.daily, nil)
+        case "WEEKLY":
+            if interval >= 2 { return (.biweekly, weekdays) }
+            return (.weekly, weekdays)
+        case "MONTHLY":
+            return (.monthly, nil)
+        case "YEARLY":
+            return (.yearly, nil)
+        default:
+            return (nil, nil)
+        }
+    }
+
+    /// Event의 반복 설정 → 서버 recurrenceRule 문자열
+    /// 예: (.weekly, [0, 2]) → "FREQ=WEEKLY;BYDAY=MO,WE"
+    static func buildRecurrenceRule(from event: Event) -> String? {
+        guard event.isRepeating, let repeatType = event.repeatOption else { return nil }
+        switch repeatType {
+        case .daily:
+            return "FREQ=DAILY;INTERVAL=1"
+        case .weekly:
+            let byday = buildByday(event.repeatWeekdays)
+            return byday != nil ? "FREQ=WEEKLY;\(byday!)" : "FREQ=WEEKLY;INTERVAL=1"
+        case .biweekly:
+            let byday = buildByday(event.repeatWeekdays)
+            return byday != nil ? "FREQ=WEEKLY;INTERVAL=2;\(byday!)" : "FREQ=WEEKLY;INTERVAL=2"
+        case .monthly:
+            return "FREQ=MONTHLY;INTERVAL=1"
+        case .yearly:
+            return "FREQ=YEARLY;INTERVAL=1"
+        }
+    }
+
+    private static func buildByday(_ weekdays: [Int]?) -> String? {
+        guard let weekdays = weekdays, !weekdays.isEmpty else { return nil }
+        let codes = weekdays.sorted().compactMap { idx in
+            bydayMap.first(where: { $0.index == idx })?.code
+        }
+        guard !codes.isEmpty else { return nil }
+        return "BYDAY=\(codes.joined(separator: ","))"
     }
 }

@@ -66,39 +66,15 @@ struct EventSummaryView: View {
         }
         .background(.white)
         .sheet(isPresented: $showEventDetailView) {
-            Group {
-                if event.category == .growth || event.category == .rest {
-                    ActivityEventDetailView(
-                        event: event,
-                        startDate: startDate,
-                        endDate: endDate,
-                        daysUntil: daysUntil,
-                        targetPeriod: targetPeriod,
-                        onEdit: nil,
-                        onDelete: onDelete,
-                        onSave: { showEventDetailView = false },
-                        onUpdateEvent: { updatedEvent in
-                            onUpdateEvent?(updatedEvent)
-                            showEventDetailView = false
-                        }
-                    )
-                } else {
-                    FixedEventDetailView(
-                        event: event,
-                        startDate: startDate,
-                        endDate: endDate,
-                        daysUntil: daysUntil,
-                        targetPeriod: targetPeriod,
-                        onEdit: nil,
-                        onDelete: onDelete,
-                        onSave: { showEventDetailView = false },
-                        onUpdateEvent: { updatedEvent in
-                            onUpdateEvent?(updatedEvent)
-                            showEventDetailView = false
-                        }
-                    )
+            EditEventView(
+                event: event,
+                startDate: startDate,
+                endDate: endDate,
+                onSave: { updatedEvent in
+                    onUpdateEvent?(updatedEvent)
+                    showEventDetailView = false
                 }
-            }
+            )
             .presentationDragIndicator(.visible)
         }
     }
