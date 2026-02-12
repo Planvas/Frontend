@@ -85,8 +85,10 @@ final class CalendarNetworkService: @unchecked Sendable {
     // MARK: - 일정 추가/수정/삭제
 
     /// 일정 추가 POST /api/calendar/event
-    func createEvent(title: String, startAt: String, endAt: String, type: String = "FIXED") async throws -> CreateEventSuccess {
-        let body = CreateEventRequestDTO(title: title, startAt: startAt, endAt: endAt, type: type)
+    func createEvent(title: String, startAt: String, endAt: String, type: String = "FIXED",
+                     category: String, eventColor: Int, recurrenceRule: String?) async throws -> CreateEventSuccess {
+        let body = CreateEventRequestDTO(title: title, startAt: startAt, endAt: endAt, type: type,
+                                         category: category, eventColor: eventColor, recurrenceRule: recurrenceRule)
         let response: CreateEventResponse = try await request(.postEvent(body: body))
         if let error = response.error {
             throw CalendarAPIError.serverFail(reason: error.reason)
@@ -98,8 +100,10 @@ final class CalendarNetworkService: @unchecked Sendable {
     }
 
     /// 일정 수정 PATCH /api/calendar/event/{id}
-    func updateEvent(id: Int, title: String, startAt: String, endAt: String, type: String = "FIXED") async throws {
-        let body = UpdateEventRequestDTO(title: title, startAt: startAt, endAt: endAt, type: type)
+    func updateEvent(id: Int, title: String, startAt: String, endAt: String, type: String = "FIXED",
+                     category: String, eventColor: Int, recurrenceRule: String?) async throws {
+        let body = UpdateEventRequestDTO(title: title, startAt: startAt, endAt: endAt, type: type,
+                                         category: category, eventColor: eventColor, recurrenceRule: recurrenceRule)
         let response: UpdateEventResponse = try await request(.patchEvent(id: id, body: body))
         if let error = response.error {
             throw CalendarAPIError.serverFail(reason: error.reason)
