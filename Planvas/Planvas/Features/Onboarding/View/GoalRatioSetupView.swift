@@ -59,14 +59,9 @@ struct GoalRatioSetupView: View {
                     PrimaryButton(title: "다음") {
                         print("성장: \(vm.growthPercent)% / 휴식: \(vm.restPercent)%")
                         
-                        // 목표 이름, 기간, 비율 저장 API 연동
-                        onboardingVM.createGoal(
-                            title: vm.goalName,
-                            startDate: onboardingVM.formatDateForAPI(vm.startDate),
-                            endDate: onboardingVM.formatDateForAPI(vm.endDate),
-                            targetGrowthRatio: vm.growthPercent,
-                            targetRestRatio: vm.restPercent
-                        )
+                        router.push(.calendar)
+                        
+                        // 목표 이름, 기간, 비율 저장 API 연동 삭제
                     }
                     .padding(.horizontal, 20)
                     .padding(.bottom, 66)
@@ -76,12 +71,6 @@ struct GoalRatioSetupView: View {
             .ignoresSafeArea(edges: .bottom)
         }
         .ignoresSafeArea(edges: .top)
-        // TODO: 일단 기존 목표가 있어도 캘린더로 가도록
-        .onChange(of: onboardingVM.shouldNavigateToCalendar) { _, shouldGo in
-            guard shouldGo else { return }
-            router.push(.calendar)
-            onboardingVM.shouldNavigateToCalendar = false
-        }
     }
     
     // MARK: - 맨 위 멘트 그룹
