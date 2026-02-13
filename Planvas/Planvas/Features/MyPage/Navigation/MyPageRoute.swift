@@ -7,4 +7,6 @@ enum MyPageRoute: Hashable {
     case calenderPage
     case alarmPage
     case loginPage
+    case activityPage
+    case goalPage
 }

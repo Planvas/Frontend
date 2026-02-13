@@ -2,11 +2,11 @@ import SwiftUI
 
 struct ReportFlowView: View {
     @State private var router = NavigationRouter<ReportRoute>()
-    let initialGoalId: Int
+    let goalId: Int
     
     var body: some View {
         NavigationStack(path: $router.path) {
-            ReportView(goalId: initialGoalId)
+            ReportView(goalId: goalId)
                 .navigationDestination(for: ReportRoute.self) { route in
                     switch route {
                     case .report(let id):
@@ -19,5 +19,5 @@ struct ReportFlowView: View {
 }
 
 #Preview {
-    ReportFlowView(initialGoalId: 12)
+    ReportFlowView(goalId: 12)
 }
