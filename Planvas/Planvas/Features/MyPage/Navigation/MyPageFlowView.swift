@@ -3,7 +3,6 @@ import SwiftUI
 struct MyPageFlowView: View {
     @State private var router = NavigationRouter<MyPageRoute>()
     @State private var calendarViewModel = CalendarViewModel()
-    let goalId: Int = 12
     
     // MARK: - 네비게이션 추가
     var body: some View {
