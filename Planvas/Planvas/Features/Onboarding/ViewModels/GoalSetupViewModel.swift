@@ -11,6 +11,9 @@ import Observation
 @Observable
 @MainActor
 final class GoalSetupViewModel {
+    // 최종 온보딩 전송을 위한 캘린더 연동 상태
+    var isCalendarConnected: Bool = false
+    
     var goalName: String = ""
 
     // 20자 초과 체크 로직
