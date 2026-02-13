@@ -22,6 +22,10 @@ struct MyPageFlowView: View {
                         NotificationView()
                     case .loginPage:
                         LoginView()
+                    case .activityPage:
+                        ActivityView()
+                    case .goalPage:
+                        OnboardingFlowView() // TODO: -  네비게이션 수정
                     }
                 }
         }
