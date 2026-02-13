@@ -10,7 +10,7 @@ extension ReportRouter: APITargetType {
     var path: String {
         switch self {
         case .getReport(let goalId):
-            return "api/reports/seasons/\(goalId)"
+            return "/api/reports/seasons/\(goalId)"
         }
     }
     
