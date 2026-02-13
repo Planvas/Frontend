@@ -9,9 +9,9 @@ import SwiftUI
 import Moya
 
 struct InterestActivitySelectionView: View {
-    // TODO: 캘린더까지 연동 완료 후 이 페이지로 이동하도록 라우팅 연결해야 함
     @Environment(LoginViewModel.self) private var loginVM
     @Environment(GoalSetupViewModel.self) private var viewModel
+    @Environment(OnboardingViewModel.self) private var onboardingVM
     
     @State private var fetchedUserName: String = ""
     @State private var didFetchName = false
@@ -62,7 +62,17 @@ struct InterestActivitySelectionView: View {
             // 버튼
             ZStack {
                 PrimaryButton(title: "플랜바스 시작하기") {
-                    // TODO: 온보딩 저장 API 연결
+                    // 온보딩 저장 API 연결
+                    onboardingVM.saveOnboarding(
+                        goalSetupVM: viewModel,
+                        selectedPresetId: onboardingVM.selectedPresetId
+                    ) { success in
+                        if success {
+                            onFinish?()
+                        } else {
+                            // 실패면 화면 이동 안 하고 에러 메시지 보여주거나, 그래도 이동 정책이면 여기서 이동
+                        }
+                    }
                     
                     let items = viewModel.interestActivityTypes
                     let selectedNumbers = items.enumerated().compactMap { index, item in
@@ -70,9 +80,6 @@ struct InterestActivitySelectionView: View {
                     }
                     let text = selectedNumbers.map(String.init).joined(separator: ",")
                     print("관심 분야 : \(text)")
-                    
-                    // 메인 화면으로 이동
-                    onFinish?()
                 }
                 .disabled(!isStartEnabled)
 
