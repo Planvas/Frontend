@@ -37,8 +37,8 @@ struct ToDoGroup: View {
             }
             
             Button(action:{
-                // TODO: - 할 일 추가 시트 연결
-                print("추가하기")
+                viewModel.addTodoViewModel = AddActivityViewModel()
+                viewModel.showAddTodo = true
             }){
                 HStack(spacing: 8){
                     Image(systemName: "plus")
@@ -57,7 +57,28 @@ struct ToDoGroup: View {
                         .stroke(.ccc60, lineWidth: 1)
                 )
             }
+            .sheet(isPresented: $viewModel.showAddTodo) {
+                if let addVM = viewModel.addTodoViewModel {
+                    AddActivityView(
+                        viewModel: addVM,
+                        onSubmit: {
+                            Task { viewModel.AddTodo() }
+                        }
+                    )
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+                }
+            }
+//            .onChange(of: viewModel.showAddTodo) { _, isShowing in
+//                if !isShowing {
+//                    viewModel.showAddTodo = false
+//                }
+//            }
         }
         .padding()
     }
+}
+
+#Preview {
+    TabBar()
 }

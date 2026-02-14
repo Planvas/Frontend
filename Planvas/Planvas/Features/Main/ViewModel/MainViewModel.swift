@@ -80,7 +80,14 @@ class MainViewModel {
     }
 
     // MARK: - 오늘의 할 일
+    var showAddTodo: Bool = false
+    var addTodoViewModel: AddActivityViewModel?
     var todayTodos: [ToDo] = []
+    
+    func AddTodo() {
+        //TODO: - 투두 추가 API 연동
+        print("할 일 추가하기")
+    }
     
     // 체크 토글
     func toggleTodo(_ todo: ToDo) {
