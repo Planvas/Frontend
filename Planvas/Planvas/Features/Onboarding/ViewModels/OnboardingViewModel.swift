@@ -296,4 +296,96 @@ final class OnboardingViewModel {
             }
         }
     }
+    
+    // MARK: - 목표 기간/이름 수정 (PATCH /api/goals/{goalId})
+    func editGoal(
+        goalId: Int,
+        title: String?,
+        startDate: String?,
+        endDate: String?,
+        completion: @escaping (Bool) -> Void
+    ) {
+        isLoading = true
+        errorMessage = nil
+
+        let body = EditGoalRequestDTO(
+            title: title,
+            startDate: startDate,
+            endDate: endDate,
+            targetGrowthRatio: nil,
+            targetRestRatio: nil
+        )
+
+        provider.request(.patchGoalBase(goalId: goalId, EditGoalRequestDTO: body)) { [weak self] result in
+            guard let self else { return }
+
+            DispatchQueue.main.async {
+                self.isLoading = false
+
+                switch result {
+                case .success(let response):
+                    print("editGoal statusCode:", response.statusCode)
+                    print("editGoal raw:", String(data: response.data, encoding: .utf8) ?? "nil")
+
+                    let ok = (200..<300).contains(response.statusCode)
+                    if ok {
+                        completion(true)
+                    } else {
+                        self.errorMessage = "목표 수정 실패"
+                        completion(false)
+                    }
+
+                case .failure(let error):
+                    let code = error.response?.statusCode ?? -1
+                    print("editGoal failure statusCode:", code)
+                    print("editGoal failure:", error.localizedDescription)
+                    if let data = error.response?.data {
+                        print("editGoal failure raw:", String(data: data, encoding: .utf8) ?? "nil")
+                    }
+                    self.errorMessage = "네트워크 오류(목표 수정)"
+                    completion(false)
+                }
+            }
+        }
+    }
+
+    // MARK: - 목표 비율 수정 (PATCH /api/goals/{goalId}/ratio)
+    func editGoalRatio(
+        goalId: Int,
+        growth: Int,
+        rest: Int,
+        completion: @escaping (Bool) -> Void
+    ) {
+        isLoading = true
+        errorMessage = nil
+
+        let body = EditRatioRequestDTO(growthRatio: growth, restRatio: rest)
+
+        provider.request(.patchGoalRatio(goalId: goalId, EditRatioRequestDTO: body)) { [weak self] result in
+            guard let self else { return }
+
+            DispatchQueue.main.async {
+                self.isLoading = false
+
+                switch result {
+                case .success(let response):
+                    print("editGoalRatio statusCode:", response.statusCode)
+                    print("editGoalRatio raw:", String(data: response.data, encoding: .utf8) ?? "nil")
+
+                    let ok = (200..<300).contains(response.statusCode)
+                    completion(ok)
+
+                case .failure(let error):
+                    let code = error.response?.statusCode ?? -1
+                    print("editGoalRatio failure statusCode:", code)
+                    print("editGoalRatio failure:", error.localizedDescription)
+                    if let data = error.response?.data {
+                        print("editGoalRatio failure raw:", String(data: data, encoding: .utf8) ?? "nil")
+                    }
+                    self.errorMessage = "네트워크 오류(비율 수정)"
+                    completion(false)
+                }
+            }
+        }
+    }
 }
