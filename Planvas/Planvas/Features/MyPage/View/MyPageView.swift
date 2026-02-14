@@ -16,7 +16,7 @@ struct MyPageView: View {
                         VStack(spacing: 40) {
                             ProfileView(viewModel: viewModel)
                             goalCardView(viewModel: viewModel)
-                            DetailPageView(showCalendarAlert: $showCalendarAlert)
+                            DetailPageView(showCalendarAlert: $showCalendarAlert, viewModel: viewModel)
                                 .environment(router)
                         }
                     }
