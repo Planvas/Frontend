@@ -15,6 +15,14 @@ struct GoalEditView: View {
     @State private var isShowingStartDatePicker = false
     @State private var isShowingEndDatePicker = false
     
+    @State private var tempStartDate = Date()
+    @State private var tempEndDate = Date()
+    @State private var editingDateType: EditingDateType? = nil
+
+    private enum EditingDateType {
+        case start, end
+    }
+    
     var body: some View {
         @Bindable var vm = vm
         
@@ -74,16 +82,30 @@ struct GoalEditView: View {
             print("수정 페이지 진입 완료. 현재 설정된 이름: \(vm.goalName), Step: \(vm.ratioStep)")
         }
         .sheet(isPresented: $isShowingStartDatePicker) {
-            datePickerSheet(title: "시작 날짜 선택", selection: Binding(
-                get: { vm.startDate ?? Date() },
-                set: { vm.startDate = $0 }
-            ))
+            datePickerSheet(
+                title: "시작 날짜 선택",
+                selection: $tempStartDate
+            ) {
+                vm.startDate = tempStartDate
+                
+                if let end = vm.endDate, end < tempStartDate {
+                    vm.endDate = tempStartDate
+                }
+                
+                isShowingStartDatePicker = false
+            }
         }
+
         .sheet(isPresented: $isShowingEndDatePicker) {
-            datePickerSheet(title: "종료 날짜 선택", selection: Binding(
-                get: { vm.endDate ?? Date() },
-                set: { vm.endDate = $0 }
-            ), range: (vm.startDate ?? Date())...)
+            let minDate = vm.startDate ?? Date()
+            datePickerSheet(
+                title: "종료 날짜 선택",
+                selection: $tempEndDate,
+                range: minDate...
+            ) {
+                vm.endDate = tempEndDate
+                isShowingEndDatePicker = false
+            }
         }
     }
     
@@ -182,6 +204,8 @@ struct GoalEditView: View {
                 // 시작날짜 수정하기 버튼
                 Button{
                     // 시작날짜 수정 로직
+                    tempStartDate = vm.startDate ?? Date()
+                    editingDateType = .start
                     isShowingStartDatePicker = true
                     
                 } label: {
@@ -203,6 +227,8 @@ struct GoalEditView: View {
                 // 끝날짜 수정하기 버튼
                 Button{
                     // 끝날짜 수정 로직
+                    tempEndDate = vm.endDate ?? (vm.startDate ?? Date())
+                    editingDateType = .end
                     isShowingEndDatePicker = true
                     
                 } label: {
@@ -286,7 +312,6 @@ struct GoalEditView: View {
                         
                         Text("\(actual)%")  // 지금 얼만큼 채웠는지
                             .textStyle(.medium18)
-                            .padding(.top, 4)
                             .foregroundStyle(.fff50)
                             .padding(.leading, 10)
                             .opacity(progress > 0.1 ? 1 : 0) // 바가 너무 짧으면 텍스트 숨김
@@ -444,7 +469,12 @@ struct GoalEditView: View {
     }
     
     // MARK: - 날짜 수정을 위한 시트
-    private func datePickerSheet(title: String, selection: Binding<Date>, range: PartialRangeFrom<Date>? = nil) -> some View {
+    private func datePickerSheet(
+        title: String,
+        selection: Binding<Date>,
+        range: PartialRangeFrom<Date>? = nil,
+        onDone: @escaping () -> Void
+    ) -> some View {
         NavigationStack {
             VStack {
                 if let range = range {
@@ -462,8 +492,7 @@ struct GoalEditView: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("완료") {
-                        isShowingStartDatePicker = false
-                        isShowingEndDatePicker = false
+                        onDone()
                     }
                 }
             }
