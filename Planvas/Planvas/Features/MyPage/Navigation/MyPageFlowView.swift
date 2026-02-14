@@ -3,6 +3,8 @@ import SwiftUI
 struct MyPageFlowView: View {
     @State private var router = NavigationRouter<MyPageRoute>()
     @State private var calendarViewModel = CalendarViewModel()
+    @State private var goalViewModel = GoalSetupViewModel()
+    @State private var myPageViewModel = MyPageViewModel()
     
     // MARK: - 네비게이션 추가
     var body: some View {
@@ -11,7 +13,7 @@ struct MyPageFlowView: View {
                 .navigationDestination(for: MyPageRoute.self) { route in
                     switch route {
                     case .currentGoalPage:
-                        MainView()
+                        GoalEditView()
                     case .reportPage(let goalId):
                         ReportView(goalId: goalId)
                     case .pastReportPage:
@@ -31,6 +33,8 @@ struct MyPageFlowView: View {
         }
         .environment(router)
         .environment(calendarViewModel)
+        .environment(goalViewModel)
+        .environment(myPageViewModel)
     }
 }
 
