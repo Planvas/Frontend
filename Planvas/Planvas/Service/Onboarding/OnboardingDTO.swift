@@ -110,3 +110,58 @@ struct GoalProgressSuccess: Decodable {
     let currentGrowthRatio: Int
     let currentRestRatio: Int
 }
+
+// MARK: - 온보딩 저장
+struct SaveOnboardingRequestDTO: Encodable {
+    let goalPeriod: GoalPeriodDTO
+    let profile: OnboardingProfileDTO
+    let calendar: OnboardingCalendarDTO
+}
+
+struct GoalPeriodDTO: Encodable {
+    let title: String
+    let dateRange: DateRangeDTO
+    let ratio: RatioDTO
+}
+
+struct DateRangeDTO: Encodable {
+    let startDate: String   // "yyyy-MM-dd"
+    let endDate: String     // "yyyy-MM-dd"
+}
+
+struct RatioDTO: Encodable {
+    let growth: Int
+    let rest: Int
+    let presetType: PresetTypeDTO
+}
+
+enum PresetTypeDTO: String, Encodable {
+    case custom = "CUSTOM"
+    case preset = "PRESET"
+}
+
+struct OnboardingProfileDTO: Encodable {
+    let interests: [Int]
+}
+
+struct OnboardingCalendarDTO: Encodable {
+    let connect: Bool
+    let provider: CalendarProviderDTO?
+}
+
+enum CalendarProviderDTO: String, Encodable {
+    case google = "google"
+}
+
+// Response
+struct SaveOnboardingResponseDTO: Decodable {
+    let resultType: String
+    let error: ErrorDTO?
+    let success: SaveOnboardingSuccessDTO?
+}
+
+struct SaveOnboardingSuccessDTO: Decodable {
+    let message: String
+    let goalPeriodId: Int
+    let onboardingCompleted: Bool
+}

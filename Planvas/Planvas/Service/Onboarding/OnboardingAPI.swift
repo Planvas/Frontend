@@ -18,6 +18,7 @@ enum OnboardingAPI {
     case patchGoalRatio(goalId: Int, EditRatioRequestDTO: EditRatioRequestDTO) // 성장/휴식 비율 설정·변경
     case getRatioList // 비율 추천 목록 조회
     case getGoalProgress(goalId: Int) // 목표 진행(현재 성장/휴식 비율) 조회
+    case postOnboarding(body: SaveOnboardingRequestDTO) // 온보딩 저장
 }
 
 extension OnboardingAPI: APITargetType {
@@ -45,12 +46,15 @@ extension OnboardingAPI: APITargetType {
         
         case .getGoalProgress(let goalId):
             return "\(Self.goalPath)/\(goalId)/progress"
+            
+        case .postOnboarding:   // 온보딩 저장
+            return "/api/users/me/onboarding"
         }
     }
     
     var method: Moya.Method {
         switch self {
-        case .postGoalBase:
+        case .postGoalBase, .postOnboarding:
             return .post
         case .patchGoalBase, .patchGoalRatio:
             return .patch
@@ -75,6 +79,8 @@ extension OnboardingAPI: APITargetType {
             return .requestPlain
         case .getGoalProgress:
             return .requestPlain
+        case .postOnboarding(let body):
+            return .requestJSONEncodable(body)
         }
     }
 }

@@ -42,7 +42,12 @@ struct OnboardingFlowView: View {
                             CalendarFlowView(
                                 selectedTab: .constant(1),
                                 calendarTabTag: 1,
-                                onFinishFromOnboarding: { router.push(.interest) }
+                                onFinishFromOnboarding: { router.push(.interest) },
+                                
+                                onSyncStateChange: { isConnected in
+                                    container.goalVM.isCalendarConnected = isConnected
+                                    print("캘린더 연동 상태 업데이트: \(isConnected)")
+                                }
                             )
                             
                         // 관심 분야 선택
