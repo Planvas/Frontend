@@ -12,6 +12,9 @@ struct GoalEditView: View {
     @Environment(GoalSetupViewModel.self) private var vm
     @Environment(MyPageViewModel.self) private var myVM
     
+    @State private var isShowingStartDatePicker = false
+    @State private var isShowingEndDatePicker = false
+    
     var body: some View {
         @Bindable var vm = vm
         
@@ -69,6 +72,20 @@ struct GoalEditView: View {
         .navigationBarBackButtonHidden()
         .task {
             print("수정 페이지 진입 완료. 현재 설정된 이름: \(vm.goalName), Step: \(vm.ratioStep)")
+        }
+        // 2. 시작 날짜 선택 시트
+        .sheet(isPresented: $isShowingStartDatePicker) {
+            datePickerSheet(title: "시작 날짜 선택", selection: Binding(
+                get: { vm.startDate ?? Date() },
+                set: { vm.startDate = $0 }
+            ))
+        }
+        // 3. 종료 날짜 선택 시트 (시작 날짜 이후만 선택 가능하도록 제한)
+        .sheet(isPresented: $isShowingEndDatePicker) {
+            datePickerSheet(title: "종료 날짜 선택", selection: Binding(
+                get: { vm.endDate ?? Date() },
+                set: { vm.endDate = $0 }
+            ), range: (vm.startDate ?? Date())...) // 시작일 이후만 선택 가능
         }
     }
     
@@ -167,6 +184,7 @@ struct GoalEditView: View {
                 // 시작날짜 수정하기 버튼
                 Button{
                     // TODO: 시작날짜 수정 로직
+                    isShowingStartDatePicker = true
                     
                 } label: {
                     HStack(alignment: .center) {
@@ -187,6 +205,7 @@ struct GoalEditView: View {
                 // 끝날짜 수정하기 버튼
                 Button{
                     // TODO: 끝날짜 수정 로직
+                    isShowingEndDatePicker = true
                     
                 } label: {
                     HStack(alignment: .center) {
@@ -423,6 +442,34 @@ struct GoalEditView: View {
         comp.timeZone = TimeZone(identifier: "Asia/Seoul")
 
         return Calendar.current.date(from: comp)
+    }
+    
+    // 4. 날짜 수정을 위한 공통 시트 뷰
+    private func datePickerSheet(title: String, selection: Binding<Date>, range: PartialRangeFrom<Date>? = nil) -> some View {
+        NavigationStack {
+            VStack {
+                if let range = range {
+                    DatePicker("", selection: selection, in: range, displayedComponents: .date)
+                        .datePickerStyle(.graphical)
+                } else {
+                    DatePicker("", selection: selection, displayedComponents: .date)
+                        .datePickerStyle(.graphical)
+                }
+                Spacer()
+            }
+            .padding()
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("완료") {
+                        isShowingStartDatePicker = false
+                        isShowingEndDatePicker = false
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium]) // 절반 높이로 표시
     }
 }
 
