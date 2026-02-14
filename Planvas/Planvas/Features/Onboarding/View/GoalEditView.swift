@@ -6,11 +6,13 @@
 //
 
 import SwiftUI
+import Moya
 
-struct GoalEditView: View {
+struct GoalEditView: View {    
     @Environment(NavigationRouter<MyPageRoute>.self) var router
     @Environment(GoalSetupViewModel.self) private var vm
     @Environment(MyPageViewModel.self) private var myVM
+    @Environment(OnboardingViewModel.self) private var onboardingVM
     
     @State private var isShowingStartDatePicker = false
     @State private var isShowingEndDatePicker = false
@@ -18,6 +20,9 @@ struct GoalEditView: View {
     @State private var tempStartDate = Date()
     @State private var tempEndDate = Date()
     @State private var editingDateType: EditingDateType? = nil
+    
+    @State private var editingRatioStep: Int = 0
+    @State private var didInitEditingRatio = false
 
     private enum EditingDateType {
         case start, end
@@ -59,19 +64,52 @@ struct GoalEditView: View {
                     .padding(.bottom, 10)
                     .padding(.horizontal, 20)
 
-                GoalRatioGroup(ratio: $vm.ratioStep)
+                GoalRatioGroup()
                     .padding(.bottom, 8)
                     .padding(.horizontal, 20)
 
-                GoalRatioEditGroup(ratio: $vm.ratioStep)
+                GoalRatioEditGroup(ratio: $editingRatioStep)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 32)
 
                 // 버튼
                 PrimaryButton(title: "저장하기") {
-                    print("성장: \(vm.growthPercent)% / 휴식: \(vm.restPercent)%")
-                    
-                    // TODO: 목표 수정하기 API 연동
+                    guard let goalId = myVM.goalData?.goalId else {
+                        myVM.handleError("현재 목표 정보를 불러오지 못했어요.")
+                        return
+                    }
+
+                    let title = vm.goalName
+                    let start = vm.formatAPIDate(vm.startDate)
+                    let end = vm.formatAPIDate(vm.endDate)
+
+                    let growth = editingRatioStep * 10
+                    let rest = (10 - editingRatioStep) * 10
+                    print("growth/rest:", growth, rest)
+
+                    // 기간/이름 수정
+                    onboardingVM.editGoal(
+                        goalId: goalId,
+                        title: title,
+                        startDate: start,
+                        endDate: end
+                    ) { success in
+                        
+                        if success {
+                            // 비율 수정
+                            onboardingVM.editGoalRatio(
+                                goalId: goalId,
+                                growth: growth,
+                                rest: rest
+                            ) { ratioSuccess in
+                                
+                                if ratioSuccess {
+                                    print("목표 수정 완료")
+                                    router.pop()
+                                }
+                            }
+                        }
+                    }
                 }
                 .padding(.horizontal, 20)
             }
@@ -79,7 +117,16 @@ struct GoalEditView: View {
         }
         .navigationBarBackButtonHidden()
         .task {
-            print("수정 페이지 진입 완료. 현재 설정된 이름: \(vm.goalName), Step: \(vm.ratioStep)")
+            print("현재 설정된 이름: \(vm.goalName), Step: \(vm.ratioStep)")
+
+            guard !didInitEditingRatio else { return }
+            didInitEditingRatio = true
+
+            if let goal = myVM.goalData {
+                editingRatioStep = (goal.growthRatio ?? 0) / 10
+            } else {
+                editingRatioStep = vm.ratioStep
+            }
         }
         .sheet(isPresented: $isShowingStartDatePicker) {
             datePickerSheet(
@@ -95,7 +142,6 @@ struct GoalEditView: View {
                 isShowingStartDatePicker = false
             }
         }
-
         .sheet(isPresented: $isShowingEndDatePicker) {
             let minDate = vm.startDate ?? Date()
             datePickerSheet(
@@ -257,8 +303,10 @@ struct GoalEditView: View {
     }
 
     // MARK: - 목표 비율
-    private func GoalRatioGroup(ratio: Binding<Int>) -> some View {
+    private func GoalRatioGroup() -> some View {
         let goal = myVM.goalData
+        let targetGrowth = goal?.growthRatio ?? 0
+        let targetRest = goal?.restRatio ?? 0
         
         return VStack(alignment: .leading, spacing: 0) {
             Text("현재 달성률")
@@ -271,13 +319,13 @@ struct GoalEditView: View {
                     title: "성장",
                     color: Color.green2,
                     actual: goal?.currentGrowthRatio ?? 0,
-                    target: vm.ratioStep * 10
+                    target: targetGrowth
                 )
                 progressCapsule(
                     title: "휴식",
                     color: Color.blue1,
                     actual: goal?.currentRestRatio ?? 0,
-                    target: (10 - vm.ratioStep) * 10
+                    target: targetRest
                 )
             }
         }
@@ -334,7 +382,7 @@ struct GoalEditView: View {
     
     // MARK: - 목표 비율 수정
     private func GoalRatioEditGroup(ratio: Binding<Int>) -> some View {
-        let purplePercent = vm.ratioStep * 10
+        let purplePercent = ratio.wrappedValue * 10
         let grayPercent = 100 - purplePercent
         
         let purpleLabel = "\(purplePercent)%"
@@ -387,7 +435,7 @@ struct GoalEditView: View {
             // 성장 비율
             GeometryReader { geo in
                 let totalWidth = geo.size.width
-                let purpleWidth = totalWidth * (CGFloat(vm.ratioStep) / 10.0)
+                let purpleWidth = totalWidth * (CGFloat(ratio.wrappedValue) / 10.0)
 
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 100)
@@ -422,14 +470,14 @@ struct GoalEditView: View {
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
                             guard totalWidth > 0 else {
-                                vm.ratioStep = 0
+                                ratio.wrappedValue = 0
                                 return
                             }
 
-                            let ratio = value.location.x / totalWidth
-                            let clamped = max(0, min(1, ratio))
+                            let r = value.location.x / totalWidth
+                            let clamped = max(0, min(1, r))
                             let next = Int((clamped * 10).rounded())
-                            vm.ratioStep = max(0, min(10, next))
+                            ratio.wrappedValue = max(0, min(10, next))
                         }
                 )
             }
@@ -506,5 +554,5 @@ struct GoalEditView: View {
         .environment(NavigationRouter<MyPageRoute>())
         .environment(GoalSetupViewModel())
         .environment(MyPageViewModel())
-
+        .environment(OnboardingViewModel(provider: MoyaProvider<OnboardingAPI>()))
 }
