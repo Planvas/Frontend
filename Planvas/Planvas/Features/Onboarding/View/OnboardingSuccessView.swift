@@ -44,7 +44,6 @@ struct OnboardingSuccessView: View {
             PrimaryButton(title: "추천 활동으로 채우기") {
                 print("추천 활동으로 채우기")
                 
-                // TODO: 추천 활동 뷰로 이동
                 dismiss()
                 onGoActivityList()
             }
