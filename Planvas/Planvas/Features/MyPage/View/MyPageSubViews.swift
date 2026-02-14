@@ -150,26 +150,18 @@ struct DetailPageView: View {
            MenuSection("목표 및 활동 관리") {
                MenuButton(title: "현재 목표 수정하기", desc: "비율 및 기간 변경") {
                    if let goal = viewModel.goalData {
-                       print("수정 페이지 이동 전 데이터 세팅 시작: \(goal.title ?? "")")
-                       
                        goalVM.goalName = goal.title ?? ""
-                       
+
                        let growth = goal.growthRatio ?? 50
                        goalVM.ratioStep = growth / 10
-                       
+
                        goalVM.startDate = dateFromTuple(goal.startTuple)
                        goalVM.endDate   = dateFromTuple(goal.endTuple)
-                       
-                       print("세팅 완료! Step: \(goalVM.ratioStep)")
+
+                       router.push(.currentGoalPage)
                    } else {
-                       print("에러: MyPageViewModel에 goalData가 없어서 세팅을 못함")
+                       viewModel.handleError("진행 중인 목표가 없습니다.")
                    }
-                   
-                   // 3. 데이터를 다 채운 뒤 화면 이동
-                   router.push(.currentGoalPage)
-               }
-               MenuButton(title: "지난 시즌 리포트", desc: "히스토리 모아보기") {
-                   router.push(.pastReportPage)
                }
            }
            MenuSection("연동 및 알림") {
@@ -191,6 +183,19 @@ struct DetailPageView: View {
         }
         .padding(.horizontal, 0)
         .padding(.bottom, 40)
+        .alert(
+            "알림",
+            isPresented: Binding(
+                get: { viewModel.showToast },
+                set: { if !$0 { viewModel.showToast = false } }
+            )
+        ) {
+            Button("확인") {
+                viewModel.showToast = false
+            }
+        } message: {
+            Text(viewModel.toastMessage ?? "알 수 없는 오류가 발생했습니다.")
+        }
     }
     
     private func dateFromTuple(_ tuple: (year: String, month: String, day: String)?) -> Date? {
