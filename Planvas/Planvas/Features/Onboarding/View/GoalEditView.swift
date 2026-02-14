@@ -545,7 +545,7 @@ struct GoalEditView: View {
                 }
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.height(450)])
     }
 }
 
