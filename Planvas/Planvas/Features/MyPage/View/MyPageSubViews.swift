@@ -141,12 +141,31 @@ struct goalCardView: View {
 struct DetailPageView: View {
     @Environment(NavigationRouter<MyPageRoute>.self) var router
     @EnvironmentObject var container: DIContainer
+    @Environment(GoalSetupViewModel.self) private var goalVM
     @Binding var showCalendarAlert: Bool
+    var viewModel: MyPageViewModel
     
     var body: some View {
         VStack(spacing: 40) {
            MenuSection("목표 및 활동 관리") {
                MenuButton(title: "현재 목표 수정하기", desc: "비율 및 기간 변경") {
+                   if let goal = viewModel.goalData {
+                       print("수정 페이지 이동 전 데이터 세팅 시작: \(goal.title ?? "")")
+                       
+                       goalVM.goalName = goal.title ?? ""
+                       
+                       let growth = goal.growthRatio ?? 50
+                       goalVM.ratioStep = growth / 10
+                       
+                       goalVM.startDate = dateFromTuple(goal.startTuple)
+                       goalVM.endDate   = dateFromTuple(goal.endTuple)
+                       
+                       print("세팅 완료! Step: \(goalVM.ratioStep)")
+                   } else {
+                       print("에러: MyPageViewModel에 goalData가 없어서 세팅을 못함")
+                   }
+                   
+                   // 3. 데이터를 다 채운 뒤 화면 이동
                    router.push(.currentGoalPage)
                }
                MenuButton(title: "지난 시즌 리포트", desc: "히스토리 모아보기") {
@@ -173,4 +192,26 @@ struct DetailPageView: View {
         .padding(.horizontal, 0)
         .padding(.bottom, 40)
     }
+    
+    private func dateFromTuple(_ tuple: (year: String, month: String, day: String)?) -> Date? {
+        guard let tuple else { return nil }
+        guard
+            let y = Int(tuple.year),
+            let m = Int(tuple.month),
+            let d = Int(tuple.day)
+        else { return nil }
+
+        var comp = DateComponents()
+        comp.year = y
+        comp.month = m
+        comp.day = d
+        comp.hour = 0
+        comp.minute = 0
+        comp.second = 0
+
+        comp.timeZone = TimeZone(identifier: "Asia/Seoul")
+
+        return Calendar.current.date(from: comp)
+    }
+
 }
