@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import Moya
+import CombineMoya
 
 class PastReportViewModel:ObservableObject {
     @Published var reportsByYear: [Int: [PastReportSuccessResponse.Seasons]] = [:]
@@ -9,12 +10,13 @@ class PastReportViewModel:ObservableObject {
     @Published var errorMessage: String?
     @Published var isLoading: Bool = false
 
-    private let provider = TokenProvider<PastReportRouter>(isStub: true)
+    private let provider = APIManager.shared.createProvider(for: PastReportRouter.self)
     private var cancellable = Set<AnyCancellable>()
     
     // MARK: - 지난 시즌 리포트 조회
     func fetchPastReport(year: Int? = nil) {
         provider.requestPublisher(.getPastReport(year:year))
+            .map(PastReportResponse.self)
             .receive(on: DispatchQueue.main)
             .handleEvents(
                 receiveSubscription: { [weak self] _ in self?.isLoading = true },

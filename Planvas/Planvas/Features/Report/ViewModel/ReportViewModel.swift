@@ -2,14 +2,14 @@ import Foundation
 import SwiftUI
 import Moya
 import Combine
+import CombineMoya
 
 class ReportViewModel:ObservableObject {
     @Published var reportData: ReportSuccessResponse?
     @Published var errorMessage: String?
     @Published var isLoading: Bool = false
     
-    // TODO: - 서버 연결 시 isStub: false로 비활성화
-    private let provider = TokenProvider<ReportRouter>(isStub: true)
+    private let provider = APIManager.shared.createProvider(for: ReportRouter.self)
     private var cancellables = Set<AnyCancellable>()
     
     // MARK: - 뷰에서 사용할 가공된 데이터
@@ -52,6 +52,7 @@ class ReportViewModel:ObservableObject {
         self.errorMessage = nil
         
         provider.requestPublisher(.getReport(goalId: goalId))
+            .map(ReportResponse.self)
             .receive(on: DispatchQueue.main)
             .handleEvents(
                 receiveSubscription: { [weak self] _ in self?.isLoading = true },
