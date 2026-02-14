@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 
 struct MyPageView: View {
-    @State private var viewModel = MyPageViewModel()
+    @Environment(MyPageViewModel.self) private var viewModel
     @State private var showCalendarAlert = false
     
     @Environment(NavigationRouter<MyPageRoute>.self) var router
