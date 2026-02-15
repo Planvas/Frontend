@@ -166,7 +166,7 @@ class MainViewModel {
                                             typeColor: ScheduleType(rawValue: $0.color) ?? .one,
                                             title: $0.title,
                                             isFixed: $0.type == "FIXED",
-                                            todoInfo: "\($0.startTime) - \($0.endTime)",
+                                            todoInfo: "\($0.category.displayText) +\($0.point)",
                                             startTime: "\($0.startTime)",
                                             isCompleted: $0.completed
                                         )
