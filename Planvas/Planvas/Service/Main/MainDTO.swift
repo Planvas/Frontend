@@ -60,6 +60,8 @@ struct ScheduleDTO: Decodable {
     let title: String
     let type: String
     let category: TodoCategory
+    let point: Int
+    let color: Int
     let startTime: String
     let endTime: String
     let completed: Bool

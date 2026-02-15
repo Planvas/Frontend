@@ -153,7 +153,7 @@ class MainViewModel {
                                             groupedSchedules[schedule.id] = Schedule(
                                                 id: schedule.id,
                                                 title: schedule.title,
-                                                type: ScheduleType(serverCategory: schedule.category),
+                                                color: schedule.color,
                                                 dates: [date]
                                             )
                                         }
@@ -163,7 +163,7 @@ class MainViewModel {
                                     let todos = day.schedules.map {
                                         ToDo(
                                             id: $0.id,
-                                            typeColor: .calRed,
+                                            typeColor: ScheduleType(rawValue: $0.color) ?? .one,
                                             title: $0.title,
                                             isFixed: $0.type == "FIXED",
                                             todoInfo: "\($0.startTime) - \($0.endTime)",
