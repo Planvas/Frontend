@@ -74,10 +74,12 @@ struct AddMyActivitySuccess: Decodable {
     let myActivityId: Int
     let activityId: Int
     let title: String
-    let category: TodoCategory
+    let category: String  // "GROWTH" | "REST"
     let point: Int
     let startDate: String
     let endDate: String
+    let scheduleStatus: String?  // e.g. "CAUTION"
+    let scheduleReason: String?
 }
 
 // MARK: - 활동 적용(내 일정 반영)
