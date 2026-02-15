@@ -41,16 +41,16 @@ enum ScheduleType: Int {
     
     var color: Color {
         switch self {
-        case .one:   return .calPurple2
-        case .two:   return .calBlue1
-        case .three: return .calRed
-        case .four:  return .calYellow
-        case .five:  return .calBlue2
-        case .six:   return .calPink
-        case .seven: return .calGreen
+        case .one:   return .calRed
+        case .two:   return .calYellow
+        case .three: return .calPink
+        case .four:  return .calPurple1
+        case .five:  return .calPurple2
+        case .six:   return .calBlue1
+        case .seven: return .calBlue2
         case .eight: return .calBlue3
-        case .nine:  return .ccc
-        case .ten:   return .calPurple1
+        case .nine:  return .calGreen
+        case .ten:   return .ccc
         }
     }
 }
