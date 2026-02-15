@@ -15,7 +15,6 @@ struct MainDataResponse: Decodable {
 }
 
 // MainDataSuccess
-// TODO: - 현재 목표가 없는 경우 확인 필요
 struct MainDataSuccess: Decodable {
     let userName: String
     let goalStatus: GoalSetting
@@ -82,4 +81,16 @@ struct Recommendation: Decodable {
     let dDay: Int?
     let imageUrl: String
     let tags: [String]?
+}
+
+// TODO: - 오늘의 할 일 (스케줄 투두) 완료 상태 토글
+struct ScheduleTodoResponse: Decodable {
+    let resultType: String
+    let error: ErrorDTO?
+    let success: ScheduleTodoSuccess?
+}
+
+struct ScheduleTodoSuccess: Decodable {
+    let id: Int
+    let status: String
 }
