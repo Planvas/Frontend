@@ -48,7 +48,7 @@ struct ToDoItem: View {
                     }
                     .frame(height: 15)
                     
-                    Text(todo.todoInfo)
+                    Text(todo.todoInfo.isEmpty ? "종일" : todo.todoInfo)
                         .textStyle(.regular14)
                         .foregroundStyle(.gray888)
                         .strikethrough(todo.isCompleted)
@@ -56,16 +56,18 @@ struct ToDoItem: View {
                 
                 Spacer()
                 
-                Text(todo.startTime)
-                    .textStyle(.regular14)
-                    .foregroundStyle(.primary1)
-                    .padding(.vertical, 2)
-                    .padding(.horizontal, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6)
-                            .foregroundStyle(.primary20)
-                    )
-                    .padding(.trailing, 46)
+                if !todo.startTime.isEmpty {
+                    Text(todo.startTime)
+                        .textStyle(.regular14)
+                        .foregroundStyle(.primary1)
+                        .padding(.vertical, 2)
+                        .padding(.horizontal, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .foregroundStyle(.primary20)
+                        )
+                        .padding(.trailing, 46)
+                }
             }
             .padding()
             .background(

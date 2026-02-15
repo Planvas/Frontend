@@ -47,9 +47,9 @@ struct MainActivityItem: View {
                         .retry(maxCount: 2, interval: .seconds(2))
                         .resizable()
                         .scaledToFill()
-                        .frame(maxWidth: .infinity, maxHeight: 130)
+                        .frame(height: 150, alignment: .top)
+                        .frame(maxWidth: .infinity)
                         .clipped()
-                        
                 } else {
                     Color.gray
                 }

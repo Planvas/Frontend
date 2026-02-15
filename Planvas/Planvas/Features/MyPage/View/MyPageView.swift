@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 
 struct MyPageView: View {
-    @State private var viewModel = MyPageViewModel()
+    @Environment(MyPageViewModel.self) private var viewModel
     @State private var showCalendarAlert = false
     
     @Environment(NavigationRouter<MyPageRoute>.self) var router
@@ -14,8 +14,8 @@ struct MyPageView: View {
                 if !viewModel.goalIsLoading && !viewModel.userIsLoading {
                     ScrollView {
                         VStack(spacing: 40) {
-                            ProfileView(viewModel: viewModel)
-                            goalCardView(viewModel: viewModel)
+                            ProfileView()
+                            goalCardView()
                             DetailPageView(showCalendarAlert: $showCalendarAlert)
                                 .environment(router)
                         }

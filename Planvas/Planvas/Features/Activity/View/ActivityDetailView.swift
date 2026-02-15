@@ -10,7 +10,8 @@ import Kingfisher
 
 struct ActivityDetailView: View {
     @State private var viewModel: ActivityDetailViewModel
-    @Environment(NavigationRouter<ActivityRoute>.self) var router
+    //    @Environment(NavigationRouter<ActivityRoute>.self) var router
+    @Environment(\.dismiss) private var dismiss
     
     let activityId: Int
     
@@ -102,12 +103,11 @@ struct ActivityDetailView: View {
     }
     
     // MARK: - Header
-    
     private var HeaderGroup: some View {
         ZStack {
             HStack {
                 Button {
-                    router.pop()
+                    dismiss()
                 } label: {
                     Image(systemName: "chevron.left")
                         .foregroundStyle(.black1)
@@ -123,7 +123,6 @@ struct ActivityDetailView: View {
             }
         }
         .padding()
-        .padding(.bottom, 20)
     }
     
     // MARK: - Body
