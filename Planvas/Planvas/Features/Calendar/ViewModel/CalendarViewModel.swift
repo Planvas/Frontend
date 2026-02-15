@@ -372,14 +372,24 @@ final class CalendarViewModel {
             newEvents[dateKey] = list
         }
         sampleEvents = newEvents
-        
-        Task {
-            do {
-                try await repository.updateEvent(event)
-                await refreshEvents()
-            } catch {
-                print("이벤트 수정 실패: \(error)")
-                await refreshEvents()
+
+        // 고정 일정만 PATCH 요청. 활동 일정 수정 API는 미연동.
+        if event.isFixed {
+            Task {
+                do {
+                    try await repository.updateEvent(event)
+                    await refreshEvents()
+                } catch {
+                    print("이벤트 수정 실패: \(error)")
+                    await refreshEvents()
+                }
+            }
+        } else {
+            // 활동 일정: API 미호출, 목록(selectedDateEvents)만 낙관 반영
+            var list = selectedDateEvents
+            if let idx = list.firstIndex(where: { $0.id == event.id }) {
+                list[idx] = event
+                selectedDateEvents = list
             }
         }
     }
@@ -622,14 +632,20 @@ final class CalendarViewModel {
                 isCompleted: false,
                 isRepeating: isRepeating,
                 repeatOption: repeatType,
-                fixedScheduleId: Int(itemId),
+                fixedScheduleId: preview.isFixed ? Int(itemId) : nil,
+                myActivityId: preview.isFixed ? nil : Int(itemId),
                 repeatWeekdays: repeatWeekdays
             )
 
-            // 해당 일정이 존재하는 모든 날짜에 추가
-            for dateStr in sortedDates {
-                if events[dateStr] == nil { events[dateStr] = [] }
-                events[dateStr]?.append(event)
+            // 고정 일정: 구간 내 모든 날짜에 표시(멀티데이 막대). 활동 일정: 종료일에만 단일 일정처럼 표시
+            if preview.isFixed {
+                for dateStr in sortedDates {
+                    if events[dateStr] == nil { events[dateStr] = [] }
+                    events[dateStr]?.append(event)
+                }
+            } else {
+                if events[lastStr] == nil { events[lastStr] = [] }
+                events[lastStr]?.append(event)
             }
         }
 
