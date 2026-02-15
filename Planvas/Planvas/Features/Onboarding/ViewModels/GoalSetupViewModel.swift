@@ -111,12 +111,12 @@ final class GoalSetupViewModel {
         return formatter.string(from: date)
     }
 
-    // ✅ 서버 전송용 날짜 포맷 (yyyy-MM-dd)
+    // 서버 전송용 날짜 포맷 (yyyy-MM-dd)
     func formatAPIDate(_ date: Date?) -> String {
         guard let date else { return "" }
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone(secondsFromGMT: 0) // 서버 기준이 UTC면 유지, 아니면 제거
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: date)
     }

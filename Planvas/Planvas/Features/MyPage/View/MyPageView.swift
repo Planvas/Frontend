@@ -14,9 +14,9 @@ struct MyPageView: View {
                 if !viewModel.goalIsLoading && !viewModel.userIsLoading {
                     ScrollView {
                         VStack(spacing: 40) {
-                            ProfileView(viewModel: viewModel)
-                            goalCardView(viewModel: viewModel)
-                            DetailPageView(showCalendarAlert: $showCalendarAlert, viewModel: viewModel)
+                            ProfileView()
+                            goalCardView()
+                            DetailPageView(showCalendarAlert: $showCalendarAlert)
                                 .environment(router)
                         }
                     }
