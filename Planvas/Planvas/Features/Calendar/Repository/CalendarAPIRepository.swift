@@ -65,8 +65,9 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         )
     }
 
-    /// 일정 수정 (PATCH /api/calendar/event/{id})
+    /// 일정 수정 (PATCH /api/calendar/event/{id}) — 고정 일정만 해당. 활동 일정 수정 API는 미완성이라 호출하지 않음.
     func updateEvent(_ event: Event) async throws {
+        guard event.isFixed else { return }
         guard let serverId = event.fixedScheduleId ?? event.myActivityId else {
             throw CalendarRepositoryError.missingServerId(message: "서버 일정 ID가 없어 수정할 수 없습니다.")
         }

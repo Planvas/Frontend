@@ -66,15 +66,40 @@ struct EventSummaryView: View {
         }
         .background(.white)
         .sheet(isPresented: $showEventDetailView) {
-            EditEventView(
-                event: event,
-                startDate: startDate,
-                endDate: endDate,
-                onSave: { updatedEvent in
-                    onUpdateEvent?(updatedEvent)
-                    showEventDetailView = false
+            Group {
+                if !event.isFixed {
+                    // 활동 일정: Activity 수정
+                    ActivityEventDetailView(
+                        event: event,
+                        startDate: startDate,
+                        endDate: endDate,
+                        daysUntil: daysUntil,
+                        targetPeriod: targetPeriod,
+                        onEdit: nil,
+                        onDelete: onDelete,
+                        onSave: { showEventDetailView = false },
+                        onUpdateEvent: { updatedEvent in
+                            onUpdateEvent?(updatedEvent)
+                            showEventDetailView = false
+                        }
+                    )
+                } else {
+                    FixedEventDetailView(
+                        event: event,
+                        startDate: startDate,
+                        endDate: endDate,
+                        daysUntil: daysUntil,
+                        targetPeriod: targetPeriod,
+                        onEdit: nil,
+                        onDelete: onDelete,
+                        onSave: { showEventDetailView = false },
+                        onUpdateEvent: { updatedEvent in
+                            onUpdateEvent?(updatedEvent)
+                            showEventDetailView = false
+                        }
+                    )
                 }
-            )
+            }
             .presentationDragIndicator(.visible)
         }
     }

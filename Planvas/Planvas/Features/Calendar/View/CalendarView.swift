@@ -72,7 +72,8 @@ struct CalendarView: View {
         .sheet(isPresented: $showEventDetail) {
             if let event = selectedEvent {
                 Group {
-                    if event.type == .activity {
+                    if !event.isFixed {
+                        // 활동 일정: isFixed == false
                         ActivityEventSummaryView(
                             viewModel: ActivityEventSummaryViewModel.from(event: event, daysUntil: viewModel.getDaysUntil(for: event)),
                             event: event,
