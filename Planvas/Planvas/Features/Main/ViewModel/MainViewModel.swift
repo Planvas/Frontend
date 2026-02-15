@@ -105,6 +105,7 @@ class MainViewModel {
 
         todos[index].isCompleted.toggle()
         weeklyTodo[key] = todos
+        fetchScheduleTodo(activityId: todo.id)
     }
     
     // MARK: - 오늘의 인기 성장 활동
@@ -161,6 +162,7 @@ class MainViewModel {
                                     // 스케줄 투두 데이터
                                     let todos = day.schedules.map {
                                         ToDo(
+                                            id: $0.id,
                                             typeColor: .calRed,
                                             title: $0.title,
                                             isFixed: $0.type == "FIXED",
@@ -210,5 +212,25 @@ class MainViewModel {
         }
     }
     
+    // MARK: - 스케줄 투두 완료 상태 토글
+    func fetchScheduleTodo(activityId: Int) {
+        provider.request(.patchScheduleTodo(activityId: activityId)) { result in
+            switch result {
+            case .success(let response):
+                do {
+                    let decodedData = try JSONDecoder().decode(ScheduleTodoResponse.self, from: response.data)
+                    DispatchQueue.main.async {
+                        if decodedData.success != nil {
+                            print("스케줄 투두 토글 성공")
+                        }
+                    }
+                } catch {
+                    print("ScheduleTodo 디코더 오류: \(error)")
+                }
+            case .failure(let error):
+                print("ScheduleTodo API 오류: \(error)")
+            }
+        }
+    }
     // TODO: - 페이지에서만 보이는 투두 api 추가 연동
 }

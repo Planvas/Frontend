@@ -92,7 +92,7 @@ enum SchedulePosition {
 
 // MARK: - 할 일
 struct ToDo: Identifiable {
-    let id = UUID()
+    let id: Int
     let typeColor: ToDoTypeColor
     let title: String
     let isFixed: Bool
