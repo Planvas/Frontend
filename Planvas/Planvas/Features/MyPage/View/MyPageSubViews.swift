@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - 프로필
 struct ProfileView: View {
-    var viewModel: MyPageViewModel
+    @Environment(MyPageViewModel.self) private var viewModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 30) {
@@ -35,7 +35,7 @@ struct ProfileView: View {
 
 // MARK: - 목표
 struct goalCardView: View {
-    var viewModel: MyPageViewModel
+    @Environment(MyPageViewModel.self) private var viewModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
@@ -143,25 +143,27 @@ struct DetailPageView: View {
     @EnvironmentObject var container: DIContainer
     @Environment(GoalSetupViewModel.self) private var goalVM
     @Binding var showCalendarAlert: Bool
-    var viewModel: MyPageViewModel
+    @Environment(MyPageViewModel.self) private var viewModel
     
     var body: some View {
         VStack(spacing: 40) {
            MenuSection("목표 및 활동 관리") {
                MenuButton(title: "현재 목표 수정하기", desc: "비율 및 기간 변경") {
-                   if let goal = viewModel.goalData {
-                       goalVM.goalName = goal.title ?? ""
-
-                       let growth = goal.growthRatio ?? 50
-                       goalVM.ratioStep = growth / 10
-
-                       goalVM.startDate = dateFromTuple(goal.startTuple)
-                       goalVM.endDate   = dateFromTuple(goal.endTuple)
-
-                       router.push(.currentGoalPage)
-                   } else {
+                   // goalData가 있어도 goalId가 nil이면 목표 없음 처리
+                   guard let goal = viewModel.goalData,
+                         let goalId = goal.goalId
+                   else {
                        viewModel.handleError("진행 중인 목표가 없습니다.")
+                       return
                    }
+
+                   goalVM.goalName = goal.title ?? ""
+                   let growth = goal.growthRatio ?? 50
+                   goalVM.ratioStep = growth / 10
+                   goalVM.startDate = dateFromTuple(goal.startTuple)
+                   goalVM.endDate   = dateFromTuple(goal.endTuple)
+
+                   router.push(.currentGoalPage)
                }
            }
            MenuSection("연동 및 알림") {
