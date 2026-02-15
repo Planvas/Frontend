@@ -21,7 +21,7 @@ struct ToDoItem: View {
                     .frame(width: 3, height: 33)
                     .padding(.trailing, 10)
                 
-                VStack(alignment: .leading){
+                VStack(alignment: todo.time.isEmpty ? .center : .leading){
                     HStack(spacing: 10){
                         Text(todo.title)
                             .textStyle(.regular18)
@@ -47,17 +47,18 @@ struct ToDoItem: View {
                         }
                     }
                     .frame(height: 15)
-                    
-                    Text(todo.todoInfo.isEmpty ? "종일" : todo.todoInfo)
-                        .textStyle(.regular14)
-                        .foregroundStyle(.gray888)
-                        .strikethrough(todo.isCompleted)
+                    if(!todo.time.isEmpty){
+                        Text(todo.time)
+                            .textStyle(.regular14)
+                            .foregroundStyle(.gray888)
+                            .strikethrough(todo.isCompleted)
+                    }
                 }
                 
                 Spacer()
                 
-                if !todo.startTime.isEmpty {
-                    Text(todo.startTime)
+                if !todo.point.isEmpty {
+                    Text(todo.point)
                         .textStyle(.regular14)
                         .foregroundStyle(.primary1)
                         .padding(.vertical, 2)
