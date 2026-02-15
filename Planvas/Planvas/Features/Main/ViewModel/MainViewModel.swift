@@ -67,32 +67,44 @@ class MainViewModel {
         return formatter.date(from: string)!
     }
     
-    // 일정 더미 데이터
+    // 일정 데이터
     var weeklySchedules: [Date: [Schedule]] = [:]
-    
-    init() {
-        weeklySchedules = [:]
-    }
     
     func schedules(for date: Date) -> [Schedule] {
         let key = Calendar.current.startOfDay(for: date)
         return weeklySchedules[key] ?? []
     }
-
-    // MARK: - 오늘의 할 일
+    
+    init() {
+        weeklySchedules = [:]
+        weeklyTodo = [:]
+    }
+    
+    // MARK: - 할 일
     var showAddTodo: Bool = false
     var addTodoViewModel: AddActivityViewModel?
-    var todayTodos: [ToDo] = []
+    var weeklyTodo: [Date: [ToDo]] = [:]
     
     func AddTodo() {
         //TODO: - 투두 추가 API 연동
         print("할 일 추가하기")
     }
     
+    var selectedTodos: [ToDo] {
+        let key = Calendar.current.startOfDay(for: selectedDate)
+        return weeklyTodo[key] ?? []
+    }
+    
     // 체크 토글
     func toggleTodo(_ todo: ToDo) {
-        guard let index = todayTodos.firstIndex(where: { $0.id == todo.id }) else { return }
-        todayTodos[index].isCompleted.toggle()
+        let key = Calendar.current.startOfDay(for: selectedDate)
+        
+        guard var todos = weeklyTodo[key],
+              let index = todos.firstIndex(where: { $0.id == todo.id })
+        else { return }
+
+        todos[index].isCompleted.toggle()
+        weeklyTodo[key] = todos
     }
     
     // MARK: - 오늘의 인기 성장 활동
@@ -126,11 +138,12 @@ class MainViewModel {
                             // 캘린더 데이터
                             if let weekly = success.weeklySummary {
                                 var result: [Date: [Schedule]] = [:]
+                                var todoResult: [Date: [ToDo]] = [:]
                                 var groupedSchedules: [Int: Schedule] = [:]
-
+                                
                                 for day in weekly.days {
                                     let date = self.date(day.date)
-
+                                    
                                     for schedule in day.schedules {
                                         if var existing = groupedSchedules[schedule.id] {
                                             existing.dates.append(date)
@@ -144,31 +157,33 @@ class MainViewModel {
                                             )
                                         }
                                     }
+                                    
+                                    // 스케줄 투두 데이터
+                                    let todos = day.schedules.map {
+                                        ToDo(
+                                            typeColor: .calRed,
+                                            title: $0.title,
+                                            isFixed: $0.type == "FIXED",
+                                            todoInfo: "\($0.startTime) - \($0.endTime)",
+                                            startTime: "\($0.startTime)",
+                                            isCompleted: $0.completed
+                                        )
+                                    }
+                                    
+                                    if !todos.isEmpty {
+                                        todoResult[date] = todos
+                                    }
+                                    
                                 }
-
                                 // 날짜별로 다시 정리
                                 for schedule in groupedSchedules.values {
                                     for date in schedule.dates {
                                         result[date, default: []].append(schedule)
                                     }
                                 }
+                                
                                 self.weeklySchedules = result
-                            }
-                            
-                            // 투두 데이터
-                            if let todos = success.todayTodos {
-                                self.todayTodos = todos.map {
-                                    ToDo(
-                                        typeColor: .calRed,
-                                        title: $0.title,
-                                        isFixed: false,
-                                        todoInfo: "",
-                                        startTime: "",
-                                        isCompleted: $0.completed
-                                    )
-                                }
-                            } else {
-                                self.todayTodos = []
+                                self.weeklyTodo = todoResult
                             }
                             
                             // 인기 활동 데이터
@@ -194,4 +209,6 @@ class MainViewModel {
             }
         }
     }
+    
+    // TODO: - 페이지에서만 보이는 투두 api 추가 연동
 }

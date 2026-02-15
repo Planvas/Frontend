@@ -17,7 +17,7 @@ struct ToDoGroup: View {
                 Text("오늘의 할 일")
                     .textStyle(.semibold25)
                     .foregroundStyle(.black1)
-                Text("\(viewModel.todayTodos.count)")
+                Text("\(viewModel.selectedTodos.count)")
                     .textStyle(.semibold20)
                     .foregroundStyle(.primary1)
                     .padding(8)
@@ -27,7 +27,8 @@ struct ToDoGroup: View {
                     )
             }
             
-            ForEach(viewModel.todayTodos) { todo in
+            // 캘린더 스케줄 투두
+            ForEach(viewModel.selectedTodos) { todo in
                 ToDoItem(
                     todo: todo,
                     onToggle: {
@@ -35,6 +36,15 @@ struct ToDoGroup: View {
                     }
                 )
             }
+//            // 페이지 내에서만 보이는 투두
+//            ForEach(viewModel.todayTodos) { todo in
+//                ToDoItem(
+//                    todo: todo,
+//                    onToggle: {
+//                        viewModel.toggleTodo(todo)
+//                    }
+//                )
+//            }
             
             Button(action:{
                 viewModel.addTodoViewModel = AddActivityViewModel()
@@ -69,11 +79,6 @@ struct ToDoGroup: View {
                     .presentationDragIndicator(.visible)
                 }
             }
-//            .onChange(of: viewModel.showAddTodo) { _, isShowing in
-//                if !isShowing {
-//                    viewModel.showAddTodo = false
-//                }
-//            }
         }
         .padding()
     }
