@@ -103,8 +103,8 @@ struct ToDo: Identifiable {
     let typeColor: ScheduleType
     let title: String
     let isFixed: Bool
-    let todoInfo: String
-    let startTime: String
+    let time: String
+    let point: String
     var isCompleted: Bool
 }
 
