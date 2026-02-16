@@ -32,13 +32,10 @@ struct TabBar: View {
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
         .task {
-            try? await Task.sleep(nanoseconds: 50_000_000) // 루트 전환 타이밍 안정화
+            try? await Task.sleep(nanoseconds: 50_000_000)
 
             if shouldShowSheet {
                 showOnboardingSuccessSheet = true
-
-                // ⚠️ 반드시 다시 false로 내려줘야
-                // 기존 목표 사용자나 재진입 시 깜빡임 방지
                 shouldShowSheet = false
             }
         }
@@ -46,11 +43,9 @@ struct TabBar: View {
         .sheet(isPresented: $showOnboardingSuccessSheet) {
             OnboardingSuccessView(
                 onGoActivityList: {
-                    // 🔹 추천 활동으로 채우기 → 활동탐색 탭으로 이동
                     selectedTab = 2
                 },
                 onGoHome: {
-                    // 🔹 홈으로 가기 → 홈 탭으로 이동
                     selectedTab = 0
                 }
             )
