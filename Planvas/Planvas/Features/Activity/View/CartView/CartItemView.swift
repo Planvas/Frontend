@@ -54,6 +54,7 @@ struct CartItemView: View {
                                 .stroke(Color.gray444, lineWidth: 1)
                         )
                     }
+                    .buttonStyle(.plain)
                 }
             }
             

@@ -15,16 +15,16 @@ struct CartListView: View {
                             
                 if filteredItems.isEmpty {
                     emptyView
+                        .listRowSeparator(.hidden)
                 } else {
                     ForEach(filteredItems, id: \.cartItemId) { item in
                         CartItemView(
-                            // 상태 판별 로직 (D-Day나 메세지 유무로 임시 설정)
                             category: item.category,
                             status: item.scheduleStatus,
-                            dDay: item.dDay,
+                            dDay: item.dDay ?? 0,
                             point: item.point,
                             title: item.title,
-                            description: item.description,
+                            description: item.description ?? "",
                             tipMessage: item.tipMessage,
                             onAddClick: {
                                 viewModel.prepareAddActivitySheet(for: item)
@@ -44,6 +44,7 @@ struct CartListView: View {
                     }
                 } else {
                     emptyView
+                        .listRowSeparator(.hidden)
                 }
             }
             .listStyle(.plain)
