@@ -18,6 +18,9 @@ class MyPageViewModel {
     // 메시지 변수
     var successMessage: String?
     var alertErrorMessage: String?
+    func handleError(_ message: String) {
+        self.alertErrorMessage = message
+    }
     
     private let calendarRepository: CalendarRepositoryProtocol = CalendarAPIRepository()
     private let provider = APIManager.shared.createProvider(for: MyPageRouter.self)
