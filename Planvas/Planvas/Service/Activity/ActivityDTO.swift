@@ -1,10 +1,3 @@
-//
-//  ActivityDTO.swift
-//  Planvas
-//
-//  Created by 정서영 on 2/2/26.
-//
-
 // MARK: - 활동 탐색/추천 목록 조회 응답
 struct ActivityListResponse: Decodable {
     let resultType: String
@@ -115,33 +108,40 @@ struct CartListResponse: Decodable {
 
 struct CartListSuccess: Decodable {
     let tab: TodoCategory
-    let items: [CartItem]
+    var items: [CartItem]
 }
 
 struct CartItem: Decodable {
     let cartItemId: Int
     let activityId: Int
-    let category: TodoCategory
-    let dDay: Int
-    let point: Int
     let title: String
-    let subTitle: String
-    let subMessage: String?
+    let description: String?
+    let category: TodoCategory
+    let point: Int
+    let type: TypeCategory?
+    let categoryId: Int?
+    let externalUrl: String?
+    let startDate: String?
     let endDate: String?
+    let dDay: Int?
+    let scheduleStatus: ScheduleStatusCategory
+    let tipMessage: String?
 }
 
+
+
 // MARK: - 장바구니 담기
-struct GetCartItemDTO: Encodable {
+struct PostCartItemDTO: Encodable {
     let activityId: Int
 }
 
-struct GetCartItemResponse: Decodable {
+struct PostCartItemResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
-    let success: GetCartItemSuccess?
+    let success: PostCartItemSuccess?
 }
 
-struct GetCartItemSuccess: Decodable {
+struct PostCartItemSuccess: Decodable {
     let cartItemId: Int
     let activityId: Int
     let message: String
