@@ -17,16 +17,26 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         self.networkService = networkService
     }
 
+    /// 월간 캘린더 조회
+    /// - API: `GET /api/calendar/month?year=&month=`
+    /// - 사용처: `CalendarViewModel.refreshEvents()`
+    /// - 시점: 앱 진입, 달 이동, 오늘로 이동, 일정 추가/수정/삭제 후
+    /// - 결과: monthData → buildMonthPreviewEvents() → sampleEvents → 캘린더 그리드(날짜별 점·막대·일정명)
     func getMonthCalendar(year: Int, month: Int) async throws -> MonthlyCalendarSuccessDTO {
         try await networkService.getMonthCalendar(year: year, month: month)
     }
 
+    /// 특정 날짜의 일정 목록 조회 (날짜 셀 탭 시 호출)
+    /// - API: `GET /api/calendar/day?date=YYYY-MM-DD` → 응답 `todayTodos`를 `Event[]`로 매핑
+    /// - 사용처: `CalendarViewModel.loadEventsForDate(_ date)`
+    /// - 결과: selectedDateEvents → 선택일 일정 카드 리스트. 상세/수정 시 이 Event 그대로 사용(별도 상세 조회 API 없음)
     func getEvents(for date: Date) async throws -> [Event] {
         let dateKey = dateKeyString(from: date)
         let dayDTO = try await networkService.getDayCalendar(date: dateKey)
         return dayDTO.todayTodos.map { mapToEvent(item: $0, date: dayDTO.date) }
     }
 
+    /// 날짜 범위 내 일정 조회 (여러 일간 조회 병렬 호출)
     func getEvents(from startDate: Date, to endDate: Date) async throws -> [Event] {
         var dates: [Date] = []
         var current = calendar.startOfDay(for: startDate)
@@ -48,6 +58,11 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         }
     }
 
+    /// 일정 추가 (직접 추가)
+    /// - API: `POST /api/calendar/event`
+    /// - Body: title, startAt, endAt, type: "FIXED", category, eventColor, recurrenceRule, recurrenceEndAt(반복일 때)
+    /// - 사용처: AddEventView "저장" → viewModel.addEvent(event)
+    /// - 후처리: 성공 시 ViewModel에서 refreshEvents()로 월간·일간 재조회
     func addEvent(_ event: Event) async throws {
         let (startAt, endAt) = formatEventTimes(event)
         let categoryStr = event.category == .none ? "GROWTH" : event.category.rawValue
@@ -62,9 +77,12 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         )
     }
 
-    /// 일정 수정 (PATCH /api/calendar/event/{id})
-    /// - 고정: 이름, 시작일, 종료일, 반복규칙, 색깔, 반복종료일. 활동치 켠 경우 type ACTIVITY + 포인트, 카테고리 추가.
-    /// - 활동: 시작일, 종료일, 포인트만 전송.
+    /// 일정 수정
+    /// - API: `PATCH /api/calendar/event/{id}` (id = itemId)
+    /// - 사용처: FixedEventDetailView/EditEventView, ActivityEventDetailView "저장" → viewModel.updateEvent(updatedEvent)
+    /// - 고정 일정: title, startAt, endAt, type: "FIXED", category, eventColor, recurrenceRule, recurrenceEndAt(반복 시). 활동치 켬(활동 전환) 시 type: "ACTIVITY" + point, category, status 추가.
+    /// - 활동 일정: startAt, endAt, type: "ACTIVITY", point, category, status 등.
+    /// - 후처리: 성공 시 refreshEvents() 호출
     func updateEvent(_ event: Event) async throws {
         guard let serverId = event.fixedScheduleId ?? event.myActivityId else {
             throw CalendarRepositoryError.missingServerId(message: "서버 일정 ID가 없어 수정할 수 없습니다.")
@@ -92,6 +110,11 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         }
     }
 
+    /// 일정 삭제
+    /// - API: `DELETE /api/calendar/event/{id}`
+    /// - 사용처: EventSummaryView / FixedEventDetailView / ActivityEventSummaryView 등 "삭제" 버튼 → viewModel.deleteEvent(event)
+    /// - 시점: 사용자가 일정 상세에서 삭제 선택 시
+    /// - 후처리: 성공 시 refreshEvents() 호출
     func deleteEvent(_ event: Event) async throws {
         guard let serverId = event.fixedScheduleId ?? event.myActivityId else {
             throw CalendarRepositoryError.missingServerId(message: "서버 일정 ID가 없어 삭제할 수 없습니다.")
@@ -99,16 +122,18 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         try await networkService.deleteEvent(id: serverId)
     }
 
+    /// 구글 캘린더에서 가져올 수 있는 일정 목록 (GET events → ImportableSchedule, 일정 선택 화면용)
     func getImportableSchedules() async throws -> [ImportableSchedule] {
         let events = try await networkService.getGoogleCalendarEvents(timeMin: nil, timeMax: nil)
         return events.map { mapToImportableSchedule($0) }
     }
 
-    /// 선택 일정 서버 동기화. TODO: 현재 서버 API는 선택 일정 목록을 받지 않고 전체 동기화만 지원하며, schedules 파라미터는 미사용.
+    /// 선택 일정 서버 동기화 (POST sync, 가져오기 확정 시). TODO: 현재 서버 API는 선택 목록 미지원, 전체 동기화만 수행. schedules 파라미터 미사용.
     func importSchedules(_ schedules: [ImportableSchedule]) async throws {
         _ = try await networkService.syncGoogleCalendar()
     }
 
+    /// 구글 캘린더 연동 여부·연동일·마지막 동기화 시각 (GET status → 도메인 모델)
     func getGoogleCalendarStatus() async throws -> GoogleCalendarStatus {
         let dto = try await networkService.getGoogleCalendarStatus()
         return GoogleCalendarStatus(
@@ -118,6 +143,7 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         )
     }
 
+    /// 구글 캘린더 연동 (로그인 후 받은 serverAuthCode로 POST connect 호출)
     func connectGoogleCalendar(code: String) async throws {
         try await networkService.connectGoogleCalendar(code: code)
     }
