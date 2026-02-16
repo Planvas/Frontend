@@ -55,7 +55,7 @@ struct InterestActivitySelectionView: View {
             
             // 관심 분야 선택
             InterestActivitySelectionGroup
-                .padding(.horizontal, 20)
+                .padding(.leading, 20)
             
             Spacer()
             
@@ -166,36 +166,25 @@ struct InterestActivitySelectionView: View {
             Text("관심 분야 선택")
                 .textStyle(.semibold20)
                 .foregroundStyle(.black1)
-            
+
             Spacer().frame(height: 2)
-            
+
             Text("최대 3개")
                 .textStyle(.medium16)
                 .foregroundStyle(.primary1)
                 .padding(.bottom, 15)
-            
-            let items = viewModel.interestActivityTypes
-            
-            VStack(alignment: .leading, spacing: 10) {
-                rowView(Array(items.prefix(3)))
-                rowView(Array(items.dropFirst(3).prefix(3)))
-                rowView(Array(items.dropFirst(6)))
+
+            FlowLayout(spacing: 5) {
+                ForEach(viewModel.interestActivityTypes) { item in
+                    InterestActivityComponent(
+                        emoji: item.emoji,
+                        title: item.title,
+                        isSelected: viewModel.isInterestSelected(item.id),
+                        onTap: { viewModel.toggleInterest(item.id) }
+                    )
+                }
             }
-        }
-    }
-    
-    // MARK: - 관심 분야 배열 한 줄씩
-    private func rowView(_ rowItems: [InterestActivityType]) -> some View {
-        HStack(spacing: 7) {
-            ForEach(rowItems) { item in
-                InterestActivityComponent(
-                    emoji: item.emoji,
-                    title: item.title,
-                    isSelected: viewModel.isInterestSelected(item.id),
-                    onTap: { viewModel.toggleInterest(item.id) }
-                )
-            }
-            Spacer()
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
