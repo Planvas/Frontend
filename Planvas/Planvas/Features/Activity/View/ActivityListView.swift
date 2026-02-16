@@ -59,10 +59,10 @@ struct ActivityListView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
         .task {
-            await vm.fetchActivities(tab: selectedActivityType)
+            await vm.onChangeTab(selectedActivityType, searchText: searchText)
         }
         .onChange(of: selectedActivityType) { _, newValue in
-            Task { await vm.fetchActivities(tab: newValue, searchText: searchText) }
+            Task { await vm.onChangeTab(newValue, searchText: searchText) }
         }
         .onChange(of: searchText) { _, newValue in
             Task { await vm.fetchActivities(tab: selectedActivityType, searchText: newValue) }
@@ -202,29 +202,28 @@ struct ActivityListView: View {
                 // 카테고리 칩 스크롤
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        ForEach(vm.categoryChips, id: \.self) { category in
+                        ForEach(vm.categories) { category in
                             Button {
                                 Task {
                                     await vm.selectCategory(category, tab: selectedActivityType, searchText: searchText)
                                 }
                             } label: {
-                                Text(category)
+                                Text(category.name)
                                     .textStyle(.medium16)
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 8)
                                     .background(
-                                        vm.selectedCategory == category
+                                        vm.selectedCategoryName == category.name
                                         ? .primary1
                                         : .fff
                                     )
                                     .foregroundStyle(
-                                        vm.selectedCategory == category
+                                        vm.selectedCategoryName == category.name
                                         ? .fff
                                         : .gray44450
                                     )
                                     .overlay(
-                                        Capsule()
-                                            .stroke(Color.ccc, lineWidth: 1)
+                                        Capsule().stroke(Color.ccc, lineWidth: 1)
                                     )
                                     .clipShape(Capsule())
                             }

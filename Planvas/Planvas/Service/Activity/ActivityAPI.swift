@@ -15,6 +15,7 @@ enum ActivityAPI {
         tab: TodoCategory,
         date: String?
     )
+    case getActivityCategories(tab: TodoCategory)   // 카테고리 목록 조회
     case getActivityDetail(activityId: Int) // 활동 상세 조회 GET /api/activities/{id}
     case postActivity(activityId: Int, GetActivityRequestDTO: GetActivityRequestDTO) // 활동 적용(내 일정 반영)
     case postAddToMyActivities(activityId: Int, body: AddMyActivityRequestDTO) // 활동을 내 일정에 추가 POST /api/activities/{id}/my-activities
@@ -35,6 +36,8 @@ extension ActivityAPI: APITargetType {
             return "\(Self.activitiesPath)/recommend"
         case .getActivityDetail(let activityId):
             return "\(Self.activitiesPath)/\(activityId)"
+        case .getActivityCategories:
+            return "\(Self.activitiesPath)/categories"
         case .postActivity(let activityId, _):
             return "\(Self.activitiesPath)/\(activityId)/apply"
         case .postAddToMyActivities(let activityId, _):
@@ -52,7 +55,7 @@ extension ActivityAPI: APITargetType {
         switch self {
         case .postActivity, .postAddToMyActivities, .postCart:
             return .post
-        case .getActivityList, .getActivityRecommend, .getActivityDetail, .getCartList:
+        case .getActivityList, .getActivityRecommend, .getActivityDetail, .getCartList, .getActivityCategories:
             return .get
         case .deleteCart:
             return .delete
@@ -94,6 +97,11 @@ extension ActivityAPI: APITargetType {
             
             return .requestParameters(
                 parameters: params,
+                encoding: URLEncoding.queryString
+            )
+        case .getActivityCategories(let tab):
+            return .requestParameters(
+                parameters: ["tab": tab.rawValue],
                 encoding: URLEncoding.queryString
             )
         case .getActivityDetail:

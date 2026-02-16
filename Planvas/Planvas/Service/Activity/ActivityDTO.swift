@@ -157,3 +157,21 @@ struct DeleteCartItemResponse: Decodable {
 struct DeleteCartItemSuccess: Decodable {
     let deleted: Bool
 }
+
+// MARK: - 활동 카테고리 목록 조회 (GET /api/activities/categories?tab=GROWTH|REST)
+struct ActivityCategoryListResponse: Decodable {
+    let resultType: String
+    let error: ErrorDTO?
+    let success: ActivityCategoryListSuccess?
+}
+
+struct ActivityCategoryListSuccess: Decodable {
+    let tab: TodoCategory
+    let categories: [ActivityCategory]
+}
+
+struct ActivityCategory: Decodable, Identifiable, Hashable {
+    let id: Int
+    let name: String
+    let count: Int
+}
