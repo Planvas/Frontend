@@ -15,22 +15,26 @@ struct CartListView: View {
                             
                 if filteredItems.isEmpty {
                     emptyView
+                        .listRowSeparator(.hidden)
                 } else {
                     ForEach(filteredItems, id: \.cartItemId) { item in
                         CartItemView(
-                            // 상태 판별 로직 (D-Day나 메세지 유무로 임시 설정)
-                            status: item.subMessage == nil ? .available : (item.dDay < 10 ? .warning : .conflict),
-                            dDay: item.dDay,
+                            category: item.category,
+                            status: item.scheduleStatus,
+                            dDay: item.dDay ?? 0,
                             point: item.point,
                             title: item.title,
-                            subTitle: item.subTitle,
-                            subMessage: item.subMessage
+                            description: item.description ?? "",
+                            tipMessage: item.tipMessage,
+                            onAddClick: {
+                                viewModel.prepareAddActivitySheet(for: item)
+                            }
                             )
                             .listRowSeparator(.hidden)
                             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                             .swipeActions(edge: .trailing) {
                                 Button(role: .destructive) {
-                                    // TODO: 삭제 API 호출 연동
+                                    viewModel.deleteCartItem(id: item.cartItemId)
                                 } label: {
                                     Label("삭제", systemImage: "trash")
                                 }
@@ -40,6 +44,7 @@ struct CartListView: View {
                     }
                 } else {
                     emptyView
+                        .listRowSeparator(.hidden)
                 }
             }
             .listStyle(.plain)
