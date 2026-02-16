@@ -89,6 +89,32 @@ class ActivityDetailViewModel {
             addErrorMessage = (error as? ActivityAPIError)?.reason ?? error.localizedDescription
         }
     }
+    
+    // MARK: - 장바구니 담기 (POST /api/cart)
+    func addToCart() async {
+        guard let id = activityId else { return }
+        isLoading = true
+        addErrorMessage = nil
+        addSuccessMessage = nil
+        
+        do {
+            _ = try await repository.postCart(activityId: id)
+            addSuccessMessage = "장바구니에 담겼습니다!"
+        } catch {
+            if let apiError = error as? ActivityAPIError {
+                switch apiError {
+                case .serverFail(let reason):
+                    addErrorMessage = reason
+                case .invalidResponse:
+                    addErrorMessage = "응답 형식 오류"
+                }
+            } else {
+                addErrorMessage = "서버 연결에 실패했습니다"
+            }
+        }
+        
+        isLoading = false
+    }
 }
 
 extension ActivityAPIError {
