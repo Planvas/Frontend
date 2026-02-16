@@ -22,7 +22,7 @@ enum ActivityAPIError: Error {
 final class ActivityNetworkService: @unchecked Sendable {
     private let provider = APIManager.shared.createProvider(for: ActivityAPI.self)
     private let myPageProvider = APIManager.shared.createProvider(for: MyPageRouter.self)
-
+    
     /// 현재 목표 조회 GET /api/goals/current
     func getCurrentGoalId() async throws -> Int? {
         let response: GoalDetailResponse = try await requestMyPage(.getCurrentGoal)
@@ -31,7 +31,7 @@ final class ActivityNetworkService: @unchecked Sendable {
         }
         return response.success?.goalId
     }
-
+    
     /// 활동 상세 조회 GET /api/activities/{activityId}
     func getActivityDetail(activityId: Int) async throws -> ActivityDetailSuccess {
         let response: ActivityDetailResponse = try await request(.getActivityDetail(activityId: activityId))
@@ -43,7 +43,7 @@ final class ActivityNetworkService: @unchecked Sendable {
         }
         return success
     }
-
+    
     /// 활동을 내 일정에 추가 POST /api/activities/{activityId}/my-activities
     /// - 409: 일정 충돌 추가 불가, 404: 해당 활동 없음, 400: 요청 값 잘못됨
     func postAddToMyActivities(activityId: Int, goalId: Int, startDate: String, endDate: String, point: Int) async throws -> AddMyActivitySuccess {
@@ -70,7 +70,7 @@ final class ActivityNetworkService: @unchecked Sendable {
             return success
         }
     }
-
+    
     /// HTTP statusCode 확인이 필요할 때 사용 (응답 + 디코딩 결과 반환)
     private func requestWithResponse<T: Decodable>(_ target: ActivityAPI) async throws -> (Moya.Response, T) {
         try await withCheckedThrowingContinuation { continuation in
@@ -102,84 +102,7 @@ final class ActivityNetworkService: @unchecked Sendable {
         }
         return success
     }
-
-    private func request<T: Decodable>(_ target: ActivityAPI) async throws -> T {
-        try await withCheckedThrowingContinuation { continuation in
-            provider.request(target) { result in
-                switch result {
-                case .success(let response):
-                    if let rawString = String(data: response.data, encoding: .utf8) {
-                        print("📍 [네트워크] 서버 응답 도착!: \(rawString)")
-                    }
-                    
-                    do {
-                        let decoded = try JSONDecoder().decode(T.self, from: response.data)
-                        continuation.resume(returning: decoded)
-                    } catch {
-                        print("❌ [디코딩 에러]: \(error)")
-                        continuation.resume(throwing: error)
-                    }
-                case .failure(let error):
-                    print("❌ [네트워크 에러]: \(error.localizedDescription)")
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
-    }
-
-    private func requestMyPage<T: Decodable>(_ target: MyPageRouter) async throws -> T {
-        try await withCheckedThrowingContinuation { continuation in
-            myPageProvider.request(target) { result in
-                switch result {
-                case .success(let response):
-                    do {
-                        let decoded = try JSONDecoder().decode(T.self, from: response.data)
-                        continuation.resume(returning: decoded)
-                    } catch {
-                        continuation.resume(throwing: error)
-                    }
-                case .failure(let error):
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
-    }
     
-    private func requestAddCart<T: Decodable>(_ target: ActivityAPI) async throws -> T {
-        try await withCheckedThrowingContinuation { continuation in
-            provider.request(target) { result in
-                switch result {
-                case .success(let response):
-                    if !(200...299).contains(response.statusCode) {
-                        // 서버가 준 JSON에서 error -> reason만 뽑아내기
-                        if let errorDTO = try? JSONDecoder().decode(ActivityListResponse.self, from: response.data),
-                           let reason = errorDTO.error?.reason {
-                            continuation.resume(throwing: ActivityAPIError.serverFail(reason: reason))
-                        } else {
-                            continuation.resume(throwing: ActivityAPIError.serverFail(reason: "알 수 없는 오류가 발생했습니다."))
-                        }
-                        return
-                    }
-
-                    do {
-                        let decoded = try JSONDecoder().decode(T.self, from: response.data)
-                        continuation.resume(returning: decoded)
-                    } catch {
-                        continuation.resume(throwing: ActivityAPIError.invalidResponse)
-                    }
-
-                case .failure(let error):
-                    if let response = error.response,
-                       let errorDTO = try? JSONDecoder().decode(ActivityListResponse.self, from: response.data),
-                       let reason = errorDTO.error?.reason {
-                        // 서버가 준 에러메시지를 ActivityAPIError로 변환해서 던짐
-                        continuation.resume(throwing: ActivityAPIError.serverFail(reason: reason))
-                    } else {
-                        // 진짜 인터넷이 끊긴 경우 등은 그대로 에러를 던짐
-                        continuation.resume(throwing: error)
-                    }
-                }
-            }
     // MARK: - 활동 탐색 목록 조회
     func getActivityList(
         tab: TodoCategory,
@@ -214,6 +137,86 @@ final class ActivityNetworkService: @unchecked Sendable {
                 title: dto.title,
                 tip: nil
             )
+        }
+    }
+    
+    private func request<T: Decodable>(_ target: ActivityAPI) async throws -> T {
+        try await withCheckedThrowingContinuation { continuation in
+            provider.request(target) { result in
+                switch result {
+                case .success(let response):
+                    if let rawString = String(data: response.data, encoding: .utf8) {
+                        print("📍 [네트워크] 서버 응답 도착!: \(rawString)")
+                    }
+                    
+                    do {
+                        let decoded = try JSONDecoder().decode(T.self, from: response.data)
+                        continuation.resume(returning: decoded)
+                    } catch {
+                        print("❌ [디코딩 에러]: \(error)")
+                        continuation.resume(throwing: error)
+                    }
+                case .failure(let error):
+                    print("❌ [네트워크 에러]: \(error.localizedDescription)")
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+    
+    private func requestMyPage<T: Decodable>(_ target: MyPageRouter) async throws -> T {
+        try await withCheckedThrowingContinuation { continuation in
+            myPageProvider.request(target) { result in
+                switch result {
+                case .success(let response):
+                    do {
+                        let decoded = try JSONDecoder().decode(T.self, from: response.data)
+                        continuation.resume(returning: decoded)
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+    
+    private func requestAddCart<T: Decodable>(_ target: ActivityAPI) async throws -> T {
+        try await withCheckedThrowingContinuation { continuation in
+            provider.request(target) { result in
+                switch result {
+                case .success(let response):
+                    if !(200...299).contains(response.statusCode) {
+                        // 서버가 준 JSON에서 error -> reason만 뽑아내기
+                        if let errorDTO = try? JSONDecoder().decode(ActivityListResponse.self, from: response.data),
+                           let reason = errorDTO.error?.reason {
+                            continuation.resume(throwing: ActivityAPIError.serverFail(reason: reason))
+                        } else {
+                            continuation.resume(throwing: ActivityAPIError.serverFail(reason: "알 수 없는 오류가 발생했습니다."))
+                        }
+                        return
+                    }
+                    
+                    do {
+                        let decoded = try JSONDecoder().decode(T.self, from: response.data)
+                        continuation.resume(returning: decoded)
+                    } catch {
+                        continuation.resume(throwing: ActivityAPIError.invalidResponse)
+                    }
+                    
+                case .failure(let error):
+                    if let response = error.response,
+                       let errorDTO = try? JSONDecoder().decode(ActivityListResponse.self, from: response.data),
+                       let reason = errorDTO.error?.reason {
+                        // 서버가 준 에러메시지를 ActivityAPIError로 변환해서 던짐
+                        continuation.resume(throwing: ActivityAPIError.serverFail(reason: reason))
+                    } else {
+                        // 진짜 인터넷이 끊긴 경우 등은 그대로 에러를 던짐
+                        continuation.resume(throwing: error)
+                    }
+                }
+            }
         }
     }
 }

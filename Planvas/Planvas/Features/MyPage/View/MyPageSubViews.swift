@@ -185,19 +185,6 @@ struct DetailPageView: View {
         }
         .padding(.horizontal, 0)
         .padding(.bottom, 40)
-        .alert(
-            "알림",
-            isPresented: Binding(
-                get: { viewModel.showToast },
-                set: { if !$0 { viewModel.showToast = false } }
-            )
-        ) {
-            Button("확인") {
-                viewModel.showToast = false
-            }
-        } message: {
-            Text(viewModel.toastMessage ?? "알 수 없는 오류가 발생했습니다.")
-        }
     }
     
     private func dateFromTuple(_ tuple: (year: String, month: String, day: String)?) -> Date? {
