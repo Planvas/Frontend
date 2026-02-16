@@ -1,10 +1,3 @@
-//
-//  ActivityDetailView.swift
-//  Planvas
-//
-//  Created by 정서영 on 2/12/26.
-//
-
 import SwiftUI
 
 struct ActivityDetailView: View {
@@ -159,7 +152,11 @@ struct ActivityDetailView: View {
                 .padding(.bottom, 26)
 
             HStack(spacing: 5) {
-                Button(action: {}, label: {
+                Button(action: {
+                    Task {
+                        await viewModel.addToCart()
+                    }
+                }, label: {
                     Text("장바구니")
                         .textStyle(.semibold18)
                         .foregroundStyle(.fff)
