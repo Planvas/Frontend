@@ -178,10 +178,11 @@ struct CreateEventRequestDTO: Encodable {
     let title: String
     let startAt: String   // ISO 8601 (e.g. "2026-02-12T18:10:00+09:00")
     let endAt: String
-    let type: String      // "FIXED"
+    let type: String      // "FIXED" (직접 추가·고정 일정) | "ACTIVITY" (활동 일정)
     let category: String  // "GROWTH" | "REST"
     let eventColor: Int   // 1~10
     let recurrenceRule: String?
+    let recurrenceEndAt: String?  // "yyyy-MM-dd", 반복 일정인 경우 필수
 }
 
 struct CreateEventResponse: Decodable {

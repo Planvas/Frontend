@@ -86,9 +86,9 @@ final class CalendarNetworkService: @unchecked Sendable {
 
     /// 일정 추가 POST /api/calendar/event
     func createEvent(title: String, startAt: String, endAt: String, type: String = "FIXED",
-                     category: String, eventColor: Int, recurrenceRule: String?) async throws -> CreateEventSuccess {
+                     category: String, eventColor: Int, recurrenceRule: String?, recurrenceEndAt: String?) async throws -> CreateEventSuccess {
         let body = CreateEventRequestDTO(title: title, startAt: startAt, endAt: endAt, type: type,
-                                         category: category, eventColor: eventColor, recurrenceRule: recurrenceRule)
+                                         category: category, eventColor: eventColor, recurrenceRule: recurrenceRule, recurrenceEndAt: recurrenceEndAt)
         let response: CreateEventResponse = try await request(.postEvent(body: body))
         if let error = response.error {
             throw CalendarAPIError.serverFail(reason: error.reason)
