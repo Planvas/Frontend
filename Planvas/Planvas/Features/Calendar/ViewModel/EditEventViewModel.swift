@@ -151,14 +151,18 @@ final class EditEventViewModel: RepeatOptionConfigurable {
         switch event.category {
         case .growth:
             self.selectedActivityType = .growth
-            self.isActivityEnabled = true
+            self.isActivityEnabled = !event.isFixed
             self.growthValue = activityPoint
         case .rest:
             self.selectedActivityType = .rest
-            self.isActivityEnabled = true
+            self.isActivityEnabled = !event.isFixed
             self.restValue = activityPoint
         case .none:
             self.selectedActivityType = .growth
+            self.isActivityEnabled = false
+        }
+        // 고정 일정(isFixed == true)은 활동치 설정 항상 꺼진 상태
+        if event.isFixed {
             self.isActivityEnabled = false
         }
     }
@@ -245,13 +249,15 @@ final class EditEventViewModel: RepeatOptionConfigurable {
         let startTime: Time = isAllDay ? .midnight : Time(from: startDate, calendar: calendar)
         let endTime: Time = isAllDay ? .endOfDay : Time(from: effectiveEndDate, calendar: calendar)
         let repeatEnd: Date? = isRepeating ? calendar.startOfDay(for: repeatEndDate) : (originalEvent?.repeatEndDate)
+        // 활동치 켜서 저장하면 활동 일정(ACTIVITY)으로 전송
+        let asActivity = isActivityEnabled
         return Event(
             id: originalEvent?.id ?? UUID(),
             title: eventName.isEmpty ? "이름 없음" : eventName,
-            isFixed: originalEvent?.isFixed ?? false,
+            isFixed: asActivity ? false : (originalEvent?.isFixed ?? false),
             isAllDay: isAllDay,
             color: selectedColor,
-            type: originalEvent?.type ?? .activity,
+            type: asActivity ? .activity : (originalEvent?.type ?? .fixed),
             startDate: startDay,
             endDate: endDay,
             startTime: startTime,

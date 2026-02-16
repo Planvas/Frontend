@@ -12,6 +12,9 @@ struct CalendarFlowView: View {
     var calendarTabTag: Int
     /// 온보딩 플로우에서만 전달. 메인 탭에서는 nil (이때 Environment에 OnboardingRoute 라우터 없어도 됨)
     var onFinishFromOnboarding: (() -> Void)? = nil
+    
+    /// 캘린더 연동 상태 변경 시 호출될 콜백
+    var onSyncStateChange: ((Bool) -> Void)? = nil
 
     @State private var router = NavigationRouter<CalendarRoute>()
     @State private var viewModel = CalendarViewModel()
@@ -35,6 +38,14 @@ struct CalendarFlowView: View {
             if newValue == calendarTabTag {
                 viewModel.moveToToday()
             }
+        }
+        // 뷰 진입 시 연동 상태 최신화 확인
+        .task {
+            syncViewModel.loadStatus()
+        }
+        // 연동 상태(isConnected)가 변하면 콜백 호출
+        .onChange(of: syncViewModel.isConnected) { _, isConnected in
+            onSyncStateChange?(isConnected)
         }
         .alert("연동 실패", isPresented: Binding(
             get: { syncViewModel.statusError != nil },

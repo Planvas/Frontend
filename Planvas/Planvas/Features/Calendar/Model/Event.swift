@@ -94,9 +94,18 @@ struct Event: Identifiable, Codable {
     /// 반복 타입 (repeatOption과 동일, 호환용)
     var repeatType: RepeatType? { get { repeatOption } set { repeatOption = newValue } }
 
-    /// 표시용 시간 문자열 (목록 등): "14:00 - 17:00" 또는 "하루종일"
+    /// 표시용 시간 문자열 (목록 등): "14:00 - 17:00", "2/15 18:45 - 2/16 19:30", 또는 "하루종일"
     var time: String {
         if isAllDay { return "하루종일" }
+        let cal = Calendar.current
+        if !cal.isDate(startDate, inSameDayAs: endDate) {
+            // 멀티데이: "2/15 18:45 - 2/16 19:30"
+            let sm = cal.component(.month, from: startDate)
+            let sd = cal.component(.day, from: startDate)
+            let em = cal.component(.month, from: endDate)
+            let ed = cal.component(.day, from: endDate)
+            return "\(sm)/\(sd) \(startTime.formatted) - \(em)/\(ed) \(endTime.formatted)"
+        }
         return "\(startTime.formatted) - \(endTime.formatted)"
     }
 

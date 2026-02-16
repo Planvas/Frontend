@@ -7,6 +7,7 @@
 
 import Foundation
 
-enum MainRoute {
+enum MainRoute: Hashable {
     case main
+    case activityDetail(activityId: Int)
 }

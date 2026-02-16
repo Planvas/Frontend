@@ -1,9 +1,17 @@
 import SwiftUI
+import Moya
 
 struct MyPageFlowView: View {
     @State private var router = NavigationRouter<MyPageRoute>()
     @State private var calendarViewModel = CalendarViewModel()
-    let goalId: Int = 12
+    @State private var goalViewModel = GoalSetupViewModel()
+    @State private var myPageViewModel = MyPageViewModel()
+    @State private var onboardingViewModel: OnboardingViewModel
+    
+    init() {
+        let provider = APIManager.shared.createProvider(for: OnboardingAPI.self)
+        _onboardingViewModel = State(wrappedValue: OnboardingViewModel(provider: provider))
+    }
     
     // MARK: - 네비게이션 추가
     var body: some View {
@@ -12,7 +20,7 @@ struct MyPageFlowView: View {
                 .navigationDestination(for: MyPageRoute.self) { route in
                     switch route {
                     case .currentGoalPage:
-                        MainView()
+                        GoalEditView()
                     case .reportPage(let goalId):
                         ReportView(goalId: goalId)
                     case .pastReportPage:
@@ -23,11 +31,18 @@ struct MyPageFlowView: View {
                         NotificationView()
                     case .loginPage:
                         LoginView()
+                    case .activityPage:
+                        ActivityView()
+                    case .goalPage:
+                        OnboardingFlowView() // TODO: -  네비게이션 수정
                     }
                 }
         }
         .environment(router)
         .environment(calendarViewModel)
+        .environment(goalViewModel)
+        .environment(myPageViewModel)
+        .environment(onboardingViewModel)
     }
 }
 

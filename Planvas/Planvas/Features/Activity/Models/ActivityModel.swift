@@ -25,7 +25,6 @@ struct ActivityTip: Hashable {
     let label: String      // "Tip" 또는 "주의"
     let tag: String        // "[카페 알바]" 같은 태그
     let message: String    // "일정이 있어요! ..."
-    let labelColor: Color  // Tip/주의 색
 }
 
 // MARK: - 활동 디테일 모델
@@ -44,52 +43,40 @@ struct ActivityDetail {
     let maxPoint: Int
     let defaultPoint: Int
     let externalUrl: String
-
-    /// D-day 표시용 문자열
-    var dDayLabel: String {
-        dDay == 0 ? "D-day" : (dDay > 0 ? "D-\(dDay)" : "D+\(-dDay)")
-    }
-
-    /// 헤더 타이틀 (성장 활동 / 휴식 활동)
-    var headerTitle: String {
-        category == .growth ? "성장 활동" : "휴식 활동"
-    }
-
+    
+    
     /// 포인트 뱃지 문자열
     var pointBadge: String {
         category == .growth ? "성장 +\(point)" : "휴식 +\(point)"
     }
-
+    
     /// 활동치 라벨 (성장 / 휴식)
     var growthLabel: String {
         category == .growth ? "성장" : "휴식"
     }
 }
 
-extension ActivityDetail {
-    /// DTO → 도메인 모델 매핑
-    init(from dto: ActivityDetailSuccess) {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-
-        self.activityId = dto.activityId
-        self.title = dto.title
-        self.category = dto.category
-        self.point = dto.point
-        self.description = dto.description
-        self.thumbnailUrl = dto.thumbnailUrl ?? ""
-        self.dDay = dto.dDay ?? 0
-        self.minPoint = dto.minPoint ?? 0
-        self.maxPoint = dto.maxPoint ?? 100
-        self.defaultPoint = dto.defaultPoint ?? 20
-        self.externalUrl = dto.externalUrl ?? ""
-        self.startDate = dto.startDate.flatMap { dateFormatter.date(from: $0) }
-        self.endDate = dto.endDate.flatMap { dateFormatter.date(from: $0) }
-
-        if let start = dto.startDate, let end = dto.endDate {
-            self.date = "\(start) ~ \(end)"
-        } else {
-            self.date = ""
-        }
+extension ActivityDetailSuccess {
+    func toDomain() -> ActivityDetail {
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        return ActivityDetail(
+            activityId: activityId,
+            title: title,
+            category: category,
+            point: point,
+            description: description,
+            thumbnailUrl: thumbnailUrl ?? "",
+            dDay: dDay,
+            date: "\(startDate) ~ \(endDate)",
+            startDate: formatter.date(from: startDate),
+            endDate: formatter.date(from: endDate),
+            minPoint: minPoint,
+            maxPoint: maxPoint,
+            defaultPoint: defaultPoint,
+            externalUrl: externalUrl ?? ""
+        )
     }
 }

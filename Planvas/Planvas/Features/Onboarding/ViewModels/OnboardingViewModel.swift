@@ -17,9 +17,6 @@ final class OnboardingViewModel {
     var isLoading: Bool = false
     var errorMessage: String? = nil
 
-    // 에러 나도 캘린더로 이동
-    var shouldNavigateToCalendar: Bool = false
-
     // ratio presets
     var ratioPresets: [RatioPreset] = []
 
@@ -71,17 +68,14 @@ final class OnboardingViewModel {
 
                         if let success = decoded.success {
                             self.createdGoalId = success.goalId
-                            self.shouldNavigateToCalendar = true
                         } else {
                             self.errorMessage = decoded.error?.reason ?? "목표 생성 실패"
-                            self.shouldNavigateToCalendar = true
                         }
                     }
                 } catch {
                     DispatchQueue.main.async {
                         self.isLoading = false
                         self.errorMessage = "응답 파싱 오류"
-                        self.shouldNavigateToCalendar = true
                     }
                 }
 
@@ -90,7 +84,7 @@ final class OnboardingViewModel {
 
                 if statusCode == 409 {
                     DispatchQueue.main.async {
-                        self.errorMessage = "이미 진행 중인 목표가 있어요. 캘린더로 이동할게요."
+                        self.errorMessage = "이미 진행 중인 목표가 있어요."
                     }
                     self.fetchCurrentGoal(fallbackToCalendar: true)
                     return
@@ -99,7 +93,6 @@ final class OnboardingViewModel {
                 DispatchQueue.main.async {
                     self.isLoading = false
                     self.errorMessage = "서버 오류가 발생했어요. 캘린더로 이동할게요."
-                    self.shouldNavigateToCalendar = true
                 }
             }
         }
@@ -128,17 +121,11 @@ final class OnboardingViewModel {
                             self.errorMessage = decoded.error?.reason ?? "현재 목표 조회 실패"
                         }
 
-                        if fallbackToCalendar {
-                            self.shouldNavigateToCalendar = true
-                        }
                     }
                 } catch {
                     DispatchQueue.main.async {
                         self.isLoading = false
                         self.errorMessage = "현재 목표 응답 파싱 오류"
-                        if fallbackToCalendar {
-                            self.shouldNavigateToCalendar = true
-                        }
                     }
                 }
 
@@ -146,9 +133,6 @@ final class OnboardingViewModel {
                 DispatchQueue.main.async {
                     self.isLoading = false
                     self.errorMessage = "현재 목표 조회 실패(서버 오류)"
-                    if fallbackToCalendar {
-                        self.shouldNavigateToCalendar = true
-                    }
                 }
             }
         }
@@ -234,6 +218,172 @@ final class OnboardingViewModel {
                     DispatchQueue.main.async { completion(false) }
                 } else {
                     DispatchQueue.main.async { completion(false) }
+                }
+            }
+        }
+    }
+    
+    // MARK: - 온보딩 저장
+    func saveOnboarding(
+        goalSetupVM: GoalSetupViewModel,
+        selectedPresetId: Int?,
+        completion: @escaping (Bool) -> Void
+    ) {
+        isLoading = true
+        errorMessage = nil
+
+        let interestIds = goalSetupVM.interestActivityTypes.enumerated().compactMap { index, item in
+            goalSetupVM.selectedInterestIds.contains(item.id) ? (index + 1) : nil
+        }
+
+        let body = SaveOnboardingRequestDTO(
+            goalPeriod: GoalPeriodDTO(
+                title: goalSetupVM.goalName,
+                dateRange: DateRangeDTO(
+                    startDate: goalSetupVM.formatAPIDate(goalSetupVM.startDate),
+                    endDate: goalSetupVM.formatAPIDate(goalSetupVM.endDate)
+                ),
+                ratio: RatioDTO(
+                    growth: goalSetupVM.growthPercent,
+                    rest: goalSetupVM.restPercent,
+                    presetType: selectedPresetId == nil ? .custom : .preset
+                )
+            ),
+            profile: OnboardingProfileDTO(interests: interestIds),
+            calendar: OnboardingCalendarDTO(
+                connect: goalSetupVM.isCalendarConnected,
+                provider: goalSetupVM.isCalendarConnected ? .google : nil
+            )
+        )
+
+        provider.request(.postOnboarding(body: body)) { [weak self] result in
+            guard let self else { return }
+
+            DispatchQueue.main.async {
+                self.isLoading = false
+
+                switch result {
+                case .success(let response):
+                    // 디버깅 로그: status code / raw body 확인
+                    print("온보딩 저장 statusCode:", response.statusCode)
+                    if let raw = String(data: response.data, encoding: .utf8) {
+                        print("온보딩 저장 raw:", raw)
+                    }
+
+                    do {
+                        let decoded = try JSONDecoder().decode(SaveOnboardingResponseDTO.self, from: response.data)
+
+                        // 성공 판정: statusCode + resultType
+                        let ok = (200..<300).contains(response.statusCode) && decoded.resultType == "SUCCESS"
+
+                        if ok {
+                            completion(true)
+                        } else {
+                            self.errorMessage = decoded.error?.reason ?? "온보딩 저장에 실패했습니다."
+                            completion(false)
+                        }
+                    } catch {
+                        self.errorMessage = "온보딩 저장 응답 파싱 실패"
+                        completion(false)
+                    }
+
+                case .failure(let error):
+                    let statusCode = error.response?.statusCode
+                    print("온보딩 저장 실패 statusCode:", statusCode ?? -1)
+                    self.errorMessage = "네트워크 오류가 발생했습니다."
+                    completion(false)
+                }
+            }
+        }
+    }
+    
+    // MARK: - 목표 기간/이름 수정 (PATCH /api/goals/{goalId})
+    func editGoal(
+        goalId: Int,
+        title: String?,
+        startDate: String?,
+        endDate: String?,
+        completion: @escaping (Bool) -> Void
+    ) {
+        isLoading = true
+        errorMessage = nil
+
+        let body = EditGoalRequestDTO(
+            title: title,
+            startDate: startDate,
+            endDate: endDate,
+            targetGrowthRatio: nil,
+            targetRestRatio: nil
+        )
+
+        provider.request(.patchGoalBase(goalId: goalId, EditGoalRequestDTO: body)) { [weak self] result in
+            guard let self else { return }
+
+            DispatchQueue.main.async {
+                self.isLoading = false
+
+                switch result {
+                case .success(let response):
+                    print("editGoal statusCode:", response.statusCode)
+                    print("editGoal raw:", String(data: response.data, encoding: .utf8) ?? "nil")
+
+                    let ok = (200..<300).contains(response.statusCode)
+                    if ok {
+                        completion(true)
+                    } else {
+                        self.errorMessage = "목표 수정 실패"
+                        completion(false)
+                    }
+
+                case .failure(let error):
+                    let code = error.response?.statusCode ?? -1
+                    print("editGoal failure statusCode:", code)
+                    print("editGoal failure:", error.localizedDescription)
+                    if let data = error.response?.data {
+                        print("editGoal failure raw:", String(data: data, encoding: .utf8) ?? "nil")
+                    }
+                    self.errorMessage = "네트워크 오류(목표 수정)"
+                    completion(false)
+                }
+            }
+        }
+    }
+
+    // MARK: - 목표 비율 수정 (PATCH /api/goals/{goalId}/ratio)
+    func editGoalRatio(
+        goalId: Int,
+        growth: Int,
+        rest: Int,
+        completion: @escaping (Bool) -> Void
+    ) {
+        isLoading = true
+        errorMessage = nil
+
+        let body = EditRatioRequestDTO(growthRatio: growth, restRatio: rest)
+
+        provider.request(.patchGoalRatio(goalId: goalId, EditRatioRequestDTO: body)) { [weak self] result in
+            guard let self else { return }
+
+            DispatchQueue.main.async {
+                self.isLoading = false
+
+                switch result {
+                case .success(let response):
+                    print("editGoalRatio statusCode:", response.statusCode)
+                    print("editGoalRatio raw:", String(data: response.data, encoding: .utf8) ?? "nil")
+
+                    let ok = (200..<300).contains(response.statusCode)
+                    completion(ok)
+
+                case .failure(let error):
+                    let code = error.response?.statusCode ?? -1
+                    print("editGoalRatio failure statusCode:", code)
+                    print("editGoalRatio failure:", error.localizedDescription)
+                    if let data = error.response?.data {
+                        print("editGoalRatio failure raw:", String(data: data, encoding: .utf8) ?? "nil")
+                    }
+                    self.errorMessage = "네트워크 오류(비율 수정)"
+                    completion(false)
                 }
             }
         }

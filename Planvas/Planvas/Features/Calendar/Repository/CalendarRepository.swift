@@ -123,14 +123,16 @@ final class CalendarRepository: CalendarRepositoryProtocol {
                 date: dateStr,
                 hasItems: hasKey,
                 itemCount: list.count,
-                schedulesPreview: list.prefix(3).map { CalendarRepository.preview(from: $0, itemId: abs($0.id.hashValue) % 1_000_000) }
+                schedulesPreview: list.prefix(3).map { CalendarRepository.preview(from: $0, itemId: "\(abs($0.id.hashValue) % 1_000_000)") },
+                moreCount: max(list.count - 3, 0)
             )
         }
         return MonthlyCalendarSuccessDTO(year: year, month: month, days: days)
     }
 
-    private static func preview(from event: Event, itemId: Int) -> SchedulePreviewDTO {
-        SchedulePreviewDTO(itemId: itemId, title: event.title, isFixed: event.isFixed, isRepeating: event.isRepeating, type: "MANUAL", color: event.color.serverColor)
+    private static func preview(from event: Event, itemId: String) -> SchedulePreviewDTO {
+        SchedulePreviewDTO(itemId: itemId, title: event.title, isFixed: event.isFixed, type: "FIXED",
+                           category: event.category.rawValue, eventColor: event.color.serverColor, recurrenceRule: nil)
     }
     
     func getEvents(for date: Date) async throws -> [Event] {
