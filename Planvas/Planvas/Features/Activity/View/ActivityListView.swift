@@ -59,13 +59,28 @@ struct ActivityListView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
         .task {
-            await vm.fetchActivities(tab: selectedActivityType)
+            await vm.onChangeTab(selectedActivityType, searchText: searchText)
         }
         .onChange(of: selectedActivityType) { _, newValue in
-            Task { await vm.fetchActivities(tab: newValue, searchText: searchText) }
+            Task { await vm.onChangeTab(newValue, searchText: searchText) }
         }
         .onChange(of: searchText) { _, newValue in
-            Task { await vm.fetchActivities(tab: selectedActivityType, searchText: newValue) }
+            Task {
+                await vm.resetAndFetch(
+                    tab: selectedActivityType,
+                    searchText: newValue,
+                    onlyAvailable: onlyAvailable
+                )
+            }
+        }
+        .onChange(of: onlyAvailable) { _, newValue in
+            Task {
+                await vm.resetAndFetch(
+                    tab: selectedActivityType,
+                    searchText: searchText,
+                    onlyAvailable: newValue
+                )
+            }
         }
         .sheet(isPresented: $showActivitySheet) {
             ActivitySelectionView(
@@ -110,7 +125,7 @@ struct ActivityListView: View {
             Spacer()
             
             Button {
-                // TODO: 버튼 누르면 장바구니 화면으로 이동하도록 수정
+                // 버튼 누르면 장바구니 화면으로 이동하도록 수정
                 router.push(.activityCart)
                 print("장바구니 버튼 클릭")
                 
@@ -154,77 +169,79 @@ struct ActivityListView: View {
     
     // MARK: - 관심 분야 선택
     private var InterestSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        let isRestTab = (selectedActivityType == "휴식")
+        
+        return VStack(alignment: .leading, spacing: 0) {
             // 관심 분야 그냥 텍스트
-            Text("관심 분야")
-                .textStyle(.semibold20)
-                .foregroundStyle(.gray444)
-                .padding(.bottom, 8)
+            if !isRestTab {
+                Text("관심 분야")
+                    .textStyle(.semibold20)
+                    .foregroundStyle(.gray444)
+                    .padding(.bottom, 8)
+            }
             
             HStack(spacing: 0) {
                 // 대표 관심사 칩
-                Button {
-                    // 버튼 누르면 관심 분야 재설정하는 시트 뜨도록
-                    showInterestEditSheet = true
-                    
-                    print("관심 분야 재설정 버튼 클릭")
-                    
-                } label: {
-                    HStack(spacing: 6) {
-                        Text(mainInterest)
-                            .textStyle(.medium16)
-                            .foregroundStyle(.white)
+                if !isRestTab {
+                    Button {
+                        showInterestEditSheet = true
+                        print("관심 분야 재설정 버튼 클릭")
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text(mainInterest)
+                                .textStyle(.medium16)
+                                .foregroundStyle(.white)
 
-                        if extraCount > 0 {
-                            Text("+\(extraCount)")
-                                .textStyle(.medium14)
-                                .foregroundStyle(.primary1)
-                                .padding(.horizontal, 4.5)
-                                .padding(.vertical, 0.5)
-                                .background(.subPurple)
-                                .clipShape(RoundedRectangle(cornerRadius: 20))
+                            if extraCount > 0 {
+                                Text("+\(extraCount)")
+                                    .textStyle(.medium14)
+                                    .foregroundStyle(.primary1)
+                                    .padding(.horizontal, 4.5)
+                                    .padding(.vertical, 0.5)
+                                    .background(.subPurple)
+                                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                            }
                         }
+                        .padding(.horizontal, 17)
+                        .padding(.vertical, 8)
+                        .background(.primary1)
+                        .clipShape(Capsule())
                     }
-                    .padding(.horizontal, 17)
-                    .padding(.vertical, 8)
-                    .background(.primary1)
-                    .clipShape(Capsule())
+                    .buttonStyle(.plain)
+
+                    // 구분선
+                    Rectangle()
+                        .fill(.ccc)
+                        .frame(height: 28)
+                        .frame(width: 2)
+                        .padding(.horizontal, 7)
                 }
-                .buttonStyle(.plain)
-                
-                // 구분선
-                Rectangle()
-                    .fill(.ccc)
-                    .frame(height: 28)
-                    .frame(width: 2)
-                    .padding(.horizontal, 7)
                 
                 // 카테고리 칩 스크롤
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        ForEach(vm.categoryChips, id: \.self) { category in
+                        ForEach(vm.categories) { category in
                             Button {
                                 Task {
                                     await vm.selectCategory(category, tab: selectedActivityType, searchText: searchText)
                                 }
                             } label: {
-                                Text(category)
+                                Text(category.name)
                                     .textStyle(.medium16)
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 8)
                                     .background(
-                                        vm.selectedCategory == category
+                                        vm.selectedCategoryName == category.name
                                         ? .primary1
                                         : .fff
                                     )
                                     .foregroundStyle(
-                                        vm.selectedCategory == category
+                                        vm.selectedCategoryName == category.name
                                         ? .fff
                                         : .gray44450
                                     )
                                     .overlay(
-                                        Capsule()
-                                            .stroke(Color.ccc, lineWidth: 1)
+                                        Capsule().stroke(Color.ccc, lineWidth: 1)
                                     )
                                     .clipShape(Capsule())
                             }
@@ -300,6 +317,19 @@ struct ActivityListView: View {
                     LazyVStack(spacing: 8) {
                         ForEach(filtered) { item in
                             ActivityCardView(item: item)
+                                .onAppear {
+                                    Task {
+                                        await vm.loadMoreIfNeeded(
+                                            currentItem: item,
+                                            tab: selectedActivityType,
+                                            searchText: searchText
+                                        )
+                                    }
+                                }
+                        }
+
+                        if vm.isFetchingMore {
+                            ProgressView().padding(.vertical, 16)
                         }
                     }
                     .padding(.horizontal, 20)
