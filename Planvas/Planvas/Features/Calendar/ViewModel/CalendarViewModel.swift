@@ -373,23 +373,13 @@ final class CalendarViewModel {
         }
         sampleEvents = newEvents
 
-        // 고정 일정만 PATCH 요청. 활동 일정 수정 API는 미연동.
-        if event.isFixed {
-            Task {
-                do {
-                    try await repository.updateEvent(event)
-                    await refreshEvents()
-                } catch {
-                    print("이벤트 수정 실패: \(error)")
-                    await refreshEvents()
-                }
-            }
-        } else {
-            // 활동 일정: API 미호출, 목록(selectedDateEvents)만 낙관 반영
-            var list = selectedDateEvents
-            if let idx = list.firstIndex(where: { $0.id == event.id }) {
-                list[idx] = event
-                selectedDateEvents = list
+        Task {
+            do {
+                try await repository.updateEvent(event)
+                await refreshEvents()
+            } catch {
+                print("이벤트 수정 실패: \(error)")
+                await refreshEvents()
             }
         }
     }
