@@ -1,10 +1,3 @@
-//
-//  ActivityDetailView.swift
-//  Planvas
-//
-//  Created by 정서영 on 2/12/26.
-//
-
 import SwiftUI
 import Kingfisher
 
@@ -199,6 +192,9 @@ struct ActivityDetailView: View {
             
             HStack(spacing: 5) {
                 Button {
+                  Task {
+                        await viewModel.addToCart()
+                    }
                 } label: {
                     Text("장바구니")
                         .textStyle(.semibold18)

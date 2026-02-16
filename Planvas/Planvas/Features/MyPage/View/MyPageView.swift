@@ -26,14 +26,6 @@ struct MyPageView: View {
                 }
             }
         }
-        .overlay(alignment: .bottom) {
-            if viewModel.showToast, let message = viewModel.toastMessage {
-                ToastView(message: message)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .padding(.bottom, 50)
-            }
-        }
-        .animation(.easeInOut, value: viewModel.showToast)
         .overlay {
             if showCalendarAlert {
                 if viewModel.isCalendarConnected {
@@ -60,6 +52,14 @@ struct MyPageView: View {
         }
         .task {
             await viewModel.fetchMyPageData()
+        }
+        .alert("오류", isPresented: Binding(
+            get: { viewModel.alertErrorMessage != nil },
+            set: { if !$0 { viewModel.alertErrorMessage = nil } }
+        )) {
+            Button("확인") { viewModel.alertErrorMessage = nil }
+        } message: {
+            Text(viewModel.alertErrorMessage ?? "")
         }
     }
 }
