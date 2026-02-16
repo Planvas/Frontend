@@ -159,7 +159,7 @@ struct DailyCalendarSuccessDTO: Decodable {
     let todayTodos: [CalendarItemDTO]
 }
 
-/// api.md 기준: itemId String, startAt/endAt ISO, isFixed, eventColor, recurrenceRule, category, status
+/// api.md 기준: itemId String, startAt/endAt ISO, isFixed, eventColor, recurrenceRule, category, status, point(활동 일정)
 struct CalendarItemDTO: Decodable {
     let itemId: String
     let title: String
@@ -171,6 +171,7 @@ struct CalendarItemDTO: Decodable {
     let eventColor: Int?
     let recurrenceRule: String?
     let status: String?  // "TODO" | "DONE"
+    let point: Int?     // 활동 일정 포인트 (성장/휴식)
 }
 
 // MARK: - 일정 추가 (POST /api/calendar/event)
@@ -205,10 +206,16 @@ struct UpdateEventRequestDTO: Encodable {
     let title: String
     let startAt: String
     let endAt: String
-    let type: String
-    let category: String
+    let type: String       // "FIXED" | "ACTIVITY"
+    let category: String   // "GROWTH" | "REST"
     let eventColor: Int
     let recurrenceRule: String?
+    /// 고정 일정 반복 시 반복 종료일 "yyyy-MM-dd"
+    let recurrenceEndAt: String?
+    /// 활동 일정일 때 필수 (성장/휴식 포인트)
+    let point: Int?
+    /// 활동 일정일 때 "TODO" | "DONE"
+    let status: String?
 }
 
 struct UpdateEventResponse: Decodable {
