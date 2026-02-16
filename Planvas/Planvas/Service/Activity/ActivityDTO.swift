@@ -18,8 +18,10 @@ struct Activity: Decodable {
     let category: TodoCategory
     let point: Int
     let thumbnailUrl: String?
-    let scheduleStatus: ScheduleAvailable?  // 일정 가능?주의?
+    let scheduleStatus: ScheduleStatusCategory?  // 일정 가능?주의?겹침?
     let dDay: Int?
+    let tipMessage: String?
+    let externalUrl: String?
 }
 
 // MARK: - 활동 상세 조회 (GET /api/activities/{activityId})
@@ -40,7 +42,7 @@ struct ActivityDetailSuccess: Decodable {
     let startDate: String
     let endDate: String
     let dDay: Int
-    let scheduleStatus: ScheduleAvailable
+    let scheduleStatus: ScheduleStatusCategory
     let tipMessage: String?
     let categoryId: Int?
     let externalUrl: String?
@@ -156,4 +158,31 @@ struct DeleteCartItemResponse: Decodable {
 
 struct DeleteCartItemSuccess: Decodable {
     let deleted: Bool
+}
+
+// MARK: - 활동 카테고리 목록 조회 (GET /api/activities/categories?tab=GROWTH|REST)
+struct ActivityCategoryListResponse: Decodable {
+    let resultType: String
+    let error: ErrorDTO?
+    let success: ActivityCategoryListSuccess?
+}
+
+struct ActivityCategoryListSuccess: Decodable {
+    let tab: TodoCategory
+    let categories: [ActivityCategory]
+}
+
+struct ActivityCategory: Decodable, Identifiable, Hashable {
+    let id: Int
+    let name: String
+    let count: Int
+}
+
+struct ActivityListPage {
+    let items: [ActivityCard]
+    let page: Int
+    let size: Int
+    let totalElements: Int
+    
+    var hasNext: Bool { (page + 1) * size < totalElements }
 }

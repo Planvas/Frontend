@@ -20,13 +20,15 @@ enum ScheduleStatusCategory: String, Codable {
     case available = "AVAILABLE"
     case unavailable = "UNAVAILABLE"
     case caution = "CAUTION"
+    case conflict = "CONFLICT"
     
     // 화면에 보여줄 한글 텍스트
     var statusTitle: String {
         switch self {
         case .available: return "일정 가능"
-        case .unavailable: return "일정 겹침"
+        case .unavailable: return "일정 마감"
         case .caution: return "일정 주의"
+        case .conflict: return "일정 겹침"
         }
     }
     
@@ -36,31 +38,8 @@ enum ScheduleStatusCategory: String, Codable {
         case .available: return .blue1
         case .unavailable: return .red1
         case .caution: return .yellow1
+        case .conflict: return .red1  
         }
     }
 }
 
-// 활동 일정 가능 여부
-enum ScheduleAvailable: String, Codable {
-    case available = "AVAILABLE" // 일정 가능
-    case caution = "CAUTION"     // 일정 주의
-    case unavailable = "UNAVAILABLE"   // 일정 마감
-    
-    // 텍스트 매핑
-    var badgeText: String {
-        switch self {
-        case .available: return "일정 가능"
-        case .caution: return "일정 주의"
-        case .unavailable: return "일정 마감"
-        }
-    }
-    
-    // 컬러 매핑
-    var badgeColor: Color {
-        switch self {
-        case .available: return .blue1
-        case .caution: return .yellow1
-        case .unavailable: return .red1
-        }
-    }
-}

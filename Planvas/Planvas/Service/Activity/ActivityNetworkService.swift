@@ -109,14 +109,17 @@ final class ActivityNetworkService: @unchecked Sendable {
         categoryId: Int? = nil,
         q: String? = nil,
         page: Int = 0,
-        size: Int = 20
+        size: Int = 20,
+        onlyAvailable: Bool
     ) async throws -> [ActivityCard] {
+        let onlyAvailableString: String? = onlyAvailable ? "true" : "false"
         let response: ActivityListResponse = try await request(.getActivityList(
             tab: tab,
             categoryId: categoryId,
             q: q,
             page: page,
-            size: size
+            size: size,
+            onlyAvailable: onlyAvailableString
         ))
         
         if let error = response.error {
@@ -127,15 +130,24 @@ final class ActivityNetworkService: @unchecked Sendable {
         
         return success.activities.map { dto in
             let status = dto.scheduleStatus ?? .available
+            
+            let tip: ActivityTip? = {
+                guard let tipMessage = dto.tipMessage, !tipMessage.isEmpty else { return nil }
+                let parsed = parseTip(tipMessage)
+                let label = (status == .caution) ? "주의" : "Tip"
+
+                return ActivityTip(label: label, tag: parsed.tag, message: parsed.message)
+            }()
+            
             return ActivityCard(
                 activityId: dto.activityId,
                 imageURL: dto.thumbnailUrl,
-                badgeText: status.badgeText,
-                badgeColor: status.badgeColor,
+                badgeText: status.statusTitle,
+                badgeColor: status.themeColor,
                 growth: dto.point,
                 dday: dto.dDay ?? 0,
                 title: dto.title,
-                tip: nil
+                tip: tip
             )
         }
     }
@@ -218,5 +230,88 @@ final class ActivityNetworkService: @unchecked Sendable {
                 }
             }
         }
+    }
+    
+    // MARK: - 카테고리 조회
+    func getActivityCategories(tab: TodoCategory) async throws -> [ActivityCategory] {
+        let response: ActivityCategoryListResponse = try await request(.getActivityCategories(tab: tab))
+        if let error = response.error {
+            throw ActivityAPIError.serverFail(reason: error.reason)
+        }
+        return response.success?.categories ?? []
+    }
+    
+    // MARK: - Tip 파싱 유틸
+    private func parseTip(_ tipMessage: String) -> (tag: String, message: String) {
+        let trimmed = tipMessage.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmed.hasPrefix("["),
+           let end = trimmed.firstIndex(of: "]") {
+
+            let tag = String(trimmed[trimmed.index(after: trimmed.startIndex)..<end])
+            let restStart = trimmed.index(after: end)
+            let message = String(trimmed[restStart...])
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            return (tag, message)
+        }
+
+        return ("", trimmed)
+    }
+    
+    func getActivityListPage(
+        tab: TodoCategory,
+        categoryId: Int? = nil,
+        q: String? = nil,
+        page: Int,
+        size: Int,
+        onlyAvailable: Bool
+    ) async throws -> ActivityListPage {
+        let onlyAvailableString: String? = onlyAvailable ? "true" : "false"
+        let response: ActivityListResponse = try await request(.getActivityList(
+            tab: tab,
+            categoryId: categoryId,
+            q: q,
+            page: page,
+            size: size,
+            onlyAvailable: onlyAvailableString
+        ))
+
+        if let error = response.error {
+            throw ActivityAPIError.serverFail(reason: error.reason)
+        }
+
+        guard let success = response.success else {
+            return ActivityListPage(items: [], page: page, size: size, totalElements: 0)
+        }
+
+        let cards: [ActivityCard] = success.activities.map { dto in
+            let status = dto.scheduleStatus ?? .available
+
+            let tip: ActivityTip? = {
+                guard let tipMessage = dto.tipMessage, !tipMessage.isEmpty else { return nil }
+                let parsed = parseTip(tipMessage)
+                let label = (status == .caution) ? "주의" : "Tip"
+                return ActivityTip(label: label, tag: parsed.tag, message: parsed.message)
+            }()
+
+            return ActivityCard(
+                activityId: dto.activityId,
+                imageURL: dto.thumbnailUrl,
+                badgeText: status.statusTitle,
+                badgeColor: status.themeColor,
+                growth: dto.point,
+                dday: dto.dDay ?? 0,
+                title: dto.title,
+                tip: tip
+            )
+        }
+
+        return ActivityListPage(
+            items: cards,
+            page: success.page,
+            size: success.size,
+            totalElements: success.totalElements
+        )
     }
 }
