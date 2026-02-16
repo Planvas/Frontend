@@ -60,6 +60,8 @@ class CartViewModel {
             .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: { [weak self] completion in
                 if case let .failure(error) = completion {
+                    if isAfterAdding { return } // 활동 추가 후의 삭제면 에러 무시
+                    
                     self?.errorMessage = "삭제 실패: \(error.localizedDescription)"
                     self?.alertErrorMessage = "삭제를 실패했어요"
                 }
