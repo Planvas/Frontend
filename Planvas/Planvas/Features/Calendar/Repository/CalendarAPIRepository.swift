@@ -59,9 +59,12 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         let categoryStr = event.category == .none ? "GROWTH" : event.category.rawValue
         let colorInt = event.color.serverColor
         let rule = Self.buildRecurrenceRule(from: event)
+        let recurrenceEndAt: String? = (event.isRepeating && event.repeatEndDate != nil)
+            ? dateKeyString(from: event.repeatEndDate!)
+            : nil
         _ = try await networkService.createEvent(
             title: event.title, startAt: startAt, endAt: endAt, type: "FIXED",
-            category: categoryStr, eventColor: colorInt, recurrenceRule: rule
+            category: categoryStr, eventColor: colorInt, recurrenceRule: rule, recurrenceEndAt: recurrenceEndAt
         )
     }
 
