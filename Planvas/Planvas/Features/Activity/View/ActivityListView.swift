@@ -78,7 +78,7 @@ struct ActivityListView: View {
         .sheet(isPresented: $showInterestEditSheet) {
             InterestEditSheetView()
                 .presentationDetents([.height(400)])
-                .presentationDragIndicator(.hidden)
+                .presentationDragIndicator(.visible)
                 .presentationBackground(.fff)
         }
     }

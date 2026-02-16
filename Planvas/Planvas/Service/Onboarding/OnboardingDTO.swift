@@ -165,3 +165,26 @@ struct SaveOnboardingSuccessDTO: Decodable {
     let goalPeriodId: Int
     let onboardingCompleted: Bool
 }
+
+// MARK: - 내 관심사 조회/수정 (/api/users/me/interests)
+
+struct MyInterestsResponseDTO: Decodable {
+    let resultType: String
+    let error: ErrorDTO?
+    let success: MyInterestsSuccessDTO?
+}
+
+struct MyInterestsSuccessDTO: Decodable {
+    let interests: [MyInterestDTO]
+}
+
+struct MyInterestDTO: Decodable {
+    let id: Int
+    let name: String
+}
+
+struct EditMyInterestsRequestDTO: Encodable {
+    let interestIds: [Int]
+}
+
+typealias EditMyInterestsResponseDTO = MyInterestsResponseDTO
