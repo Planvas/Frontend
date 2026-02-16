@@ -14,6 +14,8 @@ struct CartItemView: View {
     private var dDayText: String {
             if dDay < 0 {
                 return "마감"
+            } else if dDay == 0 {
+                return "D-Day"
             } else {
                 return "D-\(dDay)"
             }
