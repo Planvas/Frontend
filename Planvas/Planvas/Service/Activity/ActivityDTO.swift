@@ -111,15 +111,15 @@ struct CartItem: Decodable {
     let cartItemId: Int
     let activityId: Int
     let title: String
-    let description: String
+    let description: String?
     let category: TodoCategory
     let point: Int
-    let type: TypeCategory
+    let type: TypeCategory?
     let categoryId: Int?
     let externalUrl: String?
-    let startDate: String
-    let endDate: String
-    let dDay: Int
+    let startDate: String?
+    let endDate: String?
+    let dDay: Int?
     let scheduleStatus: ScheduleStatusCategory
     let tipMessage: String?
 }
@@ -127,17 +127,17 @@ struct CartItem: Decodable {
 
 
 // MARK: - 장바구니 담기
-struct GetCartItemDTO: Encodable {
+struct PostCartItemDTO: Encodable {
     let activityId: Int
 }
 
-struct GetCartItemResponse: Decodable {
+struct PostCartItemResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
-    let success: GetCartItemSuccess?
+    let success: PostCartItemSuccess?
 }
 
-struct GetCartItemSuccess: Decodable {
+struct PostCartItemSuccess: Decodable {
     let cartItemId: Int
     let activityId: Int
     let message: String

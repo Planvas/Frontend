@@ -19,7 +19,7 @@ enum ActivityAPI {
     case postActivity(activityId: Int, GetActivityRequestDTO: GetActivityRequestDTO) // 활동 적용(내 일정 반영)
     case postAddToMyActivities(activityId: Int, body: AddMyActivityRequestDTO) // 활동을 내 일정에 추가 POST /api/activities/{id}/my-activities
     case getCartList(tab: TodoCategory) // 장바구니 조회
-    case postCart(GetCartItemDTO: GetCartItemDTO) // 장바구니 담기
+    case postCart(body: PostCartItemDTO) // 장바구니 담기
     case deleteCart(cartItemId: Int) // 장바구니 삭제
 }
 
@@ -40,11 +40,11 @@ extension ActivityAPI: APITargetType {
         case .postAddToMyActivities(let activityId, _):
             return "\(Self.activitiesPath)/\(activityId)/my-activities"
         case .getCartList:
-            return "\(Self.cartPath)"
+            return "\(Self.cartPath)/activities"
         case .postCart:
-            return "\(Self.cartPath)"
+            return "\(Self.cartPath)/activities"
         case .deleteCart(let cartItemId):
-            return "\(Self.cartPath)/\(cartItemId)"
+            return "\(Self.cartPath)/activities/\(cartItemId)"
         }
     }
     
@@ -107,8 +107,8 @@ extension ActivityAPI: APITargetType {
                 parameters: ["tab": tab.rawValue],
                 encoding: URLEncoding.queryString
             )
-        case .postCart(let GetCartItemDTO):
-            return .requestJSONEncodable(GetCartItemDTO)
+        case .postCart(let body):
+            return .requestJSONEncodable(body)
         case .deleteCart:
             return .requestPlain
         }
@@ -175,6 +175,32 @@ extension ActivityAPI: APITargetType {
                             }
                         ]
                     }
+                }
+                """
+            return jsonString.data(using: .utf8)!
+        case .postAddToMyActivities:
+            let jsonString = """
+                {
+                    "resultType": "SUCCESS",
+                    "error": null,
+                    "success": {
+                        "myActivityId": 1,
+                        "activityId": 101,
+                        "title": "샘플 활동",
+                        "category": "GROWTH",
+                        "point": 20,
+                        "startDate": "2026-02-13",
+                        "endDate": "2026-02-14"
+                    }
+                }
+                """
+            return jsonString.data(using: .utf8)!
+        case .deleteCart:
+            let jsonString = """
+                {
+                    "resultType": "SUCCESS",
+                    "error": null,
+                    "success": { "deleted": true }
                 }
                 """
             return jsonString.data(using: .utf8)!
