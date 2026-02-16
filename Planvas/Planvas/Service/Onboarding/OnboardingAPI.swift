@@ -19,6 +19,8 @@ enum OnboardingAPI {
     case getRatioList // 비율 추천 목록 조회
     case getGoalProgress(goalId: Int) // 목표 진행(현재 성장/휴식 비율) 조회
     case postOnboarding(body: SaveOnboardingRequestDTO) // 온보딩 저장
+    case getMyInterests // 내 관심사 조회
+    case patchMyInterests(body: EditMyInterestsRequestDTO) // 내 관심사 수정
 }
 
 extension OnboardingAPI: APITargetType {
@@ -49,6 +51,9 @@ extension OnboardingAPI: APITargetType {
             
         case .postOnboarding:   // 온보딩 저장
             return "/api/users/me/onboarding"
+            
+        case .getMyInterests, .patchMyInterests:    // 내 관심사 조회, 수정
+            return "/api/users/me/interests"
         }
     }
     
@@ -56,9 +61,9 @@ extension OnboardingAPI: APITargetType {
         switch self {
         case .postGoalBase, .postOnboarding:
             return .post
-        case .patchGoalBase, .patchGoalRatio:
+        case .patchGoalBase, .patchGoalRatio, .patchMyInterests:
             return .patch
-        case .getGoalDetail, .getCurrentGoal, .getRatioList, .getGoalProgress:
+        case .getGoalDetail, .getCurrentGoal, .getRatioList, .getGoalProgress, .getMyInterests:
             return .get
         }
     }
@@ -80,6 +85,10 @@ extension OnboardingAPI: APITargetType {
         case .getGoalProgress:
             return .requestPlain
         case .postOnboarding(let body):
+            return .requestJSONEncodable(body)
+        case .getMyInterests:
+            return .requestPlain
+        case .patchMyInterests(let body):
             return .requestJSONEncodable(body)
         }
     }

@@ -388,4 +388,59 @@ final class OnboardingViewModel {
             }
         }
     }
+    
+    // MARK: - 내 관심사 조회 (GET /api/users/me/interests)
+    func fetchMyInterests(completion: @escaping ([MyInterestDTO]) -> Void) {
+        provider.request(.getMyInterests) { result in
+            switch result {
+            case .success(let response):
+                do {
+                    let decoded = try JSONDecoder().decode(MyInterestsResponseDTO.self, from: response.data)
+                    let list = decoded.success?.interests ?? []
+                    DispatchQueue.main.async { completion(list) }
+                } catch {
+                    print("fetchMyInterests 디코딩 오류:", error)
+                    DispatchQueue.main.async { completion([]) }
+                }
+
+            case .failure(let error):
+                print("fetchMyInterests 네트워크 오류:", error.localizedDescription)
+                DispatchQueue.main.async { completion([]) }
+            }
+        }
+    }
+    
+    // MARK: - 내 관심사 수정 (PATCH /api/users/me/interests)
+    func editMyInterests(interestIds: [Int], completion: @escaping (Bool, [MyInterestDTO]) -> Void) {
+        let body = EditMyInterestsRequestDTO(interestIds: interestIds)
+
+        provider.request(.patchMyInterests(body: body)) { result in
+            switch result {
+            case .success(let response):
+                print("editMyInterests statusCode:", response.statusCode)
+                if let raw = String(data: response.data, encoding: .utf8) {
+                    print("editMyInterests raw:", raw)
+                }
+
+                do {
+                    let decoded = try JSONDecoder().decode(EditMyInterestsResponseDTO.self, from: response.data)
+                    let ok = (200..<300).contains(response.statusCode) && decoded.resultType == "SUCCESS"
+                    let list = decoded.success?.interests ?? []
+                    DispatchQueue.main.async { completion(ok, list) }
+                } catch {
+                    print("editMyInterests 디코딩 오류:", error)
+                    DispatchQueue.main.async { completion(false, []) }
+                }
+
+            case .failure(let error):
+                let statusCode = error.response?.statusCode ?? -1
+                print("editMyInterests 실패 statusCode:", statusCode)
+                print("editMyInterests 실패:", error.localizedDescription)
+                if let data = error.response?.data {
+                    print("editMyInterests failure raw:", String(data: data, encoding: .utf8) ?? "nil")
+                }
+                DispatchQueue.main.async { completion(false, []) }
+            }
+        }
+    }
 }
