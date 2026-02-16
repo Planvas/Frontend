@@ -255,4 +255,58 @@ final class ActivityNetworkService: @unchecked Sendable {
 
         return ("", trimmed)
     }
+    
+    func getActivityListPage(
+        tab: TodoCategory,
+        categoryId: Int? = nil,
+        q: String? = nil,
+        page: Int,
+        size: Int
+    ) async throws -> ActivityListPage {
+
+        let response: ActivityListResponse = try await request(.getActivityList(
+            tab: tab,
+            categoryId: categoryId,
+            q: q,
+            page: page,
+            size: size
+        ))
+
+        if let error = response.error {
+            throw ActivityAPIError.serverFail(reason: error.reason)
+        }
+
+        guard let success = response.success else {
+            return ActivityListPage(items: [], page: page, size: size, totalElements: 0)
+        }
+
+        let cards: [ActivityCard] = success.activities.map { dto in
+            let status = dto.scheduleStatus ?? .available
+
+            let tip: ActivityTip? = {
+                guard let tipMessage = dto.tipMessage, !tipMessage.isEmpty else { return nil }
+                let parsed = parseTip(tipMessage)
+                let label = (status == .caution) ? "주의" : "Tip"
+                return ActivityTip(label: label, tag: parsed.tag, message: parsed.message)
+            }()
+
+            return ActivityCard(
+                activityId: dto.activityId,
+                imageURL: dto.thumbnailUrl,
+                badgeText: status.statusTitle,
+                badgeColor: status.themeColor,
+                growth: dto.point,
+                dday: dto.dDay ?? 0,
+                title: dto.title,
+                tip: tip
+            )
+        }
+
+        return ActivityListPage(
+            items: cards,
+            page: success.page,
+            size: success.size,
+            totalElements: success.totalElements
+        )
+    }
 }

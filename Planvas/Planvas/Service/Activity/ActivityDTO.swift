@@ -177,3 +177,12 @@ struct ActivityCategory: Decodable, Identifiable, Hashable {
     let name: String
     let count: Int
 }
+
+struct ActivityListPage {
+    let items: [ActivityCard]
+    let page: Int
+    let size: Int
+    let totalElements: Int
+    
+    var hasNext: Bool { (page + 1) * size < totalElements }
+}

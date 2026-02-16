@@ -65,7 +65,10 @@ struct ActivityListView: View {
             Task { await vm.onChangeTab(newValue, searchText: searchText) }
         }
         .onChange(of: searchText) { _, newValue in
-            Task { await vm.fetchActivities(tab: selectedActivityType, searchText: newValue) }
+            Task { await vm.resetAndFetch(tab: selectedActivityType, searchText: newValue) }
+        }
+        .onChange(of: onlyAvailable) { _, _ in
+            Task { await vm.resetAndFetch(tab: selectedActivityType, searchText: searchText) }
         }
         .sheet(isPresented: $showActivitySheet) {
             ActivitySelectionView(
@@ -302,6 +305,19 @@ struct ActivityListView: View {
                     LazyVStack(spacing: 8) {
                         ForEach(filtered) { item in
                             ActivityCardView(item: item)
+                                .onAppear {
+                                    Task {
+                                        await vm.loadMoreIfNeeded(
+                                            currentItem: item,
+                                            tab: selectedActivityType,
+                                            searchText: searchText
+                                        )
+                                    }
+                                }
+                        }
+
+                        if vm.isFetchingMore {
+                            ProgressView().padding(.vertical, 16)
                         }
                     }
                     .padding(.horizontal, 20)
