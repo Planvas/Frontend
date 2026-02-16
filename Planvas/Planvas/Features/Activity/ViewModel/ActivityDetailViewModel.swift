@@ -175,12 +175,7 @@ class ActivityDetailViewModel {
             addSuccessMessage = "장바구니에 담겼습니다!"
         } catch {
             if let apiError = error as? ActivityAPIError {
-                switch apiError {
-                case .serverFail(let reason):
-                    addErrorMessage = reason
-                case .invalidResponse:
-                    addErrorMessage = "응답 형식 오류"
-                }
+                addErrorMessage = apiError.reason
             } else {
                 addErrorMessage = "서버 연결에 실패했습니다"
             }
