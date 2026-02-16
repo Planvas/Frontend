@@ -65,10 +65,22 @@ struct ActivityListView: View {
             Task { await vm.onChangeTab(newValue, searchText: searchText) }
         }
         .onChange(of: searchText) { _, newValue in
-            Task { await vm.resetAndFetch(tab: selectedActivityType, searchText: newValue) }
+            Task {
+                await vm.resetAndFetch(
+                    tab: selectedActivityType,
+                    searchText: newValue,
+                    onlyAvailable: onlyAvailable
+                )
+            }
         }
-        .onChange(of: onlyAvailable) { _, _ in
-            Task { await vm.resetAndFetch(tab: selectedActivityType, searchText: searchText) }
+        .onChange(of: onlyAvailable) { _, newValue in
+            Task {
+                await vm.resetAndFetch(
+                    tab: selectedActivityType,
+                    searchText: searchText,
+                    onlyAvailable: newValue
+                )
+            }
         }
         .sheet(isPresented: $showActivitySheet) {
             ActivitySelectionView(
