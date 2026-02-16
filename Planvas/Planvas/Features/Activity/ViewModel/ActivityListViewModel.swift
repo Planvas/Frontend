@@ -28,7 +28,7 @@ final class ActivityListViewModel {
     
     // 탭 변경 시 카테고리부터 갱신하고 목록 재조회
     func onChangeTab(_ tab: String, searchText: String) async {
-        let categoryEnum: TodoCategory = (tab == "성장") ? .growth : .rest
+        let categoryEnum: TodoCategory = todoCategory(from: tab)
         await fetchCategories(tab: categoryEnum)
 
         // 기본값 "전체"
@@ -74,7 +74,7 @@ final class ActivityListViewModel {
         isLoading = true
         defer { isLoading = false }
 
-        let categoryEnum: TodoCategory = (tab == "성장") ? .growth : .rest
+        let categoryEnum: TodoCategory = todoCategory(from: tab)
 
         do {
             var pageToLoad = 0
@@ -170,5 +170,9 @@ final class ActivityListViewModel {
         } catch {
             print("추가 로드 실패: \(error)")
         }
+    }
+    
+    private func todoCategory(from tab: String) -> TodoCategory {
+        tab == "성장" ? .growth : .rest
     }
 }
