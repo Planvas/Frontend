@@ -96,6 +96,7 @@ class ActivityDetailViewModel {
         isLoading = true
         addErrorMessage = nil
         addSuccessMessage = nil
+        defer { isLoading = false }
         
         do {
             _ = try await repository.postCart(activityId: id)
