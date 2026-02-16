@@ -64,7 +64,7 @@ struct ActivityCardView: View {
                             Text(item.dday < 0 ? "마감" : "D-\(item.dday)")
                                 .textStyle(.medium14)
                                 .foregroundStyle(.fff)
-                                .padding(.horizontal, 8)
+                                .padding(.horizontal, 5)
                                 .padding(.vertical, 5)
                                 .background(.primary1)
                                 .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -144,17 +144,20 @@ struct ActivityCardView: View {
 }
 
 #Preview {
-    ActivityCardView(
+    let router = NavigationRouter<ActivityRoute>()
+    
+    return ActivityCardView(
         item: ActivityCard(
             activityId: 1,
             imageURL: nil,
             badgeText: "일정 가능",
             badgeColor: .blue1,
             growth: 20,
-            dday: 5,
+            dday: 299,
             title: "패스트 캠퍼스 2026 AI 대전환 오픈 세미나",
             tip: nil
         )
     )
+    .environment(router)
     .padding()
 }
