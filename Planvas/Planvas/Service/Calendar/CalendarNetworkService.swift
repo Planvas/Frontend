@@ -101,9 +101,11 @@ final class CalendarNetworkService: @unchecked Sendable {
 
     /// 일정 수정 PATCH /api/calendar/event/{id}
     func updateEvent(id: Int, title: String, startAt: String, endAt: String, type: String = "FIXED",
-                     category: String, eventColor: Int, recurrenceRule: String?) async throws {
+                     category: String, eventColor: Int, recurrenceRule: String?, recurrenceEndAt: String? = nil,
+                     point: Int? = nil, status: String? = nil) async throws {
         let body = UpdateEventRequestDTO(title: title, startAt: startAt, endAt: endAt, type: type,
-                                         category: category, eventColor: eventColor, recurrenceRule: recurrenceRule)
+                                         category: category, eventColor: eventColor, recurrenceRule: recurrenceRule,
+                                         recurrenceEndAt: recurrenceEndAt, point: point, status: status)
         let response: UpdateEventResponse = try await request(.patchEvent(id: id, body: body))
         if let error = response.error {
             throw CalendarAPIError.serverFail(reason: error.reason)
