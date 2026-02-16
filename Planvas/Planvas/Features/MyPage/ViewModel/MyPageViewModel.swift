@@ -15,23 +15,13 @@ class MyPageViewModel {
     var userErrorMessage: String?
     var goalIsLoading: Bool = false
     var userIsLoading: Bool = false
-    // 에러 메시지
-    var toastMessage: String?
-    var showToast: Bool = false
+    // 메시지 변수
+    var successMessage: String?
+    var alertErrorMessage: String?
     
     private let calendarRepository: CalendarRepositoryProtocol = CalendarAPIRepository()
     private let provider = APIManager.shared.createProvider(for: MyPageRouter.self)
     private var cancellable = Set<AnyCancellable>()
-    
-    // MARK: - 에러 발생 시 호출 할 함수
-    func handleError(_ message: String){
-        self.toastMessage = message
-        self.showToast = true
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-            self.showToast = false
-        }
-    }
     
     // MARK: - 마이페이지 데이터 초기화
     func fetchMyPageData() async{
@@ -67,7 +57,7 @@ class MyPageViewModel {
                 receiveCompletion: { [weak self] completion in
                     if case let .failure(error) = completion {
                         self?.goalErrorMessage = error.localizedDescription
-                        self?.handleError(error.localizedDescription)
+                        self?.alertErrorMessage = "목표 정보를 불러오지 못했어요"
                     }
                 },
                 receiveValue: { [weak self] (response: GoalResponse) in
@@ -77,7 +67,7 @@ class MyPageViewModel {
                     } else {
                         let errorMessage = response.error?.reason ?? "알 수 없는 오류가 발생했습니다."
                         self?.goalErrorMessage = errorMessage
-                        self?.handleError(errorMessage)
+                        self?.alertErrorMessage = "진행 중인 목표를 찾을 수 없어요"
                     }
                 })
             .store(in: &cancellable)
@@ -99,7 +89,7 @@ class MyPageViewModel {
                 receiveCompletion: { [weak self] completion in
                     if case let .failure(error) = completion {
                         self?.userErrorMessage = error.localizedDescription
-                        self?.handleError(error.localizedDescription)
+                        self?.alertErrorMessage = "내 정보를 불러오지 못했어요"
                     }
                 },
                 receiveValue: { [weak self] (response: UserResponse) in
@@ -109,7 +99,7 @@ class MyPageViewModel {
                     } else {
                         let errorMessage = response.error?.reason ?? "알 수 없는 오류가 발생했습니다."
                         self?.userErrorMessage = errorMessage
-                        self?.handleError(errorMessage)
+                        self?.alertErrorMessage = "유저 정보가 유효하지 않아요"
                     }
                 })
             .store(in: &cancellable)
