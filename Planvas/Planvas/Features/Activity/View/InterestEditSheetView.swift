@@ -94,41 +94,46 @@ struct InterestEditSheetView: View {
         }
     }
     
-    // MARK: - GET /api/users/me/interests
+    // MARK: - 내 관심사 조회
     private func fetchMyInterestsAndApply() {
         isLoading = true
-
+        
         provider.request(.getMyInterests) { result in
             DispatchQueue.main.async {
                 self.isLoading = false
-
+                
                 switch result {
                 case .success(let response):
+                    // 상태 코드 검증
+                    guard (200..<300).contains(response.statusCode) else {
+                        print("조회 실패 status: \(response.statusCode)")
+                        return
+                    }
+                    
                     do {
                         let decoded = try JSONDecoder().decode(MyInterestsResponseDTO.self, from: response.data)
                         let interests = decoded.success?.interests ?? []
-
+                        
                         let mappedUUIDs = Set(
                             interests.compactMap { serverItem in
                                 goalVM.interestActivityTypes.first(where: { $0.title == serverItem.name })?.id
                             }
                         )
-
+                        
                         self.tempSelectedIds = mappedUUIDs
                         self.goalVM.selectedInterestIds = mappedUUIDs
-
+                        
                     } catch {
-                        print("관심사 조회 디코딩 오류:", error)
+                        print("디코딩 오류: \(error)")
                     }
-
                 case .failure(let error):
-                    print("관심사 조회 실패:", error.localizedDescription)
+                    print("네트워크 오류: \(error.localizedDescription)")
                 }
             }
         }
     }
     
-    // MARK: - PATCH /api/users/me/interests
+    // MARK: - 관심사 수정
     private func saveInterests() {
         isSaving = true
 
@@ -145,23 +150,22 @@ struct InterestEditSheetView: View {
 
                 switch result {
                 case .success(let response):
-                    let ok = (200..<300).contains(response.statusCode)
-
-                    if ok {
-                        self.goalVM.selectedInterestIds = self.tempSelectedIds
-                        self.dismiss()
-                    } else {
-                        print("관심사 수정 실패 status:", response.statusCode)
-                        if let raw = String(data: response.data, encoding: .utf8) {
-                            print("관심사 수정 raw:", raw)
+                    let isHTTPGood = (200..<300).contains(response.statusCode)
+                    
+                    do {
+                        let decoded = try JSONDecoder().decode(EditMyInterestsResponseDTO.self, from: response.data)
+                        
+                        if isHTTPGood && decoded.resultType == "SUCCESS" {
+                            self.goalVM.selectedInterestIds = self.tempSelectedIds
+                            self.dismiss()
+                        } else {
+                            print("수정 실패 - Status: \(response.statusCode), Result: \(decoded.resultType)")
                         }
+                    } catch {
+                        print("디코딩 에러: \(error)")
                     }
-
                 case .failure(let error):
-                    print("관심사 수정 실패:", error.localizedDescription)
-                    if let data = error.response?.data {
-                        print("관심사 수정 failure raw:", String(data: data, encoding: .utf8) ?? "nil")
-                    }
+                    print("네트워크 에러: \(error.localizedDescription)")
                 }
             }
         }
