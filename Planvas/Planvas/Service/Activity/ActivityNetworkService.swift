@@ -127,15 +127,24 @@ final class ActivityNetworkService: @unchecked Sendable {
         
         return success.activities.map { dto in
             let status = dto.scheduleStatus ?? .available
+            
+            let tip: ActivityTip? = {
+                guard let tipMessage = dto.tipMessage, !tipMessage.isEmpty else { return nil }
+                let parsed = parseTip(tipMessage)
+                let label = (status == .caution) ? "Tip" : "주의"
+
+                return ActivityTip(label: label, tag: parsed.tag, message: parsed.message)
+            }()
+            
             return ActivityCard(
                 activityId: dto.activityId,
                 imageURL: dto.thumbnailUrl,
-                badgeText: status.badgeText,
-                badgeColor: status.badgeColor,
+                badgeText: status.statusTitle,
+                badgeColor: status.themeColor,
                 growth: dto.point,
                 dday: dto.dDay ?? 0,
                 title: dto.title,
-                tip: nil
+                tip: tip
             )
         }
     }
@@ -227,5 +236,23 @@ final class ActivityNetworkService: @unchecked Sendable {
             throw ActivityAPIError.serverFail(reason: error.reason)
         }
         return response.success?.categories ?? []
+    }
+    
+    // MARK: - Tip 파싱 유틸
+    private func parseTip(_ tipMessage: String) -> (tag: String, message: String) {
+        let trimmed = tipMessage.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmed.hasPrefix("["),
+           let end = trimmed.firstIndex(of: "]") {
+
+            let tag = String(trimmed[trimmed.index(after: trimmed.startIndex)..<end])
+            let restStart = trimmed.index(after: end)
+            let message = String(trimmed[restStart...])
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            return (tag, message)
+        }
+
+        return ("", trimmed)
     }
 }
