@@ -22,13 +22,30 @@ struct CartView: View {
         }
         .sheet(isPresented: $viewModel.showAddActivity) {
             if let addVM = viewModel.addActivityViewModel {
-                AddActivityView(viewModel: addVM) {
-                    print("서버에 일정을 추가합니다!")
-                    viewModel.showAddActivity = false
-                }
+                AddActivityView(viewModel: addVM, onSubmit: {
+                    viewModel.submitActivity()
+                })
             }
         }
+        .alert("알림", isPresented: Binding(
+            get: { viewModel.successMessage != nil },
+            set: { if !$0 { viewModel.successMessage = nil } }
+        )) {
+            Button("확인") { viewModel.successMessage = nil }
+        } message: {
+            Text(viewModel.successMessage ?? "")
+        }
+        .alert("오류", isPresented: Binding(
+            get: { viewModel.alertErrorMessage != nil },
+            set: { if !$0 { viewModel.alertErrorMessage = nil } }
+        )) {
+            Button("확인") { viewModel.alertErrorMessage = nil }
+        } message: {
+            Text(viewModel.alertErrorMessage ?? "")
+        }
+        .navigationTitle("장바구니")
     }
+    
     // 탭 버튼 컴포넌트
     @ViewBuilder
     func tabButton(title: String, category: TodoCategory) -> some View {
@@ -36,7 +53,7 @@ struct CartView: View {
             VStack(spacing: 12) {
                 Text(title)
                     .textStyle(.semibold16)
-                    .foregroundStyle(selectedBar == category ? Color.primary1 : Color.gray888)
+                    .foregroundStyle(selectedBar == category ? Color.primary1 : Color.gray444)
                 Rectangle()
                     .fill(selectedBar == category ? Color.primary1 : Color.clear)
                     .frame(height: 2)
