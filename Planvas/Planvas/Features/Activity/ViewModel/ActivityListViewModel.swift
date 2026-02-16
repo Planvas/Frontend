@@ -24,6 +24,8 @@ final class ActivityListViewModel {
     private var hasNext: Bool = true
     var isFetchingMore: Bool = false
     
+    var onlyAvailable: Bool = false
+    
     // 탭 변경 시 카테고리부터 갱신하고 목록 재조회
     func onChangeTab(_ tab: String, searchText: String) async {
         let categoryEnum: TodoCategory = (tab == "성장") ? .growth : .rest
@@ -33,14 +35,14 @@ final class ActivityListViewModel {
         selectedCategoryName = categories.first(where: { $0.id == 0 })?.name ?? "전체"
         selectedCategoryId = nil
 
-        await resetAndFetch(tab: tab, searchText: searchText)
+        await resetAndFetch(tab: tab, searchText: searchText, onlyAvailable: self.onlyAvailable)
     }
 
     // 카테고리 선택
     func selectCategory(_ category: ActivityCategory, tab: String, searchText: String) async {
         selectedCategoryName = category.name
         selectedCategoryId = (category.id == 0) ? nil : category.id
-        await resetAndFetch(tab: tab, searchText: searchText)
+        await resetAndFetch(tab: tab, searchText: searchText, onlyAvailable: self.onlyAvailable)
     }
     
     func fetchCategories(tab: TodoCategory) async {
@@ -52,22 +54,6 @@ final class ActivityListViewModel {
         }
     }
 
-    // 필터 함수
-    func fetchActivities(tab: String, searchText: String = "") async {
-        isLoading = true
-        let categoryEnum: TodoCategory = (tab == "성장") ? .growth : .rest
-        do {
-            self.activities = try await service.getActivityList(
-                tab: categoryEnum,
-                categoryId: selectedCategoryId,
-                q: searchText.isEmpty ? nil : searchText
-            )
-        } catch {
-            print("로드 실패: \(error)")
-        }
-        isLoading = false
-    }
-
     func filteredActivities(searchText: String, onlyAvailable: Bool) -> [ActivityCard] {
         var result = activities
         if onlyAvailable {
@@ -76,7 +62,8 @@ final class ActivityListViewModel {
         return result
     }
     
-    func resetAndFetch(tab: String, searchText: String = "") async {
+    func resetAndFetch(tab: String, searchText: String = "", onlyAvailable: Bool) async {
+        self.onlyAvailable = onlyAvailable
         currentPage = 0
         hasNext = true
         activities = []
@@ -90,16 +77,46 @@ final class ActivityListViewModel {
         let categoryEnum: TodoCategory = (tab == "성장") ? .growth : .rest
 
         do {
-            let pageData = try await service.getActivityListPage(
-                tab: categoryEnum,
-                categoryId: selectedCategoryId,
-                q: searchText.isEmpty ? nil : searchText,
-                page: 0,
-                size: pageSize
-            )
-            activities = pageData.items
-            currentPage = pageData.page
-            hasNext = pageData.hasNext
+            var pageToLoad = 0
+            var collected: [ActivityCard] = []
+            var latestPageData: ActivityListPage? = nil
+
+            let maxSkipPages = 10
+
+            while pageToLoad <= maxSkipPages {
+                let pageData = try await service.getActivityListPage(
+                    tab: categoryEnum,
+                    categoryId: selectedCategoryId,
+                    q: searchText.isEmpty ? nil : searchText,
+                    page: pageToLoad,
+                    size: pageSize,
+                    onlyAvailable: onlyAvailable
+                )
+
+                latestPageData = pageData
+
+                if !pageData.items.isEmpty {
+                    collected = pageData.items
+                    currentPage = pageData.page
+                    hasNext = pageData.hasNext
+                    activities = collected
+                    return
+                }
+
+                if !pageData.hasNext {
+                    currentPage = pageData.page
+                    hasNext = false
+                    activities = []
+                    return
+                }
+
+                pageToLoad += 1
+            }
+
+            currentPage = latestPageData?.page ?? 0
+            hasNext = latestPageData?.hasNext ?? false
+            activities = []
+
         } catch {
             print("첫 페이지 로드 실패: \(error)")
         }
@@ -121,16 +138,35 @@ final class ActivityListViewModel {
         let categoryEnum: TodoCategory = (tab == "성장") ? .growth : .rest
 
         do {
-            let pageData = try await service.getActivityListPage(
-                tab: categoryEnum,
-                categoryId: selectedCategoryId,
-                q: searchText.isEmpty ? nil : searchText,
-                page: nextPage,
-                size: pageSize
-            )
-            activities.append(contentsOf: pageData.items)
-            currentPage = pageData.page
-            hasNext = pageData.hasNext
+            var pageToLoad = nextPage
+            let maxSkipPages = nextPage + 10  // 안전장치
+
+            while pageToLoad <= maxSkipPages {
+                let pageData = try await service.getActivityListPage(
+                    tab: categoryEnum,
+                    categoryId: selectedCategoryId,
+                    q: searchText.isEmpty ? nil : searchText,
+                    page: pageToLoad,
+                    size: pageSize,
+                    onlyAvailable: onlyAvailable
+                )
+
+                if !pageData.items.isEmpty {
+                    activities.append(contentsOf: pageData.items)
+                    currentPage = pageData.page
+                    hasNext = pageData.hasNext
+                    return
+                }
+
+                if !pageData.hasNext {
+                    currentPage = pageData.page
+                    hasNext = false
+                    return
+                }
+
+                pageToLoad += 1
+            }
+
         } catch {
             print("추가 로드 실패: \(error)")
         }

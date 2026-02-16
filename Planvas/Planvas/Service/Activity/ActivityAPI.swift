@@ -9,7 +9,8 @@ enum ActivityAPI {
         categoryId: Int?,
         q: String?,
         page: Int?,
-        size: Int?
+        size: Int?,
+        onlyAvailable: String?
     )
     case getActivityRecommend( // 활동 추천 목록 조회
         tab: TodoCategory,
@@ -64,7 +65,7 @@ extension ActivityAPI: APITargetType {
     
     var task: Task {
         switch self {
-        case .getActivityList(let tab, let categoryId, let q, let page, let size):
+        case let .getActivityList(tab, categoryId, q, page, size, onlyAvailable):
             var params: [String: Any] = [
                 "tab": tab.rawValue
             ]
@@ -80,6 +81,9 @@ extension ActivityAPI: APITargetType {
             }
             if let size {
                 params["size"] = size
+            }
+            if let onlyAvailable {
+                params["onlyAvailable"] = onlyAvailable
             }
             
             return .requestParameters(

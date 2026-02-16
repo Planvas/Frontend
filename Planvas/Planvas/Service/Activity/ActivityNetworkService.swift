@@ -109,14 +109,17 @@ final class ActivityNetworkService: @unchecked Sendable {
         categoryId: Int? = nil,
         q: String? = nil,
         page: Int = 0,
-        size: Int = 20
+        size: Int = 20,
+        onlyAvailable: Bool
     ) async throws -> [ActivityCard] {
+        let onlyAvailableString: String? = onlyAvailable ? "true" : "false"
         let response: ActivityListResponse = try await request(.getActivityList(
             tab: tab,
             categoryId: categoryId,
             q: q,
             page: page,
-            size: size
+            size: size,
+            onlyAvailable: onlyAvailableString
         ))
         
         if let error = response.error {
@@ -131,7 +134,7 @@ final class ActivityNetworkService: @unchecked Sendable {
             let tip: ActivityTip? = {
                 guard let tipMessage = dto.tipMessage, !tipMessage.isEmpty else { return nil }
                 let parsed = parseTip(tipMessage)
-                let label = (status == .caution) ? "Tip" : "주의"
+                let label = (status == .caution) ? "주의" : "Tip"
 
                 return ActivityTip(label: label, tag: parsed.tag, message: parsed.message)
             }()
@@ -261,15 +264,17 @@ final class ActivityNetworkService: @unchecked Sendable {
         categoryId: Int? = nil,
         q: String? = nil,
         page: Int,
-        size: Int
+        size: Int,
+        onlyAvailable: Bool
     ) async throws -> ActivityListPage {
-
+        let onlyAvailableString: String? = onlyAvailable ? "true" : "false"
         let response: ActivityListResponse = try await request(.getActivityList(
             tab: tab,
             categoryId: categoryId,
             q: q,
             page: page,
-            size: size
+            size: size,
+            onlyAvailable: onlyAvailableString
         ))
 
         if let error = response.error {
