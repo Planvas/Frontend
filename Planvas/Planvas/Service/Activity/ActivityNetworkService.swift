@@ -219,4 +219,13 @@ final class ActivityNetworkService: @unchecked Sendable {
             }
         }
     }
+    
+    // MARK: - 카테고리 조회
+    func getActivityCategories(tab: TodoCategory) async throws -> [ActivityCategory] {
+        let response: ActivityCategoryListResponse = try await request(.getActivityCategories(tab: tab))
+        if let error = response.error {
+            throw ActivityAPIError.serverFail(reason: error.reason)
+        }
+        return response.success?.categories ?? []
+    }
 }

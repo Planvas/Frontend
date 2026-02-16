@@ -14,29 +14,37 @@ final class ActivityListViewModel {
     
     var activities: [ActivityCard] = []
     var isLoading: Bool = false
-    var selectedCategoryId: Int? = nil // 카테고리 ID 매핑 필요
-
-    // 현재 선택된 카테고리
-    var selectedCategory: String = "전체"
     
-    // 서버 DB와 맞춘 카테고리 ID 매핑
-    private let categoryMapping: [String: Int] = [
-        "공모전": 1, "학회/동아리": 2, "대외활동": 3, "어학/자격증": 4, "인턴십": 5, "교육/강연": 6
-    ]
+    var categories: [ActivityCategory] = []
+    var selectedCategoryId: Int? = nil
+    var selectedCategoryName: String = "전체"
+    
+    // 탭 변경 시 카테고리부터 갱신하고 목록 재조회
+    func onChangeTab(_ tab: String, searchText: String) async {
+        let categoryEnum: TodoCategory = (tab == "성장") ? .growth : .rest
+        await fetchCategories(tab: categoryEnum)
 
-    // 카테고리 칩 리스트
-    let categoryChips: [String] = [
-        "전체", "공모전", "학회/동아리",
-        "대외활동", "어학/자격증", "인턴십", "교육/강연"
-    ]
+        // 기본값 "전체"
+        selectedCategoryName = categories.first(where: { $0.id == 0 })?.name ?? "전체"
+        selectedCategoryId = nil
+
+        await fetchActivities(tab: tab, searchText: searchText)
+    }
 
     // 카테고리 선택
-    func selectCategory(_ category: String, tab: String, searchText: String) async {
-        selectedCategory = category
-        selectedCategoryId = categoryMapping[category] // "전체"면 nil
-        
-        // 카테고리 변경 후 즉시 서버 호출
+    func selectCategory(_ category: ActivityCategory, tab: String, searchText: String) async {
+        selectedCategoryName = category.name
+        selectedCategoryId = (category.id == 0) ? nil : category.id
         await fetchActivities(tab: tab, searchText: searchText)
+    }
+    
+    func fetchCategories(tab: TodoCategory) async {
+        do {
+            self.categories = try await service.getActivityCategories(tab: tab)
+        } catch {
+            print("카테고리 로드 실패: \(error)")
+            self.categories = []
+        }
     }
 
     // 필터 함수
