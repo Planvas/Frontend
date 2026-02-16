@@ -67,7 +67,8 @@ struct EventSummaryView: View {
         .background(.white)
         .sheet(isPresented: $showEventDetailView) {
             Group {
-                if event.category == .growth || event.category == .rest {
+                if !event.isFixed {
+                    // 활동 일정: Activity 수정
                     ActivityEventDetailView(
                         event: event,
                         startDate: startDate,

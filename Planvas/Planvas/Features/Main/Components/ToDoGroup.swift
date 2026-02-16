@@ -9,7 +9,7 @@ import SwiftUI
 
 // MARK: - 바디 / 투두 그룹
 struct ToDoGroup: View {
-    @ObservedObject var viewModel: MainViewModel
+    @Bindable var viewModel: MainViewModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8){

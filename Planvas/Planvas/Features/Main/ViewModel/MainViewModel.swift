@@ -6,14 +6,15 @@
 //
 
 import SwiftUI
-import Combine
+import Observation
 import Moya
 
-class MainViewModel: ObservableObject {
+@Observable
+class MainViewModel {
     // MARK: - 메인 페이지 목표 세팅 상태별 메세지
     // ACTIVE: 진행 중인 목표 존재, ENDED: 활동 기간 종료, NONE: 목표 없음
-    @Published var goalSetting: GoalSetting = .ACTIVE
-    @Published var username: String = ""
+    var goalSetting: GoalSetting = .ACTIVE
+    var username: String = ""
     var stateTitle: String {
         switch goalSetting {
         case .ACTIVE:
@@ -26,16 +27,16 @@ class MainViewModel: ObservableObject {
     }
     
     // MARK: - 현재 목표 정보
-    @Published var goalTitle: String = ""
-    @Published var dDay: Int = 0
-    @Published var growthRatio: Int = 0
-    @Published var restRatio: Int = 0
-    @Published var growthAchieved: Int = 0
-    @Published var restAchieved: Int = 0
+    var goalTitle: String = ""
+    var dDay: String = ""
+    var growthRatio: Int = 0
+    var restRatio: Int = 0
+    var growthAchieved: Int = 0
+    var restAchieved: Int = 0
     
     // MARK: - 위클리 캘린더
-    @Published var centerDate: Date = Date()
-    @Published var selectedDate: Date = Date()
+    var centerDate: Date = Date()
+    var selectedDate: Date = Date()
     
     // 오늘 기준 7일 만들기
     var weekDates: [Date] {
@@ -67,24 +68,19 @@ class MainViewModel: ObservableObject {
     }
     
     // 일정 더미 데이터
-    @Published var schedules: [Schedule] = []
+    var weeklySchedules: [Date: [Schedule]] = [:]
     
     init() {
-        schedules = []
+        weeklySchedules = [:]
     }
     
     func schedules(for date: Date) -> [Schedule] {
-        schedules.filter { schedule in
-            if let endDate = schedule.endDate {
-                return date >= schedule.startDate && date <= endDate
-            } else {
-                return Calendar.current.isDate(date, inSameDayAs: schedule.startDate)
-            }
-        }
+        let key = Calendar.current.startOfDay(for: date)
+        return weeklySchedules[key] ?? []
     }
 
     // MARK: - 오늘의 할 일
-    @Published var todayTodos: [ToDo] = []
+    var todayTodos: [ToDo] = []
     
     // 체크 토글
     func toggleTodo(_ todo: ToDo) {
@@ -93,7 +89,7 @@ class MainViewModel: ObservableObject {
     }
     
     // MARK: - 오늘의 인기 성장 활동
-    @Published var items: [ActivityItem] = []
+    var items: [ActivityItem] = []
     
     // MARK: - 메인 페이지 API 연동 함수
     private let provider = APIManager.shared.createProvider(for: MainAPI.self)
@@ -120,8 +116,37 @@ class MainViewModel: ObservableObject {
                                 self.restAchieved = achieved.restAchieved
                             }
                             
-                            // TODO: - 캘린더 UI 백엔드 데이터에 맞게 수정한 후 데이터 가져오기
                             // 캘린더 데이터
+                            if let weekly = success.weeklySummary {
+                                var result: [Date: [Schedule]] = [:]
+                                var groupedSchedules: [Int: Schedule] = [:]
+
+                                for day in weekly.days {
+                                    let date = self.date(day.date)
+
+                                    for schedule in day.schedules {
+                                        if var existing = groupedSchedules[schedule.id] {
+                                            existing.dates.append(date)
+                                            groupedSchedules[schedule.id] = existing
+                                        } else {
+                                            groupedSchedules[schedule.id] = Schedule(
+                                                id: schedule.id,
+                                                title: schedule.title,
+                                                type: ScheduleType(serverCategory: schedule.category),
+                                                dates: [date]
+                                            )
+                                        }
+                                    }
+                                }
+
+                                // 날짜별로 다시 정리
+                                for schedule in groupedSchedules.values {
+                                    for date in schedule.dates {
+                                        result[date, default: []].append(schedule)
+                                    }
+                                }
+                                self.weeklySchedules = result
+                            }
                             
                             // 투두 데이터
                             if let todos = success.todayTodos {
@@ -143,9 +168,10 @@ class MainViewModel: ObservableObject {
                             if let recs = success.recommendations {
                                 self.items = recs.map {
                                     ActivityItem(
+                                        activityId: $0.activityId,
                                         title: $0.title,
                                         subtitle: $0.subTitle ?? "",
-                                        imageName: ""
+                                        imageName: $0.imageUrl
                                     )
                                 }
                             } else {

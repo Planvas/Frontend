@@ -11,6 +11,9 @@ import Observation
 @Observable
 @MainActor
 final class GoalSetupViewModel {
+    // 최종 온보딩 전송을 위한 캘린더 연동 상태
+    var isCalendarConnected: Bool = false
+    
     var goalName: String = ""
 
     // 20자 초과 체크 로직
@@ -70,13 +73,13 @@ final class GoalSetupViewModel {
     // 관심 분야
     let interestActivityTypes: [InterestActivityType] = [
         .init(emoji: "🖥️", title: "개발/IT"),
-        .init(emoji: "📊", title: "마케팅"),
-        .init(emoji: "🎨", title: "디자인"),
-        .init(emoji: "📋", title: "경영/사무"),
+        .init(emoji: "📊", title: "기획/마케팅"),
+        .init(emoji: "🎨", title: "예술/디자인"),
+        .init(emoji: "📋", title: "인문/교육"),
         .init(emoji: "🧬", title: "과학/공학"),
-        .init(emoji: "💰", title: "경제/금융"),
-        .init(emoji: "🎬", title: "영상/콘텐츠"),
-        .init(emoji: "📝", title: "기획/마케팅/광고"),
+        .init(emoji: "💰", title: "경영/경제"),
+        .init(emoji: "🎬", title: "미디어/영상"),
+        .init(emoji: "📝", title: "외국어"),
     ]
 
     // MARK: - 로직 함수
@@ -108,12 +111,12 @@ final class GoalSetupViewModel {
         return formatter.string(from: date)
     }
 
-    // ✅ 서버 전송용 날짜 포맷 (yyyy-MM-dd)
+    // 서버 전송용 날짜 포맷 (yyyy-MM-dd)
     func formatAPIDate(_ date: Date?) -> String {
         guard let date else { return "" }
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone(secondsFromGMT: 0) // 서버 기준이 UTC면 유지, 아니면 제거
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: date)
     }

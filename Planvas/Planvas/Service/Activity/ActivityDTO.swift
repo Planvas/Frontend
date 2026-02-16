@@ -18,6 +18,8 @@ struct Activity: Decodable {
     let category: TodoCategory
     let point: Int
     let thumbnailUrl: String?
+    let scheduleStatus: ScheduleAvailable?  // 일정 가능?주의?
+    let dDay: Int?
 }
 
 // MARK: - 활동 상세 조회 (GET /api/activities/{activityId})
@@ -34,17 +36,17 @@ struct ActivityDetailSuccess: Decodable {
     let point: Int
     let description: String
     let thumbnailUrl: String?
-    let type: String?
-    let startDate: String?
-    let endDate: String?
-    let dDay: Int?
-    let scheduleStatus: String?
+    let type:  String?
+    let startDate: String
+    let endDate: String
+    let dDay: Int
+    let scheduleStatus: ScheduleAvailable
     let tipMessage: String?
     let categoryId: Int?
     let externalUrl: String?
-    let minPoint: Int?
-    let maxPoint: Int?
-    let defaultPoint: Int?
+    let minPoint: Int
+    let maxPoint: Int
+    let defaultPoint: Int
 }
 
 // MARK: - 활동을 내 일정에 추가 (POST /api/activities/{activityId}/my-activities)
@@ -65,10 +67,12 @@ struct AddMyActivitySuccess: Decodable {
     let myActivityId: Int
     let activityId: Int
     let title: String
-    let category: TodoCategory
+    let category: String  // "GROWTH" | "REST"
     let point: Int
     let startDate: String
     let endDate: String
+    let scheduleStatus: String?  // e.g. "CAUTION"
+    let scheduleReason: String?
 }
 
 // MARK: - 활동 적용(내 일정 반영)

@@ -50,7 +50,7 @@ struct EditEventView: View {
                     repeatEndDateView
                 }
                 
-                // 활동치 설정
+                // 활동치 설정 (고정 일정이면 꺼진 상태로 표시)
                 activitySettingsSection
                     .padding(.vertical, 30)
                 

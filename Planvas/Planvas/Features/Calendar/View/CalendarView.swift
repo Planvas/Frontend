@@ -72,7 +72,8 @@ struct CalendarView: View {
         .sheet(isPresented: $showEventDetail) {
             if let event = selectedEvent {
                 Group {
-                    if event.category == .growth || event.category == .rest {
+                    if !event.isFixed {
+                        // 활동 일정: isFixed == false
                         ActivityEventSummaryView(
                             viewModel: ActivityEventSummaryViewModel.from(event: event, daysUntil: viewModel.getDaysUntil(for: event)),
                             event: event,
@@ -320,7 +321,7 @@ struct CalendarView: View {
         let isToday = viewModel.isDateToday(date)
         let displayEvents = viewModel.getDisplayEvents(for: date, isSelected: isSelected)
         let repeatingEvents = viewModel.getRepeatingEvents(for: date)
-        let multiDaySegments = viewModel.getMultiDayEventSegments(for: date)
+        let multiDayBarLayout = viewModel.getMultiDayBarLayout(for: date)
         
         let dateTextColor = dayTextColor(isSelected: isSelected, isCurrentMonth: isCurrentMonth)
         
@@ -356,38 +357,48 @@ struct CalendarView: View {
                     }
                 }
                 
-                // 여러 날에 걸친 이벤트 막대 (날짜 바로 아래)
-                if isCurrentMonth && !multiDaySegments.isEmpty {
+                // 여러 날에 걸친 이벤트 막대 + 하루 단위 이벤트 (합계 최대 3개)
+                let multiDaySlotCount = multiDayBarLayout.count
+                let remainingForSingle = max(0, 3 - multiDaySlotCount)
+                let limitedDisplayEvents = Array(displayEvents.prefix(remainingForSingle))
+
+                if isCurrentMonth && !multiDayBarLayout.isEmpty {
                     VStack(spacing: 2) {
-                        ForEach(Array(multiDaySegments.prefix(2).enumerated()), id: \.element.event.id) { _, segment in
-                            multiDayBarSegment(
-                                event: segment.event,
-                                isStart: segment.isStart,
-                                isEnd: segment.isEnd,
-                                isSelected: isSelected
-                            )
+                        ForEach(multiDayBarLayout) { slot in
+                            if let event = slot.event {
+                                multiDayBarSegment(
+                                    event: event,
+                                    isStart: slot.isStart,
+                                    isEnd: slot.isEnd,
+                                    isSelected: isSelected
+                                )
+                            } else {
+                                // 빈 슬롯: 투명 스페이서로 자리 유지
+                                Color.clear
+                                    .frame(height: 11)
+                            }
                         }
                     }
                     .padding(.top, 2)
                 }
-                
-                // 이벤트 표시 영역 (하루 단위만)
+
+                // 이벤트 표시 영역 (하루 단위만, 멀티데이 막대와 합계 3개 이내)
                 VStack(spacing: 2) {
-                    if !displayEvents.isEmpty && isCurrentMonth {
-                        ForEach(displayEvents) { event in
+                    if !limitedDisplayEvents.isEmpty && isCurrentMonth {
+                        ForEach(limitedDisplayEvents) { event in
                             HStack(spacing: 3) {
                                 Rectangle()
                                     .foregroundColor(event.color.uiColor)
                                     .frame(width: 2.5, height: 9)
                                     .cornerRadius(1.25)
-                                
+
                                 Text(event.title)
                                     .textStyle(.medium10)
                                     .foregroundColor(isSelected ? .white : .black1)
                                     .lineLimit(1)
                                     .truncationMode(.tail)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                
+
                                 Spacer(minLength: 0)
                             }
                             .frame(maxWidth: .infinity)
@@ -401,6 +412,7 @@ struct CalendarView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
         .frame(height: 79)
+        .clipped()
         .contentShape(Rectangle())
         .onTapGesture {
             viewModel.selectDate(date)
@@ -417,11 +429,9 @@ struct CalendarView: View {
                 .padding(.top, 12)
                 .padding(.bottom, 20)
             
-            // 이벤트 카드들
+            // 이벤트 카드들 (일간 조회 결과)
             VStack(spacing: 12) {
-                let events = viewModel.getEvents(for: viewModel.selectedDate)
-                
-                ForEach(events) { event in
+                ForEach(viewModel.selectedDateEvents) { event in
                     eventCardView(event: event)
                 }
                 
@@ -456,22 +466,6 @@ struct CalendarView: View {
                 }
                 
                 Spacer()
-                
-                if event.isFixed {
-                    Text("고정")
-                        .textStyle(.semibold14spacing)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(
-                            LinearGradient(
-                                colors: [.gradprimary1, .primary1],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .cornerRadius(20)
-                }
             }
             .padding(16)
             .background(Color.white)

@@ -80,7 +80,3 @@ struct HeaderButtonGroup: View {
         }
     }
 }
-
-#Preview {
-    MainView()
-}
