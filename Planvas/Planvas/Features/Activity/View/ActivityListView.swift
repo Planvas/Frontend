@@ -111,7 +111,7 @@ struct ActivityListView: View {
             
             Button {
                 // TODO: 버튼 누르면 장바구니 화면으로 이동하도록 수정
-                
+                router.push(.activityCart)
                 print("장바구니 버튼 클릭")
                 
             } label: {
