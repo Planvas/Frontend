@@ -287,7 +287,7 @@ final class CalendarViewModel {
         Task { await refreshEvents() }
     }
 
-    /// 프리뷰용: 지정한 년/월/일로 이동 후 해당 월·날짜 일정 로드 (CalendarRepository 샘플 확인용)
+    /// 지정한 년/월/일로 이동 후 해당 월 일정 로드 (SwiftUI Preview 등에서 사용)
     func prepareForPreview(year: Int, month: Int, day: Int) async {
         guard let monthDate = calendar.date(from: DateComponents(year: year, month: month, day: 1)),
               let dayDate = calendar.date(from: DateComponents(year: year, month: month, day: day)) else { return }
@@ -516,41 +516,64 @@ final class CalendarViewModel {
         }
     }
 
-    /// 월간 API 호출 후, 해당 월에 등장하는 모든 itemId에 대해 상세 API로 Event 수집 → sampleEvents·selectedDateEvents 갱신.
-    /// 그리드·목록·멀티데이·활동 종료일 등 모두 이 완전한 Event로 처리. 반복 일정은 월간이 알려주는 날짜에 맞춰 배치.
+    /// 월간 API 호출 후, 상세 조회가 필요한 일정만 상세 API 호출하고 나머지는 프리뷰로 그리드 채움.
+    /// 상세 조회 대상: 같은 itemId가 2일 이상 등장하는 경우 (멀티데이 고정 일정 막대·활동 일정 종료일만 표시 판단용).
+    /// 일정 조회/수정 시에는 loadEventDetail(serverId:)로 상세 API 호출.
     func refreshEvents() async {
         let year = calendar.component(.year, from: currentMonth)
         let month = calendar.component(.month, from: currentMonth)
         do {
             let monthResult = try await repository.getMonthCalendar(year: year, month: month)
             monthData = monthResult
-            let itemIds = Set(monthData?.days.flatMap { $0.schedulesPreview.map(\.itemId) }.compactMap { Int($0) } ?? [])
+            // itemId별로 등장하는 날짜 수집 → 2일 이상 등장하는 itemId만 상세 조회
+            var itemIdToDays: [String: Set<String>] = [:]
+            for day in monthResult.days {
+                for preview in day.schedulesPreview {
+                    itemIdToDays[preview.itemId, default: []].insert(day.date)
+                }
+            }
+            let itemIdsNeedingDetail = Set(itemIdToDays.filter { $0.value.count >= 2 }.compactMap { Int($0.key) })
             var eventsByItemId: [Int: Event] = [:]
-            await withTaskGroup(of: (Int, Event?).self) { group in
-                for id in itemIds {
-                    group.addTask {
-                        do {
-                            let event = try await self.repository.getEventDetail(id: id)
-                            return (id, event)
-                        } catch {
-                            print("일정 상세 조회 실패 id=\(id): \(error)")
-                            return (id, nil)
+            if !itemIdsNeedingDetail.isEmpty {
+                await withTaskGroup(of: (Int, Event?).self) { group in
+                    for id in itemIdsNeedingDetail {
+                        group.addTask {
+                            do {
+                                let event = try await self.repository.getEventDetail(id: id)
+                                return (id, event)
+                            } catch {
+                                print("일정 상세 조회 실패 id=\(id): \(error)")
+                                return (id, nil)
+                            }
                         }
                     }
-                }
-                for await (id, event) in group {
-                    if let event { eventsByItemId[id] = event }
+                    for await (id, event) in group {
+                        if let event { eventsByItemId[id] = event }
+                    }
                 }
             }
             var newSample: [String: [Event]] = [:]
-            for day in monthResult.days {
-                let list = day.schedulesPreview.compactMap { preview -> Event? in
-                    guard let id = Int(preview.itemId) else { return nil }
-                    return eventsByItemId[id]
+            // 1) 상세 조회한 이벤트: 멀티데이 막대/활동 종료일만 표시 등 올바른 날짜에 배치
+            for (_, event) in eventsByItemId {
+                let keys: [String]
+                if event.type == .activity && !calendar.isDate(event.startDate, inSameDayAs: event.endDate) {
+                    keys = [dateKeyString(from: event.endDate)]
+                } else {
+                    keys = dateKeys(from: event.startDate, to: event.endDate)
                 }
-                let deduped = Array(Set(list.map(\.id))).compactMap { uid in list.first(where: { $0.id == uid }) }
-                if !deduped.isEmpty {
-                    newSample[day.date] = deduped
+                for key in keys {
+                    if newSample[key] == nil { newSample[key] = [] }
+                    newSample[key]?.append(event)
+                }
+            }
+            // 2) 상세 조회하지 않은 일정: 프리뷰 + 해당 날짜로 Event 생성해 그 날짜에만 표시
+            for day in monthResult.days {
+                for preview in day.schedulesPreview {
+                    guard let id = Int(preview.itemId) else { continue }
+                    if eventsByItemId[id] != nil { continue }
+                    let event = repository.eventFromPreview(preview, date: day.date)
+                    if newSample[day.date] == nil { newSample[day.date] = [] }
+                    newSample[day.date]?.append(event)
                 }
             }
             sampleEvents = newSample

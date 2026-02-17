@@ -21,7 +21,7 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
     /// - API: `GET /api/calendar/month?year=&month=`
     /// - 사용처: `CalendarViewModel.refreshEvents()`
     /// - 시점: 앱 진입, 달 이동, 오늘로 이동, 일정 추가/수정/삭제 후
-    /// - 결과: monthData → buildMonthPreviewEvents() → sampleEvents → 캘린더 그리드(날짜별 점·막대·일정명)
+    /// - 결과: monthData → refreshEvents() → sampleEvents → 캘린더 그리드(날짜별 점·막대·일정명)
     func getMonthCalendar(year: Int, month: Int) async throws -> MonthlyCalendarSuccessDTO {
         try await networkService.getMonthCalendar(year: year, month: month)
     }
@@ -36,10 +36,15 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
     }
 
     /// 일정 id로 단건 상세 조회 (GET /api/calendar/event/{id})
-    /// - 사용처: 그리드용 월별 일정 수집, 상세/수정 시 최신 정보 로드
+    /// - 사용처: 그리드용 월별 일정 수집(필요 시에만), 상세/수정 시 최신 정보 로드
     func getEventDetail(id: Int) async throws -> Event {
         let detail = try await networkService.getEventDetail(id: id)
         return mapDetailToEvent(detail)
+    }
+
+    /// 월간 프리뷰(schedulesPreview) + 해당 날짜로 그리드용 Event 생성. 상세 조회 없이 단일일 표시용.
+    func eventFromPreview(_ preview: SchedulePreviewDTO, date: String) -> Event {
+        mapPreviewToEvent(preview: preview, date: date)
     }
 
     /// 날짜 범위 내 일정 조회 (여러 일간 조회 병렬 호출)
@@ -250,6 +255,51 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
             repeatOption: repeatType,
             fixedScheduleId: detail.isFixed ? serverIdInt : nil,
             myActivityId: detail.isFixed ? nil : serverIdInt,
+            repeatWeekdays: repeatWeekdays,
+            activityPoint: activityPointValue
+        )
+    }
+
+    /// 월간 프리뷰 DTO + 해당 날짜 → 그리드용 Event (상세 조회 없이, 단일일 표시용)
+    private func mapPreviewToEvent(preview: SchedulePreviewDTO, date: String) -> Event {
+        let isFixed = preview.isFixed
+        let serverIdInt = Int(preview.itemId)
+        let id = Self.stableUUID(from: "\(preview.type)-\(preview.itemId)-\(date)")
+        let day = Self.dateOnlyFormatter.date(from: date) ?? Date()
+        let startDay = calendar.startOfDay(for: day)
+        let (startDate, endDate, startTime, endTime, isAllDay) = (
+            startDay, startDay, Time.midnight, Time.endOfDay, true
+        )
+        let color: EventColorType = preview.eventColor.map { EventColorType.from(serverColor: $0) }
+            ?? (isFixed ? .purple1 : Self.colorForServerItem(type: preview.type, itemId: preview.itemId))
+        let category: EventCategory = {
+            switch preview.category?.uppercased() {
+            case "GROWTH": return .growth
+            case "REST": return .rest
+            default: return .none
+            }
+        }()
+        let eventType: EventType = (preview.type == "ACTIVITY") ? .activity : .fixed
+        let (repeatType, repeatWeekdays) = Self.parseRecurrenceRule(preview.recurrenceRule)
+        let isRepeating = repeatType != nil
+        let activityPointValue: Int? = (eventType == .activity) ? 20 : nil
+        return Event(
+            id: id,
+            title: preview.title,
+            isFixed: isFixed,
+            isAllDay: isAllDay,
+            color: color,
+            type: eventType,
+            startDate: startDate,
+            endDate: endDate,
+            startTime: startTime,
+            endTime: endTime,
+            category: category,
+            isCompleted: false,
+            isRepeating: isRepeating,
+            repeatOption: repeatType,
+            fixedScheduleId: isFixed ? serverIdInt : nil,
+            myActivityId: isFixed ? nil : serverIdInt,
             repeatWeekdays: repeatWeekdays,
             activityPoint: activityPointValue
         )
