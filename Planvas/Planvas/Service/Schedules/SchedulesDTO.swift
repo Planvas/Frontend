@@ -121,7 +121,8 @@ struct ToDoCompletedResponse: Decodable {
 }
 
 struct ToDoCompletedSuccess: Decodable {
-    let todoId: Int
+    let id: Int
+    let status: String
 }
 
 // MARK: - 내 활동 생성

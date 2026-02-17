@@ -203,8 +203,8 @@ class MainViewModel {
                     DispatchQueue.main.async {
                         if let success = decodedData.success {
                             self.todos = success.map { todo in
-                                let startTime = self.formatTime(todo.startAt) ?? ""
-                                let endTime = self.formatTime(todo.endAt) ?? ""
+                                let startTime = self.formatTime(todo.startAt)
+                                let endTime = self.formatTime(todo.endAt)
 
                                 return ToDo(
                                     id: todo.id,
@@ -236,8 +236,7 @@ class MainViewModel {
         guard let timePart = isoString.split(separator: "T").last else {
             return ""
         }
-
-        return String(timePart.prefix(5)) // "HH:mm"
+        return String(timePart.prefix(5))
     }
     
     // MARK: - 투두 완료 상태 토글
