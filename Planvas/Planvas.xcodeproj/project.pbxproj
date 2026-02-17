@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4434DF2F2F2F3021004E540D /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 4434DF2E2F2F3021004E540D /* Kingfisher */; };
-		DB2661032F3CE92B00DDE955 /* CombineMoya in Frameworks */ = {isa = PBXBuildFile; productRef = DB2661022F3CE92B00DDE955 /* CombineMoya */; };
+		DB2659362F3C2A7000DDE955 /* CombineMoya in Frameworks */ = {isa = PBXBuildFile; productRef = DB2659352F3C2A7000DDE955 /* CombineMoya */; };
 		DBB843222F1B9B9800676F3F /* Moya in Frameworks */ = {isa = PBXBuildFile; productRef = DBB843212F1B9B9800676F3F /* Moya */; };
 		DBB847052F21DD9A00676F3F /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = DBB847042F21DD9A00676F3F /* GoogleSignIn */; };
 		DBB847072F21DD9A00676F3F /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = DBB847062F21DD9A00676F3F /* GoogleSignInSwift */; };
@@ -47,7 +47,7 @@
 				4434DF2F2F2F3021004E540D /* Kingfisher in Frameworks */,
 				DBB847072F21DD9A00676F3F /* GoogleSignInSwift in Frameworks */,
 				DBB843222F1B9B9800676F3F /* Moya in Frameworks */,
-				DB2661032F3CE92B00DDE955 /* CombineMoya in Frameworks */,
+				DB2659362F3C2A7000DDE955 /* CombineMoya in Frameworks */,
 				DBB847052F21DD9A00676F3F /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -95,7 +95,7 @@
 				DBB847042F21DD9A00676F3F /* GoogleSignIn */,
 				DBB847062F21DD9A00676F3F /* GoogleSignInSwift */,
 				4434DF2E2F2F3021004E540D /* Kingfisher */,
-				DB2661022F3CE92B00DDE955 /* CombineMoya */,
+				DB2659352F3C2A7000DDE955 /* CombineMoya */,
 			);
 			productName = Planvas;
 			productReference = 44E8D7722F16996B00E95F8E /* Planvas.app */;
@@ -293,7 +293,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = THUZAYPFV4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Planvas/Info.plist;
@@ -331,7 +331,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = THUZAYPFV4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Planvas/Info.plist;
@@ -418,7 +418,7 @@
 			package = 4434DF2D2F2F3020004E540D /* XCRemoteSwiftPackageReference "Kingfisher" */;
 			productName = Kingfisher;
 		};
-		DB2661022F3CE92B00DDE955 /* CombineMoya */ = {
+		DB2659352F3C2A7000DDE955 /* CombineMoya */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = DBB843202F1B9B9800676F3F /* XCRemoteSwiftPackageReference "Moya" */;
 			productName = CombineMoya;
