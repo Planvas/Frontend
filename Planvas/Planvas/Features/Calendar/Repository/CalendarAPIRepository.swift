@@ -21,19 +21,30 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
     /// - API: `GET /api/calendar/month?year=&month=`
     /// - 사용처: `CalendarViewModel.refreshEvents()`
     /// - 시점: 앱 진입, 달 이동, 오늘로 이동, 일정 추가/수정/삭제 후
-    /// - 결과: monthData → buildMonthPreviewEvents() → sampleEvents → 캘린더 그리드(날짜별 점·막대·일정명)
+    /// - 결과: monthData → refreshEvents() → sampleEvents → 캘린더 그리드(날짜별 점·막대·일정명)
     func getMonthCalendar(year: Int, month: Int) async throws -> MonthlyCalendarSuccessDTO {
         try await networkService.getMonthCalendar(year: year, month: month)
     }
 
     /// 특정 날짜의 일정 목록 조회 (날짜 셀 탭 시 호출)
     /// - API: `GET /api/calendar/day?date=YYYY-MM-DD` → 응답 `todayTodos`를 `Event[]`로 매핑
-    /// - 사용처: `CalendarViewModel.loadEventsForDate(_ date)`
-    /// - 결과: selectedDateEvents → 선택일 일정 카드 리스트. 상세/수정 시 이 Event 그대로 사용(별도 상세 조회 API 없음)
+    /// - 사용처: 구간 새로고침 등. 목록/그리드용 일정은 월간+상세 API(refreshEvents)로 채움.
     func getEvents(for date: Date) async throws -> [Event] {
         let dateKey = dateKeyString(from: date)
         let dayDTO = try await networkService.getDayCalendar(date: dateKey)
         return dayDTO.todayTodos.map { mapToEvent(item: $0, date: dayDTO.date) }
+    }
+
+    /// 일정 id로 단건 상세 조회 (GET /api/calendar/event/{id})
+    /// - 사용처: 그리드용 월별 일정 수집(필요 시에만), 상세/수정 시 최신 정보 로드
+    func getEventDetail(id: Int) async throws -> Event {
+        let detail = try await networkService.getEventDetail(id: id)
+        return mapDetailToEvent(detail)
+    }
+
+    /// 월간 프리뷰(schedulesPreview) + 해당 날짜로 그리드용 Event 생성. 상세 조회 없이 단일일 표시용.
+    func eventFromPreview(_ preview: SchedulePreviewDTO, date: String) -> Event {
+        mapPreviewToEvent(preview: preview, date: date)
     }
 
     /// 날짜 범위 내 일정 조회 (여러 일간 조회 병렬 호출)
@@ -175,6 +186,124 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
     }
 
     // MARK: - DTO → 도메인 매핑
+
+    /// 상세 조회 DTO → Event (startAt/endAt 필수, 멀티데이·종일·반복·포인트 등 완전 반영)
+    private func mapDetailToEvent(_ detail: EventDetailSuccessDTO) -> Event {
+        guard let start = parseISO8601Date(detail.startAt), let end = parseISO8601Date(detail.endAt) else {
+            let day = Self.dateOnlyFormatter.date(from: String(detail.startAt.prefix(10))) ?? Date()
+            return makeEventFromDetail(detail, startDate: calendar.startOfDay(for: day), endDate: calendar.startOfDay(for: day), startTime: .midnight, endTime: .endOfDay, isAllDay: true)
+        }
+        let isFixed = detail.isFixed
+        let serverIdInt = Int(detail.itemId)
+        let id = Self.stableUUID(from: "\(detail.type)-\(detail.itemId)")
+        let utcCal = Self.utcCalendar
+        let isUTCAllDay = utcCal.component(.hour, from: start) == 0 && utcCal.component(.minute, from: start) == 0
+            && utcCal.component(.hour, from: end) == 23 && utcCal.component(.minute, from: end) >= 59
+        let (startDate, endDate, startTime, endTime, isAllDay): (Date, Date, Time, Time, Bool)
+        if isUTCAllDay {
+            let startComps = utcCal.dateComponents([.year, .month, .day], from: start)
+            let endComps = utcCal.dateComponents([.year, .month, .day], from: end)
+            let localStart = calendar.date(from: startComps).flatMap { calendar.startOfDay(for: $0) } ?? calendar.startOfDay(for: start)
+            let localEnd = calendar.date(from: endComps).flatMap { calendar.startOfDay(for: $0) } ?? calendar.startOfDay(for: end)
+            (startDate, endDate, startTime, endTime, isAllDay) = (localStart, localEnd, .midnight, .endOfDay, true)
+        } else {
+            let allDay = isAllDayEvent(start: start, end: end)
+            let startDay = calendar.startOfDay(for: start)
+            let endDay = calendar.startOfDay(for: end)
+            (startDate, endDate, startTime, endTime, isAllDay) = (
+                startDay, endDay,
+                allDay ? .midnight : Time(from: start, calendar: calendar),
+                allDay ? .endOfDay : Time(from: end, calendar: calendar),
+                allDay
+            )
+        }
+        return makeEventFromDetail(detail, startDate: startDate, endDate: endDate, startTime: startTime, endTime: endTime, isAllDay: isAllDay)
+    }
+
+    private func makeEventFromDetail(_ detail: EventDetailSuccessDTO, startDate: Date, endDate: Date, startTime: Time, endTime: Time, isAllDay: Bool) -> Event {
+        let serverIdInt = Int(detail.itemId)
+        let id = Self.stableUUID(from: "\(detail.type)-\(detail.itemId)")
+        let color: EventColorType = detail.eventColor.map { EventColorType.from(serverColor: $0) }
+            ?? (detail.isFixed ? .purple1 : Self.colorForServerItem(type: detail.type, itemId: detail.itemId))
+        let category: EventCategory = {
+            switch detail.category?.uppercased() {
+            case "GROWTH": return .growth
+            case "REST": return .rest
+            default: return .none
+            }
+        }()
+        let eventType: EventType = (detail.type == "ACTIVITY") ? .activity : .fixed
+        let isCompleted = detail.status?.uppercased() == "DONE"
+        let (repeatType, repeatWeekdays) = Self.parseRecurrenceRule(detail.recurrenceRule)
+        let isRepeating = repeatType != nil
+        /// ACTIVITY일 때 상세 API point 사용, 없으면 기본 20. 고정 일정은 nil.
+        let activityPointValue = detail.point ?? (detail.isFixed ? nil : 20)
+        return Event(
+            id: id,
+            title: detail.title,
+            isFixed: detail.isFixed,
+            isAllDay: isAllDay,
+            color: color,
+            type: eventType,
+            startDate: startDate,
+            endDate: endDate,
+            startTime: startTime,
+            endTime: endTime,
+            category: category,
+            isCompleted: isCompleted,
+            isRepeating: isRepeating,
+            repeatOption: repeatType,
+            fixedScheduleId: detail.isFixed ? serverIdInt : nil,
+            myActivityId: detail.isFixed ? nil : serverIdInt,
+            repeatWeekdays: repeatWeekdays,
+            activityPoint: activityPointValue
+        )
+    }
+
+    /// 월간 프리뷰 DTO + 해당 날짜 → 그리드용 Event (상세 조회 없이, 단일일 표시용)
+    private func mapPreviewToEvent(preview: SchedulePreviewDTO, date: String) -> Event {
+        let isFixed = preview.isFixed
+        let serverIdInt = Int(preview.itemId)
+        let id = Self.stableUUID(from: "\(preview.type)-\(preview.itemId)-\(date)")
+        let day = Self.dateOnlyFormatter.date(from: date) ?? Date()
+        let startDay = calendar.startOfDay(for: day)
+        let (startDate, endDate, startTime, endTime, isAllDay) = (
+            startDay, startDay, Time.midnight, Time.endOfDay, true
+        )
+        let color: EventColorType = preview.eventColor.map { EventColorType.from(serverColor: $0) }
+            ?? (isFixed ? .purple1 : Self.colorForServerItem(type: preview.type, itemId: preview.itemId))
+        let category: EventCategory = {
+            switch preview.category?.uppercased() {
+            case "GROWTH": return .growth
+            case "REST": return .rest
+            default: return .none
+            }
+        }()
+        let eventType: EventType = (preview.type == "ACTIVITY") ? .activity : .fixed
+        let (repeatType, repeatWeekdays) = Self.parseRecurrenceRule(preview.recurrenceRule)
+        let isRepeating = repeatType != nil
+        let activityPointValue: Int? = (eventType == .activity) ? 20 : nil
+        return Event(
+            id: id,
+            title: preview.title,
+            isFixed: isFixed,
+            isAllDay: isAllDay,
+            color: color,
+            type: eventType,
+            startDate: startDate,
+            endDate: endDate,
+            startTime: startTime,
+            endTime: endTime,
+            category: category,
+            isCompleted: false,
+            isRepeating: isRepeating,
+            repeatOption: repeatType,
+            fixedScheduleId: isFixed ? serverIdInt : nil,
+            myActivityId: isFixed ? nil : serverIdInt,
+            repeatWeekdays: repeatWeekdays,
+            activityPoint: activityPointValue
+        )
+    }
 
     /// 일간 일정 DTO → 캘린더 표시용 Event (api: itemId, startAt/endAt ISO, eventColor, point 등)
     private func mapToEvent(item: CalendarItemDTO, date: String) -> Event {
@@ -325,7 +454,9 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         case "WEEKLY":
             if interval >= 2 { return (.biweekly, weekdays) }
             return (.weekly, weekdays)
-        case "MONTHLY": return (.monthly, nil)
+        case "MONTHLY":
+            if interval == 12 { return (.yearly, nil) }
+            return (.monthly, nil)
         case "YEARLY": return (.yearly, nil)
         default: return (nil, nil)
         }
@@ -341,8 +472,8 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         case .biweekly:
             let byday = buildByday(event.repeatWeekdays)
             return byday != nil ? "FREQ=WEEKLY;INTERVAL=2;\(byday!)" : "FREQ=WEEKLY;INTERVAL=2"
-        case .monthly: return "FREQ=MONTHLY;INTERVAL=1"
-        case .yearly: return "FREQ=YEARLY;INTERVAL=1"
+        case .monthly: return "FREQ=MONTHLY"
+        case .yearly: return "FREQ=MONTHLY;INTERVAL=12"
         }
     }
 

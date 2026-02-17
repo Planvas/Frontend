@@ -18,6 +18,7 @@ enum CalendarAPI {
     case getGoogleSchedulesCalendar(timeMin: String?, timeMax: String?) // 구글 캘린더 가져올 일정 목록 조회
     case getMonthCalendar(year: Int, month: Int) // 월간 캘린더 조회
     case getDateCalendar(date: String) // 일간 캘린더 조회 - (YYYY-MM-DD)형식 날짜 조회
+    case getEventDetail(id: Int) // 일정 상세 조회 GET /api/calendar/event/{id}
     case postEvent(body: CreateEventRequestDTO) // 일정 추가 POST /api/calendar/event
     case patchEvent(id: Int, body: UpdateEventRequestDTO) // 일정 수정 PATCH /api/calendar/event/{id}
     case deleteEvent(id: Int) // 일정 삭제 DELETE /api/calendar/event/{id}
@@ -38,6 +39,8 @@ extension CalendarAPI: APITargetType {
             return "/api/calendar/month"
         case .getDateCalendar:
             return "/api/calendar/day"
+        case .getEventDetail(let id):
+            return "/api/calendar/event/\(id)"
         case .postEvent:
             return "/api/calendar/event"
         case .patchEvent(let id, _):
@@ -51,7 +54,7 @@ extension CalendarAPI: APITargetType {
         switch self {
         case .postGoogleCalendar, .postGoogleSchedulesCalendar, .postEvent:
             return .post
-        case .getGoogleCalendar, .getGoogleSchedulesCalendar, .getMonthCalendar, .getDateCalendar:
+        case .getGoogleCalendar, .getGoogleSchedulesCalendar, .getMonthCalendar, .getDateCalendar, .getEventDetail:
             return .get
         case .patchEvent:
             return .patch
@@ -96,6 +99,8 @@ extension CalendarAPI: APITargetType {
                 parameters: ["date": date],
                 encoding: URLEncoding.queryString
             )
+        case .getEventDetail:
+            return .requestPlain
         case .postEvent(let body):
             return .requestJSONEncodable(body)
         case .patchEvent(_, let body):
