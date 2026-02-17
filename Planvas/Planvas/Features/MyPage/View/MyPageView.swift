@@ -44,10 +44,8 @@ struct MyPageView: View {
                                 // 1. 이미 연동된 경우: 로그인 창 없이 서버 동기화만
                                 await syncViewModel.syncGoogleCalendar() // (extension 함수 호출)
                             } else {
-                                // 2. 연동 안 된 경우: 연동 프로세스 진해
-                                syncViewModel.performGoogleCalendarConnect {
-                                    await viewModel.fetchMyPageData()
-                                }
+                                // 2. 연동 안 된 경우: 연동 프로세스 진행
+                                syncViewModel.performGoogleCalendarConnect()
                             }
                             await viewModel.fetchMyPageData()
                             showCalendarAlert = false
@@ -67,18 +65,6 @@ struct MyPageView: View {
             Button("확인") { viewModel.alertErrorMessage = nil }
         } message: {
             Text(viewModel.alertErrorMessage ?? "")
-        }
-    }
-}
-
-extension CalendarSyncViewModel {
-    func syncGoogleCalendar() async {
-        self.statusError = nil
-        do {
-            let service = CalendarNetworkService()
-            try await service.syncGoogleCalendar()
-        } catch {
-            self.statusError = (error as? CalendarAPIError)?.reason ?? error.localizedDescription
         }
     }
 }
