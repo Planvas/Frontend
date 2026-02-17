@@ -14,6 +14,9 @@ protocol CalendarRepositoryProtocol {
 
     /// 특정 날짜의 일정 목록을 가져옵니다 (GET /api/calendar/day) - 날짜 클릭 시 호출
     func getEvents(for date: Date) async throws -> [Event]
+
+    /// 일정 id로 단건 상세 조회 (GET /api/calendar/event/{id}) - 그리드·상세/수정 시 최신 정보용
+    func getEventDetail(id: Int) async throws -> Event
     
     /// 특정 날짜 범위의 이벤트 목록을 가져옵니다 (여러 일간 조회용)
     func getEvents(from startDate: Date, to endDate: Date) async throws -> [Event]
@@ -136,9 +139,17 @@ final class CalendarRepository: CalendarRepositoryProtocol {
     }
     
     func getEvents(for date: Date) async throws -> [Event] {
-        // TODO : API 연동 시 이 부분을 네트워크 호출로 변경
         let dateKey = dateKeyString(from: date)
         return sampleEvents[dateKey] ?? []
+    }
+
+    func getEventDetail(id: Int) async throws -> Event {
+        let all = sampleEvents.values.flatMap { $0 }
+        if let event = all.first(where: { $0.fixedScheduleId == id || $0.myActivityId == id }) {
+            return event
+        }
+        if let first = all.first { return first }
+        throw CalendarRepositoryError.notImplemented(message: "샘플 일정 없음")
     }
     
     func getEvents(from startDate: Date, to endDate: Date) async throws -> [Event] {
