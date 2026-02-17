@@ -47,6 +47,23 @@ class ReportViewModel:ObservableObject {
         return "다음 시즌은 부담 없는 계획들로 \n새로운 밑그림을 그리러 가볼까요?"
     }
     
+    // MARK: - 날짜 형식 변환
+    func formatDate(dateString: String) -> String {
+        // 1. 서버의 ISO8601 문자열을 Date 객체로 변환
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds] // 밀리초 포함
+        
+        // 2. 만약 위 형식이 안 맞으면 기본 ISO 형식을 한 번 더 시도
+        let date = isoFormatter.date(from: dateString) ?? ISO8601DateFormatter().date(from: dateString)
+        
+        guard let date = date else { return dateString } // 변환 실패 시 원본 반환
+        
+        // 3. 뷰에서 보여줄 형식
+        let displayFormatter = DateFormatter()
+        displayFormatter.dateFormat = "yyyy.MM.dd"
+        return displayFormatter.string(from: date)
+    }
+    
     // MARK: - 최종 리포트 가져오기
     func fetchReport(goalId: Int) {
         self.errorMessage = nil

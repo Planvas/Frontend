@@ -40,16 +40,20 @@ struct ratioResponse: Decodable {
 struct summaryResponse: Decodable {
     let type: String
     let title: String
-    let description: String
+    let subTitle: String
 }
 
 struct ctaResponse: Decodable {
-    let primary: ButtonDetail
-    let secondary: ButtonDetail
+    let primary: primaryDetail
+    let secondary: SecondaryDetail
     
-    struct ButtonDetail: Decodable {
+    struct primaryDetail: Decodable {
         let type: String
         let focus: String?
+        let label: String
+    }
+    struct SecondaryDetail: Decodable {
+        let type: String
         let label: String
     }
 }

@@ -19,14 +19,21 @@ struct EmptyReportView: View {
 
 // MARK: - 연도별 완료된 목표 뷰
 struct ReportSectionView: View {
-    let reports: [PastReportSuccessResponse.Seasons]
+    let reports: [PastReportSuccessResponse]
     let onTap: (Int) -> Void
     
+    // MARK: - 데이터 형식 바꾸기
+    private let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MM/dd"
+        return f
+    }()
+    
     var body: some View {
-        ForEach(reports, id: \.goalId) { report in
+        ForEach(reports) { report in
             let des = {
-                if let s = report.startDateTuple, let e = report.endDateTuple {
-                    return "\(s.month)/\(s.day) ~ \(e.month)/\(e.day)"
+                if let s = report.startDateObject, let e = report.endDateObject {
+                    return "\(dateFormatter.string(from: s)) ~ \(dateFormatter.string(from: e))"
                 } else {
                     return "날짜 정보 없음"}
             }()
@@ -34,7 +41,7 @@ struct ReportSectionView: View {
                 title: report.title,
                 desc: des,
             ) {
-                onTap(report.goalId)
+                onTap(report.id)
             }
         }
     }

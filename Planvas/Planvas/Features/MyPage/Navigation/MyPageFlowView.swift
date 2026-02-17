@@ -7,6 +7,7 @@ struct MyPageFlowView: View {
     @State private var goalViewModel = GoalSetupViewModel()
     @State private var myPageViewModel = MyPageViewModel()
     @State private var onboardingViewModel: OnboardingViewModel
+    @State private var loginViewModel = LoginViewModel()
     
     init() {
         let provider = APIManager.shared.createProvider(for: OnboardingAPI.self)
@@ -33,8 +34,10 @@ struct MyPageFlowView: View {
                         LoginView()
                     case .activityPage:
                         ActivityView()
-                    case .goalPage:
-                        OnboardingFlowView() // TODO: -  네비게이션 수정
+                    case .goalInfoSetup:
+                        GoalInfoSetupView()
+                    case .goalRatioInfo:
+                        GoalRatioSetupView()
                     }
                 }
         }
@@ -43,6 +46,8 @@ struct MyPageFlowView: View {
         .environment(goalViewModel)
         .environment(myPageViewModel)
         .environment(onboardingViewModel)
+        .environment(loginViewModel)
+        .environment(\.flowContext, .myPage)
     }
 }
 
