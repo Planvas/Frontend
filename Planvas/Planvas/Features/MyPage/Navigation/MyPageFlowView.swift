@@ -33,8 +33,10 @@ struct MyPageFlowView: View {
                         LoginView()
                     case .activityPage:
                         ActivityView()
-                    case .goalPage:
-                        OnboardingFlowView() // TODO: -  네비게이션 수정
+                    case .goalInfoSetup:
+                        GoalInfoSetupView()
+                    case .goalRatioInfo:
+                        GoalRatioSetupView()
                     }
                 }
         }
