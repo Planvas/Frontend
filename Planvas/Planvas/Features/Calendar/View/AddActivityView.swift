@@ -37,6 +37,14 @@ struct AddActivityView: View {
         .background(.white)
         .onChange(of: viewModel.startDate) { viewModel.updateTargetPeriodFromDates() }
         .onChange(of: viewModel.endDate) { viewModel.updateTargetPeriodFromDates() }
+        .task {
+            do {
+                let goal = try await MyPageViewModel.getCurrentGoal()
+                viewModel.applyCurrentGoal(goal)
+            } catch {
+                // 기본값 유지
+            }
+        }
     }
 
     // MARK: - Header (보라 세로바 + 부제 + 제목)
