@@ -46,7 +46,7 @@ struct ToDoGroup: View {
             }
             
             Button(action:{
-                // 추가 버튼
+                viewModel.showAddTodo = true
             }){
                 HStack(spacing: 8){
                     Image(systemName: "plus")
@@ -87,6 +87,12 @@ struct ToDoGroup: View {
                     .presentationDetents([.medium])
                     .presentationDragIndicator(.visible)
                 }
+            }
+            .sheet(isPresented: $viewModel.showAddTodo) {
+                AddTodoView(
+                    date: viewModel.selectedDate,
+                )
+                .presentationDragIndicator(.visible)
             }
         }
         .padding()
