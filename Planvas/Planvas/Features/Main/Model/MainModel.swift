@@ -18,32 +18,39 @@ enum GoalSetting: String, Decodable {
 struct Schedule: Identifiable {
     let id: Int
     let title: String
-    let type: ScheduleType
+    let color: Int
     var dates: [Date]
+    let recurrenceRule: String?
+    var type: ScheduleType {
+        ScheduleType(rawValue: color) ?? .one
+    }
 }
 
 // 일정 색상
-enum ScheduleType {
-    case yellow
-    case blue
-    case red
-    
-    init(serverCategory: TodoCategory) {
-        switch serverCategory {
-        case .growth:
-            self = .yellow
-        case .rest:
-            self = .blue
-        case .manual:
-            self = .red
-        }
-    }
+enum ScheduleType: Int {
+    case one = 1
+    case two
+    case three
+    case four
+    case five
+    case six
+    case seven
+    case eight
+    case nine
+    case ten
     
     var color: Color {
         switch self {
-        case .yellow: return .calYellow
-        case .blue: return .calBlue1
-        case .red: return .calRed
+        case .one:   return .calRed
+        case .two:   return .calYellow
+        case .three: return .calPink
+        case .four:  return .calPurple1
+        case .five:  return .calPurple2
+        case .six:   return .calBlue1
+        case .seven: return .calBlue2
+        case .eight: return .calBlue3
+        case .nine:  return .calGreen
+        case .ten:   return .ccc
         }
     }
 }
@@ -92,33 +99,13 @@ enum SchedulePosition {
 
 // MARK: - 할 일
 struct ToDo: Identifiable {
-    let id = UUID()
-    let typeColor: ToDoTypeColor
+    let id: Int
+    let typeColor: ScheduleType
     let title: String
     let isFixed: Bool
-    let todoInfo: String
-    let startTime: String
+    let time: String
+    let point: String
     var isCompleted: Bool
-}
-// 할 일 타입별 색상 정리
-enum ToDoTypeColor: String, Codable {
-    case calRed
-    case calPurple
-    case calBlue
-    case calGreen
-    
-    var color: Color {
-        switch self {
-        case .calRed:
-            return Color("calRed")
-        case .calPurple:
-            return Color("calPurple")
-        case .calBlue:
-            return Color("calBlue")
-        case .calGreen:
-            return Color("calGreen")
-        }
-    }
 }
 
 // MARK: - 오늘의 인기 성장 활동

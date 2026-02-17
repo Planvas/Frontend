@@ -17,7 +17,7 @@ struct ToDoGroup: View {
                 Text("오늘의 할 일")
                     .textStyle(.semibold25)
                     .foregroundStyle(.black1)
-                Text("\(viewModel.todayTodos.count)")
+                Text("\(viewModel.todos.count)")
                     .textStyle(.semibold20)
                     .foregroundStyle(.primary1)
                     .padding(8)
@@ -27,7 +27,8 @@ struct ToDoGroup: View {
                     )
             }
             
-            ForEach(viewModel.todayTodos) { todo in
+            // 투두 아이템
+            ForEach(viewModel.todos) { todo in
                 ToDoItem(
                     todo: todo,
                     onToggle: {
@@ -37,8 +38,7 @@ struct ToDoGroup: View {
             }
             
             Button(action:{
-                // TODO: - 할 일 추가 시트 연결
-                print("추가하기")
+                //TODO: - 투두 시트
             }){
                 HStack(spacing: 8){
                     Image(systemName: "plus")
@@ -57,7 +57,12 @@ struct ToDoGroup: View {
                         .stroke(.ccc60, lineWidth: 1)
                 )
             }
+//            .sheet
         }
         .padding()
     }
+}
+
+#Preview {
+    TabBar()
 }

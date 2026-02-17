@@ -8,6 +8,17 @@ enum TodoCategory: String, Codable {
     case growth = "GROWTH"
     case rest = "REST"
     case manual = "MANUAL"
+    
+    var displayText: String {
+        switch self {
+        case .growth:
+            return "성장"
+        case .rest:
+            return "휴식"
+        case .manual:
+            return "휴식"
+        }
+    }
 }
 
 // 타입 카테고리
