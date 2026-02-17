@@ -33,6 +33,48 @@ class MyPageViewModel {
         fetchUser() // 유저 데이터 조회
     }
     
+    // MARK: - 날짜 형식 변환
+    /// 뷰에서 호출하는 splitDate 함수 (튜플 반환)
+    func splitDate(_ dateString: String?) -> (year: String, month: String, day: String) {
+        guard let dateString = dateString else { return ("-", "-", "-") }
+        
+        // 1. ISO8601 시도 - > 그 외 API 날짜 형식
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        // 2. 단순 날짜 (yyyy-MM-dd 형식) 시도 -> 현재 목표 조회 API 날짜형식
+        let simpleFormatter = DateFormatter()
+        simpleFormatter.dateFormat = "yyyy-MM-dd"
+        simpleFormatter.calendar = Calendar(identifier: .gregorian)
+        
+        // 3. 우선순위에 따라 파싱 시도
+        let date = isoFormatter.date(from: dateString) // 밀리초 포함 ISO
+               ?? ISO8601DateFormatter().date(from: dateString) // 기본 ISO
+               ?? simpleFormatter.date(from: dateString) // 단순 날짜 (yyyy-MM-dd)
+        
+        guard let date = date else {
+            return ("-", "-", "-")
+        }
+        
+        let calendar = Calendar.current
+        return (
+            "\(calendar.component(.year, from: date))",
+            "\(calendar.component(.month, from: date))",
+            "\(calendar.component(.day, from: date))"
+        )
+    }
+    /// 뷰에서 호출하는 formatDate 함수
+    func formatDate(dateString: String) -> String {
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let date = isoFormatter.date(from: dateString) ?? ISO8601DateFormatter().date(from: dateString)
+        guard let date = date else { return dateString }
+        
+        let displayFormatter = DateFormatter()
+        displayFormatter.dateFormat = "yyyy.MM.dd"
+        return displayFormatter.string(from: date)
+    }
+    
     // MARK: - 캘린더 연동 상태 조회
     private func checkCalendarStatus() async {
         do {
