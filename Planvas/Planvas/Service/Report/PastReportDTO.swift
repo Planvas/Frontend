@@ -23,11 +23,21 @@ extension PastReportSuccessResponse {
     var startDateObject: Date? {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter.date(from: startDate)
+        if let date = formatter.date(from: startDate) { return date }
+        
+        let simple = DateFormatter()
+        simple.dateFormat = "yyyy-MM-dd"
+        simple.calendar = Calendar(identifier: .gregorian)
+        return simple.date(from: startDate)
     }
     var endDateObject: Date? {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter.date(from: endDate)
+        if let date = formatter.date(from: endDate) { return date }
+        
+        let simple = DateFormatter()
+        simple.dateFormat = "yyyy-MM-dd"
+        simple.calendar = Calendar(identifier: .gregorian)
+        return simple.date(from: endDate)
     }
 }
