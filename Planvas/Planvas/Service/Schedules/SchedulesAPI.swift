@@ -15,6 +15,7 @@ enum SchedulesAPI {
     case getScheduleList // 고정 일정 목록 조회
     case patchSchedule(id: Int, EditScheduleRequestDTO: EditScheduleRequestDTO) // 고정 일정 수정
     case deleteSchedule(id: Int) // 고정 일정 삭제
+    case postTodo(date: String, AddTodoRequest: AddTodoRequest) // 할 일 추가
     case getToDo(date: String) // 할 일 조회
     case patchToDo(todoId: Int) // 할 일 완료
     case postMyActivity(CreateMyActivityRequestDTO: CreateMyActivityRequestDTO) // 내 활동 생성
@@ -39,6 +40,8 @@ extension SchedulesAPI: APITargetType {
             return "\(Self.schedulePath)/\(id)"
         case .deleteSchedule(let id):
             return "\(Self.schedulePath)/\(id)"
+        case .postTodo:
+            return "\(Self.todoPath)"
         case .getToDo:
             return "\(Self.todoPath)"
         case .patchToDo(let todoId):
@@ -58,7 +61,7 @@ extension SchedulesAPI: APITargetType {
     
     var method: Moya.Method {
         switch self {
-        case .postAddSchedule, .postMyActivity:
+        case .postAddSchedule, .postMyActivity, .postTodo:
             return .post
         case .getScheduleList, .getToDo, .getMyActivityDetail:
             return .get
@@ -79,6 +82,11 @@ extension SchedulesAPI: APITargetType {
             return .requestJSONEncodable(EditScheduleRequestDTO)
         case .deleteSchedule:
             return .requestPlain
+        case .postTodo(let date, let AddTodoRequest):
+            return .requestCompositeData(
+                bodyData: try! JSONEncoder().encode(AddTodoRequest),
+                urlParameters: ["date": date]
+            )
         case .getToDo(let date):
             return .requestParameters(
                 parameters: ["date": date],
