@@ -137,7 +137,14 @@ struct CalendarView: View {
                         .onTapGesture { showCompleteAlert = false }
                     ActivityCompleteAlertView(
                         viewModel: alertVM,
-                        onConfirm: { showCompleteAlert = false },
+                        onConfirm: {
+                            Task {
+                                if let id = alertVM.myActivityId {
+                                    await viewModel.completeActivity(myActivityId: id)
+                                }
+                                showCompleteAlert = false
+                            }
+                        },
                         onDismiss: { showCompleteAlert = false }
                     )
                     .padding(.horizontal, 24)
