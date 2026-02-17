@@ -404,7 +404,9 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         case "WEEKLY":
             if interval >= 2 { return (.biweekly, weekdays) }
             return (.weekly, weekdays)
-        case "MONTHLY": return (.monthly, nil)
+        case "MONTHLY":
+            if interval == 12 { return (.yearly, nil) }
+            return (.monthly, nil)
         case "YEARLY": return (.yearly, nil)
         default: return (nil, nil)
         }
