@@ -1,10 +1,3 @@
-//
-//  ActivityDTO.swift
-//  Planvas
-//
-//  Created by 정서영 on 2/2/26.
-//
-
 // MARK: - 활동 탐색/추천 목록 조회 응답
 struct ActivityListResponse: Decodable {
     let resultType: String
@@ -25,8 +18,10 @@ struct Activity: Decodable {
     let category: TodoCategory
     let point: Int
     let thumbnailUrl: String?
-    let scheduleStatus: ScheduleAvailable?  // 일정 가능?주의?
+    let scheduleStatus: ScheduleStatusCategory?  // 일정 가능?주의?겹침?
     let dDay: Int?
+    let tipMessage: String?
+    let externalUrl: String?
 }
 
 // MARK: - 활동 상세 조회 (GET /api/activities/{activityId})
@@ -47,7 +42,7 @@ struct ActivityDetailSuccess: Decodable {
     let startDate: String
     let endDate: String
     let dDay: Int
-    let scheduleStatus: ScheduleAvailable
+    let scheduleStatus: ScheduleStatusCategory
     let tipMessage: String?
     let categoryId: Int?
     let externalUrl: String?
@@ -74,10 +69,12 @@ struct AddMyActivitySuccess: Decodable {
     let myActivityId: Int
     let activityId: Int
     let title: String
-    let category: TodoCategory
+    let category: String  // "GROWTH" | "REST"
     let point: Int
     let startDate: String
     let endDate: String
+    let scheduleStatus: String?  // e.g. "CAUTION"
+    let scheduleReason: String?
 }
 
 // MARK: - 활동 적용(내 일정 반영)
@@ -113,33 +110,40 @@ struct CartListResponse: Decodable {
 
 struct CartListSuccess: Decodable {
     let tab: TodoCategory
-    let items: [CartItem]
+    var items: [CartItem]
 }
 
 struct CartItem: Decodable {
     let cartItemId: Int
     let activityId: Int
-    let category: TodoCategory
-    let dDay: Int
-    let point: Int
     let title: String
-    let subTitle: String
-    let subMessage: String?
+    let description: String?
+    let category: TodoCategory
+    let point: Int
+    let type: TypeCategory?
+    let categoryId: Int?
+    let externalUrl: String?
+    let startDate: String?
     let endDate: String?
+    let dDay: Int?
+    let scheduleStatus: ScheduleStatusCategory
+    let tipMessage: String?
 }
 
+
+
 // MARK: - 장바구니 담기
-struct GetCartItemDTO: Encodable {
+struct PostCartItemDTO: Encodable {
     let activityId: Int
 }
 
-struct GetCartItemResponse: Decodable {
+struct PostCartItemResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
-    let success: GetCartItemSuccess?
+    let success: PostCartItemSuccess?
 }
 
-struct GetCartItemSuccess: Decodable {
+struct PostCartItemSuccess: Decodable {
     let cartItemId: Int
     let activityId: Int
     let message: String
@@ -154,4 +158,31 @@ struct DeleteCartItemResponse: Decodable {
 
 struct DeleteCartItemSuccess: Decodable {
     let deleted: Bool
+}
+
+// MARK: - 활동 카테고리 목록 조회 (GET /api/activities/categories?tab=GROWTH|REST)
+struct ActivityCategoryListResponse: Decodable {
+    let resultType: String
+    let error: ErrorDTO?
+    let success: ActivityCategoryListSuccess?
+}
+
+struct ActivityCategoryListSuccess: Decodable {
+    let tab: TodoCategory
+    let categories: [ActivityCategory]
+}
+
+struct ActivityCategory: Decodable, Identifiable, Hashable {
+    let id: Int
+    let name: String
+    let count: Int
+}
+
+struct ActivityListPage {
+    let items: [ActivityCard]
+    let page: Int
+    let size: Int
+    let totalElements: Int
+    
+    var hasNext: Bool { (page + 1) * size < totalElements }
 }

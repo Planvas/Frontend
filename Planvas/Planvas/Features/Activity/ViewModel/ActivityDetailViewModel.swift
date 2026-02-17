@@ -161,6 +161,28 @@ class ActivityDetailViewModel {
             addErrorMessage = (error as? ActivityAPIError)?.reason ?? error.localizedDescription
         }
     }
+    
+    // MARK: - 장바구니 담기 (POST /api/cart)
+    func addToCart() async {
+        guard let id = activityId else { return }
+        isLoading = true
+        addErrorMessage = nil
+        addSuccessMessage = nil
+        defer { isLoading = false }
+        
+        do {
+            _ = try await repository.postCart(activityId: id)
+            addSuccessMessage = "장바구니에 담겼습니다!"
+        } catch {
+            if let apiError = error as? ActivityAPIError {
+                addErrorMessage = apiError.reason
+            } else {
+                addErrorMessage = "서버 연결에 실패했습니다"
+            }
+        }
+        
+        isLoading = false
+    }
 }
 
 extension ActivityAPIError {
@@ -168,6 +190,9 @@ extension ActivityAPIError {
         switch self {
         case .serverFail(let reason): return reason
         case .invalidResponse: return "응답 형식 오류"
+        case .scheduleConflict(let r): return r ?? "일정이 충돌해 추가할 수 없어요"
+        case .activityNotFound(let r): return r ?? "해당 활동을 찾을 수 없어요"
+        case .badRequest(let r): return r ?? "요청 값이 올바르지 않아요"
         }
     }
 }

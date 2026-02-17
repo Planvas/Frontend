@@ -12,7 +12,7 @@ struct ActivityComponent: View {
     let title: String
     
     var body: some View {
-        HStack(alignment: .center, spacing: 8.34) {
+        HStack(alignment: .center, spacing: 5) {
             Text("\(emoji)")
                 .textStyle(.bold12_5)
             
@@ -21,7 +21,7 @@ struct ActivityComponent: View {
                 .lineLimit(1)
         }
         .padding(.vertical, 10)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 12)
         .foregroundStyle(.black1)
         .background(.interest)
         .clipShape(Capsule())

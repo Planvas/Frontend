@@ -82,13 +82,25 @@ final class CalendarNetworkService: @unchecked Sendable {
         return success
     }
 
+    /// 일정 상세 조회 GET /api/calendar/event/{id}
+    func getEventDetail(id: Int) async throws -> EventDetailSuccessDTO {
+        let response: EventDetailResponse = try await request(.getEventDetail(id: id))
+        if let error = response.error {
+            throw CalendarAPIError.serverFail(reason: error.reason)
+        }
+        guard let success = response.success else {
+            throw CalendarAPIError.invalidResponse
+        }
+        return success
+    }
+
     // MARK: - 일정 추가/수정/삭제
 
     /// 일정 추가 POST /api/calendar/event
     func createEvent(title: String, startAt: String, endAt: String, type: String = "FIXED",
-                     category: String, eventColor: Int, recurrenceRule: String?) async throws -> CreateEventSuccess {
+                     category: String, eventColor: Int, recurrenceRule: String?, recurrenceEndAt: String?) async throws -> CreateEventSuccess {
         let body = CreateEventRequestDTO(title: title, startAt: startAt, endAt: endAt, type: type,
-                                         category: category, eventColor: eventColor, recurrenceRule: recurrenceRule)
+                                         category: category, eventColor: eventColor, recurrenceRule: recurrenceRule, recurrenceEndAt: recurrenceEndAt)
         let response: CreateEventResponse = try await request(.postEvent(body: body))
         if let error = response.error {
             throw CalendarAPIError.serverFail(reason: error.reason)
@@ -101,9 +113,11 @@ final class CalendarNetworkService: @unchecked Sendable {
 
     /// 일정 수정 PATCH /api/calendar/event/{id}
     func updateEvent(id: Int, title: String, startAt: String, endAt: String, type: String = "FIXED",
-                     category: String, eventColor: Int, recurrenceRule: String?) async throws {
+                     category: String, eventColor: Int, recurrenceRule: String?, recurrenceEndAt: String? = nil,
+                     point: Int? = nil, status: String? = nil) async throws {
         let body = UpdateEventRequestDTO(title: title, startAt: startAt, endAt: endAt, type: type,
-                                         category: category, eventColor: eventColor, recurrenceRule: recurrenceRule)
+                                         category: category, eventColor: eventColor, recurrenceRule: recurrenceRule,
+                                         recurrenceEndAt: recurrenceEndAt, point: point, status: status)
         let response: UpdateEventResponse = try await request(.patchEvent(id: id, body: body))
         if let error = response.error {
             throw CalendarAPIError.serverFail(reason: error.reason)

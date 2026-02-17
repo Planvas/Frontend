@@ -76,39 +76,20 @@ struct ActivityEventSummaryView: View {
         .background(.white)
         .sheet(isPresented: $showEventDetailView) {
             if let event = event {
-                Group {
-                    if event.category == .growth || event.category == .rest {
-                        ActivityEventDetailView(
-                            event: event,
-                            startDate: viewModel.startDate,
-                            endDate: viewModel.endDate,
-                            daysUntil: viewModel.daysUntilLabel.flatMap { parseDaysUntil($0) },
-                            targetPeriod: targetPeriod,
-                            onEdit: nil,
-                            onDelete: onDelete,
-                            onSave: { showEventDetailView = false },
-                            onUpdateEvent: { updatedEvent in
-                                onUpdateEvent?(updatedEvent)
-                                showEventDetailView = false
-                            }
-                        )
-                    } else {
-                        FixedEventDetailView(
-                            event: event,
-                            startDate: viewModel.startDate,
-                            endDate: viewModel.endDate,
-                            daysUntil: viewModel.daysUntilLabel.flatMap { parseDaysUntil($0) },
-                            targetPeriod: targetPeriod,
-                            onEdit: nil,
-                            onDelete: onDelete,
-                            onSave: { showEventDetailView = false },
-                            onUpdateEvent: { updatedEvent in
-                                onUpdateEvent?(updatedEvent)
-                                showEventDetailView = false
-                            }
-                        )
+                ActivityEventDetailView(
+                    event: event,
+                    startDate: viewModel.startDate,
+                    endDate: viewModel.endDate,
+                    daysUntil: viewModel.daysUntilLabel.flatMap { parseDaysUntil($0) },
+                    targetPeriod: targetPeriod,
+                    onEdit: nil,
+                    onDelete: onDelete,
+                    onSave: { showEventDetailView = false },
+                    onUpdateEvent: { updatedEvent in
+                        onUpdateEvent?(updatedEvent)
+                        showEventDetailView = false
                     }
-                }
+                )
                 .presentationDragIndicator(.visible)
             }
         }

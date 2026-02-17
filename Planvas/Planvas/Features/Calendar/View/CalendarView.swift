@@ -70,21 +70,25 @@ struct CalendarView: View {
             .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showEventDetail) {
-            if let event = selectedEvent {
+            let event = viewModel.loadedEventDetail ?? selectedEvent
+            if let event {
                 Group {
-                    if event.type == .activity {
+                    if !event.isFixed {
                         ActivityEventSummaryView(
                             viewModel: ActivityEventSummaryViewModel.from(event: event, daysUntil: viewModel.getDaysUntil(for: event)),
                             event: event,
                             onDelete: {
                                 viewModel.deleteEvent(event)
+                                viewModel.clearLoadedEventDetail()
                                 showEventDetail = false
                             },
                             onUpdateEvent: { updatedEvent in
                                 viewModel.updateEvent(updatedEvent)
+                                viewModel.clearLoadedEventDetail()
                                 showEventDetail = false
                             },
                             onCompleteRequested: { alertVM in
+                                viewModel.clearLoadedEventDetail()
                                 showEventDetail = false
                                 completeAlertViewModel = alertVM
                                 showCompleteAlert = true
@@ -98,11 +102,13 @@ struct CalendarView: View {
                             daysUntil: viewModel.getDaysUntil(for: event),
                             onDelete: {
                                 viewModel.deleteEvent(event)
+                                viewModel.clearLoadedEventDetail()
                                 showEventDetail = false
                             },
                             onEdit: nil,
                             onUpdateEvent: { updatedEvent in
                                 viewModel.updateEvent(updatedEvent)
+                                viewModel.clearLoadedEventDetail()
                                 showEventDetail = false
                             }
                         )
@@ -110,6 +116,12 @@ struct CalendarView: View {
                 }
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
+                .task {
+                    if let id = event.fixedScheduleId ?? event.myActivityId {
+                        await viewModel.loadEventDetail(serverId: id)
+                    }
+                }
+                .onDisappear { viewModel.clearLoadedEventDetail() }
             }
         }
         .overlay {

@@ -159,7 +159,7 @@ struct DailyCalendarSuccessDTO: Decodable {
     let todayTodos: [CalendarItemDTO]
 }
 
-/// api.md 기준: itemId String, startAt/endAt ISO, isFixed, eventColor, recurrenceRule, category, status
+/// api.md 기준: itemId String, startAt/endAt ISO, isFixed, eventColor, recurrenceRule, category, status, point(활동 일정)
 struct CalendarItemDTO: Decodable {
     let itemId: String
     let title: String
@@ -171,6 +171,7 @@ struct CalendarItemDTO: Decodable {
     let eventColor: Int?
     let recurrenceRule: String?
     let status: String?  // "TODO" | "DONE"
+    let point: Int?     // 활동 일정 포인트 (성장/휴식)
 }
 
 // MARK: - 일정 추가 (POST /api/calendar/event)
@@ -178,10 +179,11 @@ struct CreateEventRequestDTO: Encodable {
     let title: String
     let startAt: String   // ISO 8601 (e.g. "2026-02-12T18:10:00+09:00")
     let endAt: String
-    let type: String      // "FIXED"
+    let type: String      // "FIXED" (직접 추가·고정 일정) | "ACTIVITY" (활동 일정)
     let category: String  // "GROWTH" | "REST"
     let eventColor: Int   // 1~10
     let recurrenceRule: String?
+    let recurrenceEndAt: String?  // "yyyy-MM-dd", 반복 일정인 경우 필수
 }
 
 struct CreateEventResponse: Decodable {
@@ -199,15 +201,44 @@ struct CreateEventSuccess: Decodable {
     let status: String?
 }
 
+// MARK: - 일정 상세 조회 (GET /api/calendar/event/{id})
+struct EventDetailResponse: Decodable {
+    let resultType: String
+    let error: ErrorDTO?
+    let success: EventDetailSuccessDTO?
+}
+
+/// 일정 상세 조회 응답 success. ACTIVITY일 때 point가 있으면 활동 상세/수정 화면에서 사용.
+struct EventDetailSuccessDTO: Decodable {
+    let itemId: String
+    let title: String
+    let isFixed: Bool
+    let type: String
+    let category: String?
+    let eventColor: Int?
+    let recurrenceRule: String?
+    let startAt: String
+    let endAt: String
+    let status: String?
+    /// 활동 일정(ACTIVITY) 포인트. 상세 보기·수정 시 성장/휴식 포인트 표시용.
+    let point: Int?
+}
+
 // MARK: - 일정 수정 (PATCH /api/calendar/event/{id})
 struct UpdateEventRequestDTO: Encodable {
     let title: String
     let startAt: String
     let endAt: String
-    let type: String
-    let category: String
+    let type: String       // "FIXED" | "ACTIVITY"
+    let category: String   // "GROWTH" | "REST"
     let eventColor: Int
     let recurrenceRule: String?
+    /// 고정 일정 반복 시 반복 종료일 "yyyy-MM-dd"
+    let recurrenceEndAt: String?
+    /// 활동 일정일 때 필수 (성장/휴식 포인트)
+    let point: Int?
+    /// 활동 일정일 때 "TODO" | "DONE"
+    let status: String?
 }
 
 struct UpdateEventResponse: Decodable {

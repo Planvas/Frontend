@@ -1,9 +1,4 @@
-//
-//  CommonEnum.swift
-//  Planvas
-//
-//  Created by 정서영 on 2/6/26.
-//
+import SwiftUI
 
 // 성장/휴식 카테고리
 
@@ -26,27 +21,35 @@ enum TodoCategory: String, Codable {
     }
 }
 
-// 활동 일정 가능 여부
-enum ScheduleAvailable: String, Codable {
-    case available = "AVAILABLE" // 일정 가능
-    case caution = "CAUTION"     // 일정 주의
-    case unavailable = "UNAVAILABLE"   // 일정 마감
+// 타입 카테고리
+enum TypeCategory: String, Codable {
+    case normal = "NORMAL"
+    case contest = "CONTEST"
+}
 
-    // 텍스트 매핑
-    var badgeText: String {
+enum ScheduleStatusCategory: String, Codable {
+    case available = "AVAILABLE"
+    case unavailable = "UNAVAILABLE"
+    case caution = "CAUTION"
+    case conflict = "CONFLICT"
+    
+    // 화면에 보여줄 한글 텍스트
+    var statusTitle: String {
         switch self {
         case .available: return "일정 가능"
-        case .caution: return "일정 주의"
         case .unavailable: return "일정 마감"
+        case .caution: return "일정 주의"
+        case .conflict: return "일정 겹침"
         }
     }
-
-    // 컬러 매핑
-    var badgeColor: Color {
+    
+    // 상태별 테마 색상
+    var themeColor: Color {
         switch self {
         case .available: return .blue1
-        case .caution: return .yellow1
         case .unavailable: return .red1
+        case .caution: return .yellow1
+        case .conflict: return .red1  
         }
     }
 }

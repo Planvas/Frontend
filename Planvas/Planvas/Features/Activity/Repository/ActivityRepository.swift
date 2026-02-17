@@ -19,6 +19,9 @@ protocol ActivityRepositoryProtocol {
 
     /// 활동을 내 일정에 추가 (POST /api/activities/{activityId}/my-activities)
     func addToMyActivities(activityId: Int, goalId: Int, startDate: String, endDate: String, point: Int) async throws -> AddMyActivitySuccess
+    
+    /// 장바구니 담기 (POST /api/cart)
+    func postCart(activityId: Int) async throws -> PostCartItemSuccess
 }
 
 // MARK: - API Implementation
@@ -41,5 +44,9 @@ final class ActivityAPIRepository: ActivityRepositoryProtocol {
 
     func addToMyActivities(activityId: Int, goalId: Int, startDate: String, endDate: String, point: Int) async throws -> AddMyActivitySuccess {
         try await networkService.postAddToMyActivities(activityId: activityId, goalId: goalId, startDate: startDate, endDate: endDate, point: point)
+    }
+    
+    func postCart(activityId: Int) async throws -> PostCartItemSuccess {
+        try await networkService.postCart(activityId: activityId)
     }
 }

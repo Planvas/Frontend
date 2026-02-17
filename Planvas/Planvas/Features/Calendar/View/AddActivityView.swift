@@ -176,5 +176,5 @@ struct AddActivityView: View {
 }
 
 #Preview {
-    AddActivityView(viewModel: ActivitySampleData.sampleAddActivityViewModel())
+    AddActivityView(viewModel: AddActivityViewModel())
 }
