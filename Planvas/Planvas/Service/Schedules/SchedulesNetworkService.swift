@@ -91,6 +91,18 @@ final class SchedulesNetworkService: @unchecked Sendable {
         }
     }
 
+    /// 활동 완료 처리 및 목표 달성도 반영. 응답에 before/after 진행률 포함.
+    func patchActivityComplete(id: Int) async throws -> CompleteMyActivitySuccess {
+        let response: CompleteMyActivityResponse = try await request(.patchActivityComplete(id: id))
+        if let error = response.error {
+            throw SchedulesAPIError.serverFail(reason: error.reason)
+        }
+        guard let success = response.success else {
+            throw SchedulesAPIError.invalidResponse
+        }
+        return success
+    }
+
     // MARK: - Private
 
     private func request<T: Decodable>(_ target: SchedulesAPI) async throws -> T {

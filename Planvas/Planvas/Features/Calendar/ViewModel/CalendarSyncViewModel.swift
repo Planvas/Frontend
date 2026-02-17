@@ -134,6 +134,19 @@ final class CalendarSyncViewModel {
     }
 }
 
+// 마이페이지에서 사용하기 위해 확장
+extension CalendarSyncViewModel {
+    func syncGoogleCalendar() async {
+        self.statusError = nil
+        do {
+            let service = CalendarNetworkService()
+            try await service.syncGoogleCalendar()
+        } catch {
+            self.statusError = (error as? CalendarAPIError)?.reason ?? error.localizedDescription
+        }
+    }
+}
+
 extension CalendarAPIError {
     var reason: String? {
         if case .serverFail(let reason) = self { return reason }
