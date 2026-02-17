@@ -81,6 +81,7 @@ class MainViewModel {
     
     init() {
         weeklySchedules = [:]
+        fetchTodoData(for: selectedDate)
     }
     
     // MARK: - 할 일
@@ -201,19 +202,22 @@ class MainViewModel {
                     let decodedData = try JSONDecoder().decode(ToDoListResponse.self, from: response.data)
                     DispatchQueue.main.async {
                         if let success = decodedData.success {
-                            let todos = success.todos.map {
-                                ToDo(
-                                    id: $0.id,
-                                    typeColor: ScheduleType(rawValue: $0.color) ?? .one,
-                                    title: $0.title,
-                                    isFixed: $0.type == "FIXED",
-                                    time: ($0.startTime == "00:00" && $0.endTime == "23:59")
-                                    ? ""
-                                    : "\($0.startTime) - \($0.endTime)",
-                                    point: $0.point == 0
-                                    ? ""
-                                    : "\($0.category.displayText) +\($0.point)",
-                                    isCompleted: $0.completed
+                            self.todos = success.map { todo in
+                                let startTime = self.formatTime(todo.startAt) ?? ""
+                                let endTime = self.formatTime(todo.endAt) ?? ""
+
+                                return ToDo(
+                                    id: todo.id,
+                                    typeColor: ScheduleType(rawValue: todo.eventColor) ?? .one,
+                                    title: todo.title,
+                                    isFixed: todo.type == "FIXED",
+                                    time: (startTime == "00:00" && endTime == "23:59")
+                                        ? ""
+                                        : "\(startTime) - \(endTime)",
+                                    point: todo.point == 0
+                                        ? ""
+                                        : "\(todo.category.displayText) +\(todo.point)",
+                                    isCompleted: todo.status == "DONE"
                                 )
                             }
                         }
@@ -225,6 +229,15 @@ class MainViewModel {
                 print("Todo 조회 API 오류: \(error)")
             }
         }
+    }
+    
+    // 날짜 + 시간 -> 시간 (HH:mm) 변환 함수
+    func formatTime(_ isoString: String) -> String {
+        guard let timePart = isoString.split(separator: "T").last else {
+            return ""
+        }
+
+        return String(timePart.prefix(5)) // "HH:mm"
     }
     
     // MARK: - 투두 완료 상태 토글
