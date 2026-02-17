@@ -39,8 +39,8 @@ struct ActivityDetailSuccess: Decodable {
     let description: String
     let thumbnailUrl: String?
     let type:  String?
-    let startDate: String
-    let endDate: String
+    let startDate: String?
+    let endDate: String?
     let dDay: Int
     let scheduleStatus: ScheduleStatusCategory
     let tipMessage: String?
