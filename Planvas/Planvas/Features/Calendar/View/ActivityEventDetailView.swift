@@ -2,6 +2,8 @@
 //  ActivityEventDetailView.swift
 //  Planvas
 //
+//  Created by 백지은 on 2/13/26.
+//
 //  활동 일정 수정 뷰. 수정 가능한 항목은 날짜(진행기간)와 활동치뿐.
 //  고정 일정 수정은 EditEventView로, 활동 일정 수정은 이 뷰로 연결됩니다.
 //
@@ -60,6 +62,12 @@ struct ActivityEventDetailView: View {
                 daysUntil: daysUntil,
                 targetPeriod: targetPeriod
             )
+        }
+        .task {
+            do {
+                let goal = try await MyPageViewModel.getCurrentGoal()
+                viewModel.applyCurrentGoal(goal)
+            } catch { }
         }
         .onChange(of: viewModel.startDate) { viewModel.updateTargetPeriodFromDates() }
         .onChange(of: viewModel.endDate) { viewModel.updateTargetPeriodFromDates() }

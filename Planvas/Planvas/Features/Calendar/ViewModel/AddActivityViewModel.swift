@@ -20,7 +20,7 @@ final class AddActivityViewModel: ActivitySettingsBindable {
     var recommendedPoint: Int = 20
     var goalPercent: Int = 60
     var growthLabel: String = "성장"
-    /// API 목표 연동용. 성장/휴식 각각 현재·목표 퍼센트.
+    /// API 목표 연동용. 성장/휴식 각각 현재·목표 퍼센트. 값이 없는 경우 임의로 40 60으로 설정. 
     private(set) var currentGrowthPercent: Int = 0
     private(set) var currentRestPercent: Int = 0
     private(set) var goalGrowthPercent: Int = 40
