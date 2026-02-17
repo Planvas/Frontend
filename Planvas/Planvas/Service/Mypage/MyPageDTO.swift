@@ -20,16 +20,6 @@ struct GoalSuccessResponse: Decodable {
     let presetId: Int?
 }
 
-extension GoalSuccessResponse {
-    var startTuple: (year: String, month: String, day: String)? {
-        return startDate?.toDateTuple()
-    }
-    
-    var endTuple: (year: String, month: String, day: String)? {
-        return endDate?.toDateTuple()
-    }
-}
-
 // MARK: - 내 정보 조회 DTO
 struct UserResponse: Decodable {
     let resultType: String
