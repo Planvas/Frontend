@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CryptoKit
 
 /// Calendar 관련 데이터를 관리하는 repo
 protocol CalendarRepositoryProtocol {
@@ -14,7 +15,13 @@ protocol CalendarRepositoryProtocol {
 
     /// 특정 날짜의 일정 목록을 가져옵니다 (GET /api/calendar/day) - 날짜 클릭 시 호출
     func getEvents(for date: Date) async throws -> [Event]
-    
+
+    /// 일정 id로 단건 상세 조회 (GET /api/calendar/event/{id}) - 그리드·상세/수정 시 최신 정보용
+    func getEventDetail(id: Int) async throws -> Event
+
+    /// 월간 프리뷰(schedulesPreview) + 해당 날짜로 그리드용 Event 생성. 상세 조회 없이 단일일 표시용.
+    func eventFromPreview(_ preview: SchedulePreviewDTO, date: String) -> Event
+
     /// 특정 날짜 범위의 이벤트 목록을 가져옵니다 (여러 일간 조회용)
     func getEvents(from startDate: Date, to endDate: Date) async throws -> [Event]
     
@@ -46,103 +53,89 @@ enum CalendarRepositoryError: Error {
     case notImplemented(message: String)
 }
 
-/// TODO : 현재는 샘플 데이터를 사용 (프리뷰용 활동/고정 일정 포함)
+/// API 미연동 시 사용하는 Mock. 월/일 조회는 빈 데이터 반환.
 final class CalendarRepository: CalendarRepositoryProtocol {
     private static let cal = Calendar.current
-
-    /// 날짜만 (00:00) 또는 날짜+시간. 시간 있는 일정은 startDateTime/endDateTime처럼 시·분 반영.
-    private static func date(_ y: Int, _ m: Int, _ d: Int, hour: Int? = nil, minute: Int? = nil) -> Date {
-        var comps = DateComponents(year: y, month: m, day: d)
-        if let h = hour { comps.hour = h }
-        if let mn = minute { comps.minute = mn }
-        return cal.date(from: comps) ?? Date()
-    }
-
-    /// 프리뷰용: 이벤트를 한 번만 정의한 뒤 날짜 구간에 맞춰 배치 (멀티데이 중복 없음).
-    private lazy var sampleEvents: [String: [Event]] = Self.buildPreviewSampleEvents()
-
-    private static func buildPreviewSampleEvents() -> [String: [Event]] {
-        let calendar = Calendar.current
-        func date(_ y: Int, _ m: Int, _ d: Int, hour: Int? = nil, minute: Int? = nil) -> Date {
-            var c = DateComponents(year: y, month: m, day: d)
-            if let h = hour { c.hour = h }
-            if let mn = minute { c.minute = mn }
-            return calendar.date(from: c) ?? Date()
-        }
-
-        // 이벤트 한 번만 생성 (멀티데이/반복도 인스턴스 하나)
-        let event1 = Event(title: "이벤트", isFixed: true, isAllDay: true, color: .purple1, type: .fixed, startDate: date(2026, 1, 2), endDate: date(2026, 1, 2))
-        let cafeAlba = Event(title: "카페 알바", isFixed: true, isAllDay: false, color: .red, type: .fixed, startDate: date(2026, 1, 13), endDate: date(2026, 1, 13), startTime: Time(hour: 18, minute: 0), endTime: Time(hour: 22, minute: 0), isRepeating: true, repeatOption: .weekly, repeatEndDate: date(2026, 2, 28))
-        let momBirthday = Event(title: "엄마생신", isFixed: true, isAllDay: true, color: .purple2, type: .fixed, startDate: date(2026, 1, 13), endDate: date(2026, 1, 13))
-        let seminar = Event(title: "패스트캠퍼스 AI 세미나", isAllDay: false, color: .purple2, type: .activity, startDate: date(2026, 1, 13), endDate: date(2026, 1, 13), startTime: Time(hour: 14, minute: 0), endTime: Time(hour: 17, minute: 0), category: .growth, activityPoint: 30)
-        let vietnam = Event(title: "베트남 여행", isFixed: true, isAllDay: true, color: .blue1, type: .fixed, startDate: date(2026, 1, 15), endDate: date(2026, 1, 16))
-        let yoga = Event(title: "요가 클래스", isFixed: true, isAllDay: false, color: .green, type: .fixed, startDate: date(2026, 1, 15), endDate: date(2026, 1, 15), startTime: Time(hour: 10, minute: 0), endTime: Time(hour: 11, minute: 0), category: .rest, activityPoint: 20)
-        let club = Event(title: "동아리송별", isFixed: true, isAllDay: true, color: .blue3, type: .fixed, startDate: date(2026, 1, 18), endDate: date(2026, 1, 18))
-        let samsung = Event(title: "삼성전자 대학생 프로그래밍 경진대회", isAllDay: false, color: .purple2, type: .activity, startDate: date(2026, 1, 18), endDate: date(2026, 1, 20), startTime: Time(hour: 9, minute: 0), endTime: Time(hour: 18, minute: 0), category: .growth, activityPoint: 30)
-        let eventPink = Event(title: "이벤트", isFixed: true, isAllDay: true, color: .pink, type: .fixed, startDate: date(2026, 1, 20), endDate: date(2026, 1, 20))
-
-        let allEvents = [event1, cafeAlba, momBirthday, seminar, vietnam, yoga, club, samsung, eventPink]
-        var result: [String: [Event]] = [:]
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        for event in allEvents {
-            var current = calendar.startOfDay(for: event.startDate)
-            let endDay = calendar.startOfDay(for: event.endDate)
-            while current <= endDay {
-                let key = formatter.string(from: current)
-                if result[key] == nil { result[key] = [] }
-                result[key]?.append(event)
-                guard let next = calendar.date(byAdding: .day, value: 1, to: current) else { break }
-                current = next
-            }
-        }
-        // 반복 일정: 매주 수요일(1/13 기준) 1월 내 추가
-        for day in [20, 27] {
-            let key = String(format: "2026-01-%02d", day)
-            if result[key] == nil { result[key] = [] }
-            if result[key]?.contains(where: { $0.id == cafeAlba.id }) == false {
-                result[key]?.append(cafeAlba)
-            }
-        }
-        return result
-    }
-    
-    private func dateKeyString(from date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: date)
-    }
 
     func getMonthCalendar(year: Int, month: Int) async throws -> MonthlyCalendarSuccessDTO {
         let range = Calendar.current.range(of: .day, in: .month, for: Calendar.current.date(from: DateComponents(year: year, month: month)) ?? Date())!
         let days = range.map { day -> CalendarDayDTO in
             let dateStr = String(format: "%04d-%02d-%02d", year, month, day)
-            let hasKey = sampleEvents[dateStr] != nil
-            let list = sampleEvents[dateStr] ?? []
             return CalendarDayDTO(
                 date: dateStr,
-                hasItems: hasKey,
-                itemCount: list.count,
-                schedulesPreview: list.prefix(3).map { CalendarRepository.preview(from: $0, itemId: "\(abs($0.id.hashValue) % 1_000_000)") },
-                moreCount: max(list.count - 3, 0)
+                hasItems: false,
+                itemCount: 0,
+                schedulesPreview: [],
+                moreCount: 0
             )
         }
         return MonthlyCalendarSuccessDTO(year: year, month: month, days: days)
     }
 
-    private static func preview(from event: Event, itemId: String) -> SchedulePreviewDTO {
-        SchedulePreviewDTO(itemId: itemId, title: event.title, isFixed: event.isFixed, type: "FIXED",
-                           category: event.category.rawValue, eventColor: event.color.serverColor, recurrenceRule: nil)
-    }
-    
     func getEvents(for date: Date) async throws -> [Event] {
-        // TODO : API 연동 시 이 부분을 네트워크 호출로 변경
-        let dateKey = dateKeyString(from: date)
-        return sampleEvents[dateKey] ?? []
+        []
     }
-    
+
+    func getEventDetail(id: Int) async throws -> Event {
+        throw CalendarRepositoryError.notImplemented(message: "Mock에는 일정 데이터가 없습니다.")
+    }
+
+    func eventFromPreview(_ preview: SchedulePreviewDTO, date: String) -> Event {
+        let day = Self.dateOnlyFormatter.date(from: date) ?? Self.cal.startOfDay(for: Date())
+        let startDay = Self.cal.startOfDay(for: day)
+        let color: EventColorType = preview.eventColor.map { EventColorType.from(serverColor: $0) }
+            ?? (preview.isFixed ? .purple1 : .purple2)
+        let category: EventCategory = {
+            switch preview.category?.uppercased() {
+            case "GROWTH": return .growth
+            case "REST": return .rest
+            default: return .none
+            }
+        }()
+        let eventType: EventType = (preview.type == "ACTIVITY") ? .activity : .fixed
+        let id = Self.stableUUID(from: "\(preview.type)-\(preview.itemId)-\(date)")
+        let serverIdInt = Int(preview.itemId)
+        let isRepeating = (preview.recurrenceRule != nil && !(preview.recurrenceRule?.isEmpty ?? true))
+        return Event(
+            id: id,
+            title: preview.title,
+            isFixed: preview.isFixed,
+            isAllDay: true,
+            color: color,
+            type: eventType,
+            startDate: startDay,
+            endDate: startDay,
+            startTime: .midnight,
+            endTime: .endOfDay,
+            category: category,
+            isCompleted: false,
+            isRepeating: isRepeating,
+            repeatOption: nil,
+            fixedScheduleId: preview.isFixed ? serverIdInt : nil,
+            myActivityId: preview.isFixed ? nil : serverIdInt,
+            repeatWeekdays: nil,
+            activityPoint: eventType == .activity ? 20 : nil
+        )
+    }
+
+    private static let dateOnlyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        return f
+    }()
+
+    private static func stableUUID(from string: String) -> UUID {
+        var data = Data()
+        data.append(contentsOf: string.utf8)
+        let hash = Insecure.SHA1.hash(data: data)
+        var bytes = Array(Array(hash).prefix(16))
+        bytes[6] = (bytes[6] & 0x0F) | 0x50
+        bytes[8] = (bytes[8] & 0x3F) | 0x80
+        return UUID(uuid: (bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7], bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]))
+    }
+
     func getEvents(from startDate: Date, to endDate: Date) async throws -> [Event] {
-        // TODO : API 연동 시 이 부분을 네트워크 호출로 변경
         var allEvents: [Event] = []
         var currentDate = startDate
         let calendar = Calendar.current
@@ -160,35 +153,19 @@ final class CalendarRepository: CalendarRepositoryProtocol {
     }
     
     func addEvent(_ event: Event) async throws {
-        // TODO : API 연동 시 이 부분을 네트워크 호출로 변경
-        // 현재는 샘플 데이터에 추가만
+        // Mock: 무시 (API 연동 완료, CalendarAPIRepository 사용)
     }
-    
+
     func updateEvent(_ event: Event) async throws {
-        // TODO : API 연동 시 이 부분을 네트워크 호출로 변경
+        // Mock: 무시
     }
-    
+
     func deleteEvent(_ event: Event) async throws {
-        // TODO : API 연동 시 이 부분을 네트워크 호출로 변경
+        // Mock: 무시
     }
     
     func getImportableSchedules() async throws -> [ImportableSchedule] {
-        // TODO : API 연동 시 이 부분을 네트워크 호출로 변경
-        let cal = Calendar.current
-        func date(_ y: Int, _ m: Int, _ d: Int, hour: Int? = nil) -> Date {
-            var c = DateComponents()
-            c.year = y; c.month = m; c.day = d
-            if let h = hour { c.hour = h; c.minute = 0 }
-            return cal.date(from: c) ?? Date()
-        }
-        return [
-            ImportableSchedule(id: "sample-1", title: "편의점 알바", timeDescription: "매주 수요일 18:00 - 22:00", startDate: date(2026, 2, 4, hour: 18), endDate: date(2026, 2, 4, hour: 22), isSelected: true),
-            ImportableSchedule(id: "sample-2", title: "컴퓨터활용능력 학원", timeDescription: "매주 목요일 9:00 - 13:00", startDate: date(2026, 2, 5, hour: 9), endDate: date(2026, 2, 5, hour: 13), isSelected: false),
-            ImportableSchedule(id: "sample-3", title: "헬스장 PT", timeDescription: "매주 토요일 17:00 - 18:00", startDate: date(2026, 2, 7, hour: 17), endDate: date(2026, 2, 7, hour: 18), isSelected: false),
-            ImportableSchedule(id: "sample-4", title: "아빠 생신", timeDescription: "2026년 2월 7일", startDate: date(2026, 2, 7), endDate: date(2026, 2, 7), isSelected: true),
-            ImportableSchedule(id: "sample-5", title: "겨울 국내 여행", timeDescription: "2/15 - 2/18", startDate: date(2026, 2, 15), endDate: date(2026, 2, 18), isSelected: true),
-            ImportableSchedule(id: "sample-6", title: "개강 전 친구 모임", timeDescription: "2026년 2월 25일", startDate: date(2026, 2, 25), endDate: date(2026, 2, 25), isSelected: false)
-        ]
+        []
     }
     
     func importSchedules(_ schedules: [ImportableSchedule]) async throws {
