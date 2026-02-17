@@ -47,7 +47,7 @@ struct MyPageFlowView: View {
         .environment(myPageViewModel)
         .environment(onboardingViewModel)
         .environment(loginViewModel)
-        .environment(NavigationRouter<OnboardingRoute>())
+        .environment(\.flowContext, .myPage)
     }
 }
 
