@@ -127,6 +127,8 @@ struct GoalRatioSetupView: View {
                 .foregroundStyle(.black1)
                 .padding(.bottom, 7)
             
+            let isEnabled:Bool = onboardingRouter != nil && myPageRouter == nil
+            
             Button(action: {
                 print("유형별 추천 비율 선택 버튼 클릭")
                 
@@ -138,14 +140,15 @@ struct GoalRatioSetupView: View {
             }) {
                 Text("유형별 추천 비율 선택하기")
                     .textStyle(.semibold18)
-                    .foregroundStyle(.primary1)
                     .padding(.bottom, 0.05)
                     .overlay(alignment: .bottom) {
                         Rectangle()
                             .frame(height: 1.8)
-                            .foregroundStyle(.primary1)
+                            .foregroundStyle(isEnabled ? Color.primary1 : Color.gray888)
                     }
+                    .foregroundStyle(isEnabled ? Color.primary1 : Color.gray888)
             }
+            .disabled(!isEnabled)
         }
         .frame(maxWidth: .infinity, alignment: .center)
         .padding(.bottom, 35)
