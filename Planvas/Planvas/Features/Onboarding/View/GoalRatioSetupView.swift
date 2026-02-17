@@ -7,9 +7,14 @@
 import SwiftUI
 
 struct GoalRatioSetupView: View {
-    @Environment(NavigationRouter<OnboardingRoute>.self) private var router
     @Environment(GoalSetupViewModel.self) private var vm
     @Environment(OnboardingViewModel.self) private var onboardingVM
+    
+    // 마이페이지 흐름인지 온보딩 흐름인지 알기 위해 두 라우터 모두 선언 (옵셔널)
+    @Environment(\.flowContext) private var flowContext
+    @Environment(NavigationRouter<MyPageRoute>.self) private var myPageRouter: NavigationRouter<MyPageRoute>?
+    @Environment(NavigationRouter<OnboardingRoute>.self) private var onboardingRouter: NavigationRouter<OnboardingRoute>?
+    @Environment(\.dismiss) private var dismiss
 
     // 토글 상태를 위한 @State 변수 추가
     @State private var showGrowthActivities = false
@@ -57,9 +62,24 @@ struct GoalRatioSetupView: View {
                     
                     // 다음 버튼
                     PrimaryButton(title: "다음") {
+                        let startStr = onboardingVM.formatDateForAPI(vm.startDate)
+                        let endStr = onboardingVM.formatDateForAPI(vm.endDate)
+                        
                         print("성장: \(vm.growthPercent)% / 휴식: \(vm.restPercent)%")
                         
-                        router.push(.calendar)
+                        switch flowContext {
+                        case .onboarding:
+                            onboardingRouter?.push(.calendar)
+                        case .myPage:
+                            onboardingVM.createGoal(
+                                title: vm.goalName,
+                                startDate: startStr,
+                                endDate: endStr,
+                                targetGrowthRatio: vm.growthPercent,
+                                targetRestRatio: vm.restPercent
+                            )
+                            myPageRouter?.reset()
+                        }
                         
                         // 목표 이름, 기간, 비율 저장 API 연동 삭제
                     }
@@ -107,22 +127,28 @@ struct GoalRatioSetupView: View {
                 .foregroundStyle(.black1)
                 .padding(.bottom, 7)
             
+            let isEnabled:Bool = (flowContext == .onboarding)
+            
             Button(action: {
                 print("유형별 추천 비율 선택 버튼 클릭")
                 
                 // 유형별 추천 비율 선택 화면 연결
-                router.push(.recommendation)
+                if let onboardingRouter = onboardingRouter {
+                    onboardingRouter.push(.recommendation)
+                }
+                
             }) {
                 Text("유형별 추천 비율 선택하기")
                     .textStyle(.semibold18)
-                    .foregroundStyle(.primary1)
                     .padding(.bottom, 0.05)
                     .overlay(alignment: .bottom) {
                         Rectangle()
                             .frame(height: 1.8)
-                            .foregroundStyle(.primary1)
+                            .foregroundStyle(isEnabled ? Color.primary1 : Color.gray888)
                     }
+                    .foregroundStyle(isEnabled ? Color.primary1 : Color.gray888)
             }
+            .disabled(!isEnabled)
         }
         .frame(maxWidth: .infinity, alignment: .center)
         .padding(.bottom, 35)

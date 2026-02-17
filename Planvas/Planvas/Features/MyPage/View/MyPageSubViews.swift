@@ -39,14 +39,18 @@ struct goalCardView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
-            if let goal = viewModel.goalData, let start = viewModel.goalData?.startTuple, let end = viewModel.goalData?.endTuple  {
+            if let goal = viewModel.goalData {
+                
+                let startDate = viewModel.splitDate(goal.startDate)
+                let endDate = viewModel.splitDate(goal.endDate)
+                
                 Text("현재 목표 기간").textStyle(.semibold18)
                 
                 // 날짜 섹션
                 HStack(spacing: 20) {
-                    dateVStack(year: start.year, month: start.month, day: start.day)
+                    dateVStack(year: startDate.year, month: startDate.month, day: startDate.day)
                     Image(systemName: "chevron.right")
-                    dateVStack(year: end.year, month: end.month, day: end.day)
+                    dateVStack(year: endDate.year, month: endDate.month, day: endDate.day)
                 }
                 
                 Divider().frame(height: 1)
@@ -151,7 +155,9 @@ struct DetailPageView: View {
                MenuButton(title: "현재 목표 수정하기", desc: "비율 및 기간 변경") {
                    // goalData가 있어도 goalId가 nil이면 목표 없음 처리
                    guard let goal = viewModel.goalData,
-                         let goalId = goal.goalId
+                         let _ = goal.goalId,
+                         let startStr = goal.startDate,
+                         let endStr = goal.endDate
                    else {
                        viewModel.handleError("진행 중인 목표가 없습니다.")
                        return
@@ -160,11 +166,15 @@ struct DetailPageView: View {
                    goalVM.goalName = goal.title ?? ""
                    let growth = goal.growthRatio ?? 50
                    goalVM.ratioStep = growth / 10
-                   goalVM.startDate = dateFromTuple(goal.startTuple)
-                   goalVM.endDate   = dateFromTuple(goal.endTuple)
+                   
+                   goalVM.startDate = dateFromISO(startStr)
+                   goalVM.endDate = dateFromISO(endStr)
 
                    router.push(.currentGoalPage)
                }
+               MenuButton(title: "지난 시즌 리포트", desc: "히스토리 모아보기") {
+                    router.push(.pastReportPage)
+                }
            }
            MenuSection("연동 및 알림") {
                MenuButton(title: "캘린더 연동 설정", desc: "구글 캘린더 관리") {
@@ -187,25 +197,9 @@ struct DetailPageView: View {
         .padding(.bottom, 40)
     }
     
-    private func dateFromTuple(_ tuple: (year: String, month: String, day: String)?) -> Date? {
-        guard let tuple else { return nil }
-        guard
-            let y = Int(tuple.year),
-            let m = Int(tuple.month),
-            let d = Int(tuple.day)
-        else { return nil }
-
-        var comp = DateComponents()
-        comp.year = y
-        comp.month = m
-        comp.day = d
-        comp.hour = 0
-        comp.minute = 0
-        comp.second = 0
-
-        comp.timeZone = TimeZone(identifier: "Asia/Seoul")
-
-        return Calendar.current.date(from: comp)
+    private func dateFromISO(_ dateString: String) -> Date? {
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return iso.date(from: dateString) ?? ISO8601DateFormatter().date(from: dateString)
     }
-
 }

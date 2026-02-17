@@ -4,7 +4,7 @@ import Moya
 import CombineMoya
 
 class PastReportViewModel:ObservableObject {
-    @Published var reportsByYear: [Int: [PastReportSuccessResponse.Seasons]] = [:]
+    @Published var reportsByYear: [Int: [PastReportSuccessResponse]] = [:]
     @Published var sortedYears: [Int] = []
     
     @Published var errorMessage: String?
@@ -30,8 +30,9 @@ class PastReportViewModel:ObservableObject {
                 }
             }, receiveValue: { [weak self] (response: PastReportResponse) in
                 self?.errorMessage = nil
-                if response.resultType == "SUCCESS", let seasons = response.success?.seasons {
-                    self?.groupReportsByYear(seasons: seasons.compactMap { $0 })
+                if response.resultType == "SUCCESS" {
+                    let seasons = response.success.compactMap{ $0 }
+                    self?.groupReportsByYear(seasons: seasons)
                 } else {
                     self?.errorMessage = response.error?.reason ?? "알 수 없는 오류 발생"
                 }
@@ -40,7 +41,7 @@ class PastReportViewModel:ObservableObject {
     }
     
     // MARK: - 시즌별 리포트를 오름차순으로 저장(연도별로)
-    private func groupReportsByYear(seasons: [PastReportSuccessResponse.Seasons]) {
+    private func groupReportsByYear(seasons: [PastReportSuccessResponse]) {
         // [연도: [해당 연도 리포트]]
         let group = Dictionary(grouping: seasons) { $0.year }
         self.reportsByYear = group

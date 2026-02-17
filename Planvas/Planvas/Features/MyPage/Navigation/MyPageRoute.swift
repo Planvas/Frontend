@@ -8,5 +8,6 @@ enum MyPageRoute: Hashable {
     case alarmPage
     case loginPage
     case activityPage
-    case goalPage
+    case goalInfoSetup // 목표 이름 & 기간 설정
+    case goalRatioInfo // 목표 비율 설정
 }
