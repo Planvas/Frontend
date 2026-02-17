@@ -21,6 +21,7 @@ final class CalendarViewModel {
 
     private let calendar = Calendar.current
     private let repository: CalendarRepositoryProtocol
+    private let schedulesService = SchedulesNetworkService()
 
     let weekdays = ["일", "월", "화", "수", "목", "금", "토"]
 
@@ -552,10 +553,12 @@ final class CalendarViewModel {
         do {
             let monthResult = try await repository.getMonthCalendar(year: year, month: month)
             monthData = monthResult
+            // 캘린더에는 FIXED·ACTIVITY만 표시 (TODO·MANUAL은 홈 등에서 사용)
+            let calendarPreviewTypes = Set(["FIXED", "ACTIVITY"])
             // itemId별로 등장하는 날짜 수집 → 2일 이상 등장하는 itemId만 상세 조회
             var itemIdToDays: [String: Set<String>] = [:]
             for day in monthResult.days {
-                for preview in day.schedulesPreview {
+                for preview in day.schedulesPreview where calendarPreviewTypes.contains(preview.type.uppercased()) {
                     itemIdToDays[preview.itemId, default: []].insert(day.date)
                 }
             }
@@ -593,9 +596,9 @@ final class CalendarViewModel {
                     newSample[key]?.append(event)
                 }
             }
-            // 2) 상세 조회하지 않은 일정: 프리뷰 + 해당 날짜로 Event 생성해 그 날짜에만 표시
+            // 2) 상세 조회하지 않은 일정: 프리뷰(FIXED·ACTIVITY만) + 해당 날짜로 Event 생성해 그 날짜에만 표시
             for day in monthResult.days {
-                for preview in day.schedulesPreview {
+                for preview in day.schedulesPreview where calendarPreviewTypes.contains(preview.type.uppercased()) {
                     guard let id = Int(preview.itemId) else { continue }
                     if eventsByItemId[id] != nil { continue }
                     let event = repository.eventFromPreview(preview, date: day.date)
@@ -658,6 +661,17 @@ final class CalendarViewModel {
     /// 상세 시트 닫을 때 로드된 상세 캐시 초기화
     func clearLoadedEventDetail() {
         loadedEventDetail = nil
+    }
+
+    /// 활동 완료 처리 (PATCH /api/my-activities/{id}/complete) 후 캘린더 새로고침
+    func completeActivity(myActivityId: Int) async {
+        do {
+            _ = try await schedulesService.patchActivityComplete(id: myActivityId)
+            await refreshEvents()
+        } catch {
+            print("활동 완료 처리 실패: \(error)")
+            await refreshEvents()
+        }
     }
     
     /// 같은 멀티데이 일정을 하나로 묶음. 서버 ID 우선, 없으면 title+start+end+type으로 동일 이벤트 판단.
