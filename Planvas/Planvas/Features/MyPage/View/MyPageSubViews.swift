@@ -197,9 +197,24 @@ struct DetailPageView: View {
         .padding(.bottom, 40)
     }
     
+    // 날짜 파싱 방식
     private func dateFromISO(_ dateString: String) -> Date? {
+        let s = dateString.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let df = DateFormatter()
+        df.locale = Locale(identifier: "en_US_POSIX")
+        df.timeZone = TimeZone(identifier: "Asia/Seoul")
+        df.dateFormat = "yyyy-MM-dd"
+        if let d = df.date(from: s) { return d }
+
         let iso = ISO8601DateFormatter()
+        iso.timeZone = TimeZone(identifier: "Asia/Seoul")
         iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return iso.date(from: dateString) ?? ISO8601DateFormatter().date(from: dateString)
+        if let d = iso.date(from: s) { return d }
+
+        let iso2 = ISO8601DateFormatter()
+        iso2.timeZone = TimeZone(identifier: "Asia/Seoul")
+        iso2.formatOptions = [.withInternetDateTime]
+        return iso2.date(from: s)
     }
 }
