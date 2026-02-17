@@ -27,7 +27,7 @@ struct ToDoGroup: View {
                     )
             }
             
-            // 투두 아이테
+            // 투두 아이템
             ForEach(viewModel.todos) { todo in
                 ToDoItem(
                     todo: todo,
@@ -38,7 +38,7 @@ struct ToDoGroup: View {
             }
             
             Button(action:{
-                viewModel.addTodoViewModel = TodoViewModel()
+                //TODO: - 투두 시트
             }){
                 HStack(spacing: 8){
                     Image(systemName: "plus")
@@ -57,14 +57,7 @@ struct ToDoGroup: View {
                         .stroke(.ccc60, lineWidth: 1)
                 )
             }
-            .sheet(item: $viewModel.addTodoViewModel) { addVM in
-                AddTodoView(
-                    viewModel: addVM,
-                    onSubmit: {
-                        viewModel.addTodoViewModel = nil
-                    }
-                )
-            }
+//            .sheet
         }
         .padding()
     }
