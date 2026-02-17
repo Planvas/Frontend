@@ -70,7 +70,7 @@ struct OnboardingFlowView: View {
         .environment(container.goalVM)
         .environment(container.onboardingVM)
         .environment(container.loginVM)
-        .environment(NavigationRouter<MyPageRoute>())
+        .environment(\.flowContext, .onboarding)
     }
 }
 

@@ -11,6 +11,7 @@ struct GoalRatioSetupView: View {
     @Environment(OnboardingViewModel.self) private var onboardingVM
     
     // 마이페이지 흐름인지 온보딩 흐름인지 알기 위해 두 라우터 모두 선언 (옵셔널)
+    @Environment(\.flowContext) private var flowContext
     @Environment(NavigationRouter<MyPageRoute>.self) private var myPageRouter: NavigationRouter<MyPageRoute>?
     @Environment(NavigationRouter<OnboardingRoute>.self) private var onboardingRouter: NavigationRouter<OnboardingRoute>?
     @Environment(\.dismiss) private var dismiss
@@ -66,9 +67,10 @@ struct GoalRatioSetupView: View {
                         
                         print("성장: \(vm.growthPercent)% / 휴식: \(vm.restPercent)%")
                         
-                        if let onboardingRouter = onboardingRouter {
-                            onboardingRouter.push(.calendar)
-                        } else if let myPageRouter = myPageRouter {
+                        switch flowContext {
+                        case .onboarding:
+                            onboardingRouter?.push(.calendar)
+                        case .myPage:
                             onboardingVM.createGoal(
                                 title: vm.goalName,
                                 startDate: startStr,
@@ -76,9 +78,7 @@ struct GoalRatioSetupView: View {
                                 targetGrowthRatio: vm.growthPercent,
                                 targetRestRatio: vm.restPercent
                             )
-                            myPageRouter.reset()
-                        } else {
-                            dismiss()
+                            myPageRouter?.reset()
                         }
                         
                         // 목표 이름, 기간, 비율 저장 API 연동 삭제
@@ -127,7 +127,7 @@ struct GoalRatioSetupView: View {
                 .foregroundStyle(.black1)
                 .padding(.bottom, 7)
             
-            let isEnabled:Bool = onboardingRouter != nil && myPageRouter == nil
+            let isEnabled:Bool = (flowContext == .onboarding)
             
             Button(action: {
                 print("유형별 추천 비율 선택 버튼 클릭")
