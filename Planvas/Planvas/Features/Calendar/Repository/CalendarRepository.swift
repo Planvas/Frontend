@@ -25,8 +25,8 @@ protocol CalendarRepositoryProtocol {
     /// 특정 날짜 범위의 이벤트 목록을 가져옵니다 (여러 일간 조회용)
     func getEvents(from startDate: Date, to endDate: Date) async throws -> [Event]
     
-    /// 이벤트를 추가합니다
-    func addEvent(_ event: Event) async throws
+    /// 이벤트를 추가합니다. 성공 시 생성된 일정 id(서버 itemId) 반환.
+    func addEvent(_ event: Event) async throws -> Int
     
     /// 이벤트를 업데이트합니다
     func updateEvent(_ event: Event) async throws
@@ -152,8 +152,8 @@ final class CalendarRepository: CalendarRepositoryProtocol {
         return allEvents
     }
     
-    func addEvent(_ event: Event) async throws {
-        // Mock: 무시 (API 연동 완료, CalendarAPIRepository 사용)
+    func addEvent(_ event: Event) async throws -> Int {
+        0
     }
 
     func updateEvent(_ event: Event) async throws {

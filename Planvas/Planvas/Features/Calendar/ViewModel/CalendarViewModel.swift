@@ -253,7 +253,7 @@ final class CalendarViewModel {
         let isCurrentMonth = calendar.isDate(date, equalTo: currentMonth, toGranularity: .month)
         if isCurrentMonth {
             selectedDate = date
-            selectedDateEvents = getEvents(for: date)
+            Task { await loadEventsForDate(date) }
         }
     }
     
@@ -507,12 +507,39 @@ final class CalendarViewModel {
         
         Task {
             do {
-                try await repository.addEvent(event)
+                let newId = try await repository.addEvent(event)
                 await refreshEvents()
+                await mergeNewEventIntoGrid(id: newId)
             } catch {
                 print("이벤트 추가 서버 오류: \(error)")
                 await refreshEvents()
             }
+        }
+    }
+    
+    /// 추가 직후 월간 API에 아직 안 올 수 있어서, 생성된 id로 상세 조회 후 그리드에 합침.
+    private func mergeNewEventIntoGrid(id: Int) async {
+        do {
+            let event = try await repository.getEventDetail(id: id)
+            let keys: [String]
+            if event.type == .activity && !calendar.isDate(event.startDate, inSameDayAs: event.endDate) {
+                keys = [dateKeyString(from: event.endDate)]
+            } else {
+                keys = event.isRepeating
+                    ? dateKeysForRepeatingEvent(event)
+                    : dateKeys(from: event.startDate, to: event.endDate)
+            }
+            for dateKey in keys {
+                if sampleEvents[dateKey] == nil { sampleEvents[dateKey] = [] }
+                if sampleEvents[dateKey]?.contains(where: { $0.fixedScheduleId == id || $0.myActivityId == id }) == true { continue }
+                sampleEvents[dateKey]?.append(event)
+            }
+            let selectedKey = dateKeyString(from: selectedDate)
+            if keys.contains(selectedKey) {
+                selectedDateEvents = sampleEvents[selectedKey] ?? []
+            }
+        } catch {
+            print("추가 일정 상세 조회 실패 id=\(id): \(error)")
         }
     }
 
@@ -576,11 +603,44 @@ final class CalendarViewModel {
                     newSample[day.date]?.append(event)
                 }
             }
+            // 3) moreCount > 0 인 날은 일간 API로 전체 일정 보충 (그리드에 이름이 안 뜨는 것 방지)
+            let daysNeedingDayApi = monthResult.days.filter { (($0.moreCount ?? 0) > 0) }
+            if !daysNeedingDayApi.isEmpty {
+                await withTaskGroup(of: (String, [Event]).self) { group in
+                    for day in daysNeedingDayApi {
+                        group.addTask {
+                            guard let dayDate = Self.previewDateFormatter.date(from: day.date) else { return (day.date, newSample[day.date] ?? []) }
+                            do {
+                                let events = try await self.repository.getEvents(for: dayDate)
+                                return (day.date, events)
+                            } catch {
+                                return (day.date, newSample[day.date] ?? [])
+                            }
+                        }
+                    }
+                    for await (dateKey, events) in group {
+                        if !events.isEmpty {
+                            newSample[dateKey] = events
+                        }
+                    }
+                }
+            }
             sampleEvents = newSample
             let selectedKey = dateKeyString(from: selectedDate)
             selectedDateEvents = sampleEvents[selectedKey] ?? []
         } catch {
             print("월간 캘린더 조회 실패: \(error)")
+        }
+    }
+
+    /// 선택한 날짜의 일정 목록 로드 (GET /api/calendar/day). selectedDateEvents 갱신.
+    func loadEventsForDate(_ date: Date) async {
+        do {
+            let events = try await repository.getEvents(for: date)
+            selectedDateEvents = events
+        } catch {
+            print("일간 일정 조회 실패 (\(date)): \(error)")
+            selectedDateEvents = []
         }
     }
 
