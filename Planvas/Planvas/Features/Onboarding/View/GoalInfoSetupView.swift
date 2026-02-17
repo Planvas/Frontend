@@ -151,10 +151,15 @@ struct GoalInfoSetupView: View {
 #Preview {
     let router = NavigationRouter<OnboardingRoute>()
     let goalVM = GoalSetupViewModel()
+    let loginVM = LoginViewModel()
+    let myPageRouter = NavigationRouter<MyPageRoute>()
 
     NavigationStack(path: .constant(router.path)) {
         GoalInfoSetupView()
             .environment(goalVM)
+            .environment(loginVM)
+            .environment(router)
+            .environment(myPageRouter)
     }
     .environment(router)
 }
