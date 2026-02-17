@@ -2,19 +2,18 @@ import SwiftUI
 
 // MARK: - Header
 struct HeaderSection: View {
-    let goal: goalResponse?
+    let title: String
+    let dateRange: String
     
     var body: some View {
         VStack(spacing: 5) {
-            if let goal = goal {
-                Text("겨울방학 기간 종료")
-                    .textStyle(.semibold25)
-                    .foregroundStyle(Color.white)
-                
-                Text("\(goal.startDate)~\(goal.endDate)")
-                    .textStyle(.medium16)
-                    .foregroundStyle(Color.fff.opacity(0.5))
-            }
+            Text(title)
+                .textStyle(.semibold25)
+                .foregroundStyle(Color.white)
+            
+            Text(dateRange)
+                .textStyle(.medium16)
+                .foregroundStyle(Color.fff.opacity(0.5))
         }
         .padding(.top, 24)
         .padding(.bottom, 32)
@@ -34,9 +33,12 @@ struct MainSection: View {
                 VStack(spacing: 15) {
                     Text(reportData.summary.title)
                         .textStyle(.semibold22)
-                    Text(reportData.summary.description)
+                        .multilineTextAlignment(.center)
+                    Text(reportData.summary.subTitle)
                         .textStyle(.medium18)
+                        .multilineTextAlignment(.center)
                         .foregroundStyle(Color.primary1)
+                        .padding(.horizontal, 20)
                 }
                 .padding(.vertical, 50)
                 
@@ -79,6 +81,7 @@ struct ImageSection: View {
                     Image("success_back")
                         .resizable()
                         .scaledToFit()
+                        .offset(y: -20)
                 }
                 Image(data.name)
                     .resizable()
@@ -139,9 +142,10 @@ struct ButtonSection: View {
                 title: "다음 목표 기간 설정하러 가기",
                 isDisabled: false,
                 action: {
-                    myPageRouter.push(.goalPage)
+                    myPageRouter.push(.goalInfoSetup)
                 }
             )
+            .padding(.bottom, 40)
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 14)
