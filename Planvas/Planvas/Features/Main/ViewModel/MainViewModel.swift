@@ -95,6 +95,7 @@ class MainViewModel {
         fetchTodoStatus(todoId: todo.id)
     }
     var showTodoDetail: Bool = false
+    var showAddTodo: Bool = false
     
     // MARK: - 오늘의 인기 성장 활동
     var items: [ActivityItem] = []
