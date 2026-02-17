@@ -113,10 +113,6 @@ struct Todo: Decodable {
 }
 
 // MARK: - 할 일 완료
-struct ToDoCompletedRequestDTO: Encodable {
-    let completed: Bool
-}
-
 struct ToDoCompletedResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
