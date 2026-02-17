@@ -82,6 +82,18 @@ final class CalendarNetworkService: @unchecked Sendable {
         return success
     }
 
+    /// 일정 상세 조회 GET /api/calendar/event/{id}
+    func getEventDetail(id: Int) async throws -> EventDetailSuccessDTO {
+        let response: EventDetailResponse = try await request(.getEventDetail(id: id))
+        if let error = response.error {
+            throw CalendarAPIError.serverFail(reason: error.reason)
+        }
+        guard let success = response.success else {
+            throw CalendarAPIError.invalidResponse
+        }
+        return success
+    }
+
     // MARK: - 일정 추가/수정/삭제
 
     /// 일정 추가 POST /api/calendar/event

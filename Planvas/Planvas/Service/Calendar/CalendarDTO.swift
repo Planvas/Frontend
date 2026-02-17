@@ -201,6 +201,29 @@ struct CreateEventSuccess: Decodable {
     let status: String?
 }
 
+// MARK: - 일정 상세 조회 (GET /api/calendar/event/{id})
+struct EventDetailResponse: Decodable {
+    let resultType: String
+    let error: ErrorDTO?
+    let success: EventDetailSuccessDTO?
+}
+
+/// 일정 상세 조회 응답 success. ACTIVITY일 때 point가 있으면 활동 상세/수정 화면에서 사용.
+struct EventDetailSuccessDTO: Decodable {
+    let itemId: String
+    let title: String
+    let isFixed: Bool
+    let type: String
+    let category: String?
+    let eventColor: Int?
+    let recurrenceRule: String?
+    let startAt: String
+    let endAt: String
+    let status: String?
+    /// 활동 일정(ACTIVITY) 포인트. 상세 보기·수정 시 성장/휴식 포인트 표시용.
+    let point: Int?
+}
+
 // MARK: - 일정 수정 (PATCH /api/calendar/event/{id})
 struct UpdateEventRequestDTO: Encodable {
     let title: String

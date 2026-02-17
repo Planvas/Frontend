@@ -26,10 +26,12 @@ final class CalendarViewModel {
 
     /// 월간 API 결과 (날짜별 메타·프리뷰). 그리드 표시용.
     private(set) var monthData: MonthlyCalendarSuccessDTO?
-    /// 월간 프리뷰 기반 Event (그리드 표시 전용, 일간 조회로 덮어쓰지 않음)
+    /// 날짜별 Event (상세 API로 수집한 완전한 일정 → 그리드·목록·멀티데이/종료일 모두 이걸로 처리)
     private(set) var sampleEvents: [String: [Event]] = [:]
-    /// 선택된 날짜의 일간 조회 결과 (목록 표시 전용)
+    /// 선택된 날짜의 일정 목록 (sampleEvents[selectedDate]와 동기화)
     private(set) var selectedDateEvents: [Event] = []
+    /// 상세 시트용 최신 일정 (getEventDetail 로드 결과, 시트에서 이걸 우선 표시)
+    private(set) var loadedEventDetail: Event?
 
     /// Google 캘린더 연동 여부 (Repository 연동 상태에서 로드)
     private(set) var isCalendarConnected: Bool = false
@@ -251,7 +253,7 @@ final class CalendarViewModel {
         let isCurrentMonth = calendar.isDate(date, equalTo: currentMonth, toGranularity: .month)
         if isCurrentMonth {
             selectedDate = date
-            Task { await loadEventsForDate(date) }
+            selectedDateEvents = getEvents(for: date)
         }
     }
     
@@ -514,144 +516,65 @@ final class CalendarViewModel {
         }
     }
 
-    /// 해당 날짜 구간만 API로 가져와 sampleEvents에 반영 (일정 추가 실패 시 해당 일만 새로고침 등)
-    private func refreshEventsInRange(from startDate: Date, to endDate: Date) async {
-        let start = calendar.startOfDay(for: startDate)
-        let end = calendar.startOfDay(for: endDate)
-        do {
-            let events = try await repository.getEvents(from: start, to: end)
-            let fetchedByDate = eventsToDictionary(events)
-            for key in dateKeys(from: start, to: end) {
-                sampleEvents[key] = fetchedByDate[key] ?? []
-            }
-            sampleEvents = sampleEvents.filter { !$0.value.isEmpty }
-        } catch {
-            print("일정 구간 새로고침 실패: \(error)")
-        }
-    }
-    
-    /// 월간 API만 호출하여 그리드 표시용 데이터를 갱신. 상세 일정은 날짜 클릭(일간 조회) 시 로드.
+    /// 월간 API 호출 후, 해당 월에 등장하는 모든 itemId에 대해 상세 API로 Event 수집 → sampleEvents·selectedDateEvents 갱신.
+    /// 그리드·목록·멀티데이·활동 종료일 등 모두 이 완전한 Event로 처리. 반복 일정은 월간이 알려주는 날짜에 맞춰 배치.
     func refreshEvents() async {
         let year = calendar.component(.year, from: currentMonth)
         let month = calendar.component(.month, from: currentMonth)
         do {
             let monthResult = try await repository.getMonthCalendar(year: year, month: month)
             monthData = monthResult
-            // 월간 프리뷰에서 멀티데이 감지하여 Event로 변환 → sampleEvents에 반영
-            buildMonthPreviewEvents()
-            // 현재 선택된 날짜의 일간 조회도 자동 로드 (시간 정보 포함)
-            await loadEventsForDate(selectedDate)
+            let itemIds = Set(monthData?.days.flatMap { $0.schedulesPreview.map(\.itemId) }.compactMap { Int($0) } ?? [])
+            var eventsByItemId: [Int: Event] = [:]
+            await withTaskGroup(of: (Int, Event?).self) { group in
+                for id in itemIds {
+                    group.addTask {
+                        do {
+                            let event = try await self.repository.getEventDetail(id: id)
+                            return (id, event)
+                        } catch {
+                            print("일정 상세 조회 실패 id=\(id): \(error)")
+                            return (id, nil)
+                        }
+                    }
+                }
+                for await (id, event) in group {
+                    if let event { eventsByItemId[id] = event }
+                }
+            }
+            var newSample: [String: [Event]] = [:]
+            for day in monthResult.days {
+                let list = day.schedulesPreview.compactMap { preview -> Event? in
+                    guard let id = Int(preview.itemId) else { return nil }
+                    return eventsByItemId[id]
+                }
+                let deduped = Array(Set(list.map(\.id))).compactMap { uid in list.first(where: { $0.id == uid }) }
+                if !deduped.isEmpty {
+                    newSample[day.date] = deduped
+                }
+            }
+            sampleEvents = newSample
+            let selectedKey = dateKeyString(from: selectedDate)
+            selectedDateEvents = sampleEvents[selectedKey] ?? []
         } catch {
             print("월간 캘린더 조회 실패: \(error)")
         }
     }
 
-    /// 월간 프리뷰에서 같은 itemId가 여러 날에 있으면 멀티데이 Event로 변환, sampleEvents에 반영.
-    /// 날짜 클릭(일간 조회) 시 해당 날짜만 덮어쓰므로, 나머지 날짜에는 프리뷰 기반 Event가 유지됨.
-    private func buildMonthPreviewEvents() {
-        guard let monthData = monthData else { return }
-
-        // 1. 모든 날짜의 프리뷰를 itemId로 그룹핑
-        var itemDates: [String: [String]] = [:]          // itemId → [date strings]
-        var itemPreview: [String: SchedulePreviewDTO] = [:] // itemId → 대표 preview
-
-        for day in monthData.days {
-            for preview in day.schedulesPreview {
-                if itemDates[preview.itemId] == nil {
-                    itemDates[preview.itemId] = []
-                    itemPreview[preview.itemId] = preview
-                }
-                itemDates[preview.itemId]?.append(day.date)
-            }
+    /// 상세/수정 시트에서 쓸 최신 일정 로드 (GET /api/calendar/event/{id}). 성공 시 loadedEventDetail에 저장.
+    func loadEventDetail(serverId: Int) async {
+        loadedEventDetail = nil
+        do {
+            let event = try await repository.getEventDetail(id: serverId)
+            loadedEventDetail = event
+        } catch {
+            print("일정 상세 조회 실패 id=\(serverId): \(error)")
         }
-
-        // 2. 각 itemId에 대해 Event 생성 (멀티데이 여부 자동 감지)
-        var events: [String: [Event]] = [:]
-
-        for (itemId, dates) in itemDates {
-            guard let preview = itemPreview[itemId] else { continue }
-            let sortedDates = dates.sorted()
-            guard let firstStr = sortedDates.first,
-                  let lastStr = sortedDates.last,
-                  let firstDate = Self.previewDateFormatter.date(from: firstStr),
-                  let lastDate = Self.previewDateFormatter.date(from: lastStr) else { continue }
-
-            let startDay = calendar.startOfDay(for: firstDate)
-            let isMultiDay = sortedDates.count > 1
-            let endDay = isMultiDay
-                ? calendar.startOfDay(for: lastDate)
-                : (calendar.date(bySettingHour: 23, minute: 59, second: 59, of: startDay) ?? startDay)
-
-            // 멀티데이: itemId만으로 UUID (모든 날에서 동일 Event)
-            // 싱글데이: 날짜 포함 UUID
-            let id = isMultiDay
-                ? CalendarViewModel.stableUUID(from: "preview-\(itemId)")
-                : CalendarViewModel.stableUUID(from: "preview-\(itemId)-\(sortedDates[0])")
-
-            let color: EventColorType = (preview.eventColor.map { EventColorType.from(serverColor: $0) })
-                ?? (preview.isFixed ? .purple1 : Self.colorForServerItem(itemId: itemId, type: preview.type))
-
-            // category 매핑
-            let category: EventCategory = {
-                switch preview.category?.uppercased() {
-                case "GROWTH": return .growth
-                case "REST": return .rest
-                default: return .none
-                }
-            }()
-
-            // type 매핑
-            let eventType: EventType = (preview.type == "ACTIVITY") ? .activity : .fixed
-
-            // recurrenceRule 파싱
-            let (repeatType, repeatWeekdays) = CalendarAPIRepository.parseRecurrenceRule(preview.recurrenceRule)
-            let isRepeating = repeatType != nil
-
-            let event = Event(
-                id: id,
-                title: preview.title,
-                isFixed: preview.isFixed,
-                isAllDay: true,
-                color: color,
-                type: eventType,
-                startDate: startDay,
-                endDate: endDay,
-                startTime: .midnight,
-                endTime: .endOfDay,
-                category: category,
-                isCompleted: false,
-                isRepeating: isRepeating,
-                repeatOption: repeatType,
-                fixedScheduleId: preview.isFixed ? Int(itemId) : nil,
-                myActivityId: preview.isFixed ? nil : Int(itemId),
-                repeatWeekdays: repeatWeekdays
-            )
-
-            // 고정 일정: 구간 내 모든 날짜에 표시(멀티데이 막대). 활동 일정: 종료일에만 단일 일정처럼 표시
-            if preview.isFixed {
-                for dateStr in sortedDates {
-                    if events[dateStr] == nil { events[dateStr] = [] }
-                    events[dateStr]?.append(event)
-                }
-            } else {
-                if events[lastStr] == nil { events[lastStr] = [] }
-                events[lastStr]?.append(event)
-            }
-        }
-
-        sampleEvents = events
     }
 
-    /// 해당 날짜 상세 일정 로드 (GET /api/calendar/day) → 목록 표시용 selectedDateEvents만 갱신.
-    /// 캘린더 그리드(sampleEvents)는 월간 프리뷰 데이터만 사용하므로 건드리지 않음.
-    func loadEventsForDate(_ date: Date) async {
-        do {
-            let events = try await repository.getEvents(for: date)
-            selectedDateEvents = events
-        } catch {
-            print("일간 일정 조회 실패 (\(date)): \(error)")
-            selectedDateEvents = []
-        }
+    /// 상세 시트 닫을 때 로드된 상세 캐시 초기화
+    func clearLoadedEventDetail() {
+        loadedEventDetail = nil
     }
     
     /// 같은 멀티데이 일정을 하나로 묶음. 서버 ID 우선, 없으면 title+start+end+type으로 동일 이벤트 판단.
