@@ -58,10 +58,27 @@ struct ActivityDetail {
 
 extension ActivityDetailSuccess {
     func toDomain() -> ActivityDetail {
-        
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+
+        let start = startDate.flatMap { formatter.date(from: $0) }
+        let end = endDate.flatMap { formatter.date(from: $0) }
+
+        let dateText: String = {
+            switch (startDate, endDate) {
+            case let (s?, e?):
+                return "\(s) ~ \(e)"
+            case let (nil, e?):
+                return "~ \(e)"
+            case let (s?, nil):
+                return "\(s) ~"
+            default:
+                return "날짜 정보 없음"
+            }
+        }()
+
         return ActivityDetail(
             activityId: activityId,
             title: title,
@@ -70,9 +87,9 @@ extension ActivityDetailSuccess {
             description: description,
             thumbnailUrl: thumbnailUrl ?? "",
             dDay: dDay,
-            date: "\(startDate) ~ \(endDate)",
-            startDate: formatter.date(from: startDate),
-            endDate: formatter.date(from: endDate),
+            date: dateText,
+            startDate: start,
+            endDate: end,
             minPoint: minPoint,
             maxPoint: maxPoint,
             defaultPoint: defaultPoint,
