@@ -7,6 +7,7 @@
 
 import Foundation
 import Observation
+import Moya
 
 @MainActor
 @Observable
@@ -35,11 +36,7 @@ final class AddTodoViewModel {
     }
     
     // MARK: - Color Picker
-    let availableColors: [EventColorType] = [
-        .purple2, .blue1, .red, .yellow,
-        .blue2, .pink, .green, .blue3,
-        .ccc, .purple1
-    ]
+    let availableColors: [EventColorType] = [ .purple2, .blue1, .red, .yellow, .blue2, .pink, .green, .blue3, .ccc, .purple1 ]
     
     // MARK: - Activity Computed Properties
     
@@ -107,49 +104,35 @@ final class AddTodoViewModel {
         }
     }
     
-    // MARK: - Event 생성 (추가용)
-    
-    func createUpdatedEvent() -> Event {
-        
-        let category: EventCategory
-        if isActivityEnabled {
-            category = selectedActivityType == .growth ? .growth : .rest
-        } else {
-            category = .none
-        }
-        
-        let calendar = Calendar.current
-        
-        let startDay = calendar.startOfDay(for: startDate)
-        let endDay = calendar.startOfDay(for: endDate)
-        
-        let startTime: Time = isAllDay ? .midnight : Time(from: startDate, calendar: calendar)
-        let endTime: Time = isAllDay ? .endOfDay : Time(from: endDate, calendar: calendar)
-        
-        return Event(
-            id: UUID(),
+    private let provider = APIManager.shared.createProvider(for: SchedulesAPI.self)
+    func saveTodo(date: Date) {
+        let request = AddTodoRequest(
             title: eventName.isEmpty ? "이름 없음" : eventName,
-            isFixed: false,
-            isAllDay: isAllDay,
-            color: selectedColor,
-            type: isActivityEnabled ? .activity : .fixed,
-            startDate: startDay,
-            endDate: endDay,
-            startTime: startTime,
-            endTime: endTime,
-            category: category,
-            isCompleted: false,
-            isRepeating: false,
-            repeatOption: nil,
-            fixedScheduleId: nil,
-            myActivityId: nil,
-            repeatWeekdays: nil,
-            repeatEndDate: nil,
-            activityPoint: isActivityEnabled ? currentActivityValue : 0
+            category: selectedActivityType == .growth ? "GROWTH" : "REST",
+            point: isActivityEnabled ? currentActivityValue : 0,
+            eventColor: selectedColor.serverColor,
+            startTime: startDate.toTimeString(),
+            endTime: endDate.toTimeString()
         )
-    }
-    
-    func saveEvent() {
-        // 실제 저장은 외부에서 처리
+        
+        let dateString = date.toDateString()
+        
+        provider.request(.postTodo(date: dateString, AddTodoRequest: request)) { result in
+            switch result {
+            case .success(let response):
+                    do {
+                        let decodedData = try JSONDecoder().decode(AddToDoResponse.self, from: response.data)
+                        DispatchQueue.main.async {
+                            if decodedData.success != nil {
+                                print("투두 생성 성공")
+                            }
+                        }
+                    } catch {
+                        print("todo 생성 디코더 오류: \(error)")
+                    }
+                case .failure(let error):
+                    print("todo 생성 API 오류: \(error)")
+                }
+            }
     }
 }

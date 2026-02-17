@@ -83,8 +83,9 @@ extension SchedulesAPI: APITargetType {
         case .deleteSchedule:
             return .requestPlain
         case .postTodo(let date, let AddTodoRequest):
-            return .requestCompositeData(
-                bodyData: try! JSONEncoder().encode(AddTodoRequest),
+            return .requestCompositeParameters(
+                bodyParameters: AddTodoRequest.dictionary ?? [:],
+                bodyEncoding: JSONEncoding.default,
                 urlParameters: ["date": date]
             )
         case .getToDo(let date):

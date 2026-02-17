@@ -340,8 +340,7 @@ struct AddTodoView: View {
     // MARK: - Save Button
     private var skipButton: some View {
         PrimaryButton(title: "할 일 추가하기") {
-            _ = viewModel.createUpdatedEvent()
-            viewModel.saveEvent()
+            viewModel.saveTodo(date: date)
             dismiss()
         }
     }
