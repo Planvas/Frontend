@@ -167,11 +167,8 @@ struct DetailPageView: View {
                    let growth = goal.growthRatio ?? 50
                    goalVM.ratioStep = growth / 10
                    
-                   let startFormatted = viewModel.formatDate(dateString: startStr)
-                   let endFormatted = viewModel.formatDate(dateString: endStr)
-                   
-                   goalVM.startDate = dateFromString(startFormatted)
-                   goalVM.endDate = dateFromString(endFormatted)
+                   goalVM.startDate = dateFromISO(startStr)
+                   goalVM.endDate = dateFromISO(endStr)
 
                    router.push(.currentGoalPage)
                }
@@ -200,10 +197,9 @@ struct DetailPageView: View {
         .padding(.bottom, 40)
     }
     
-    private func dateFromString(_ dateString: String) -> Date? {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy.MM.dd"
-            formatter.timeZone = TimeZone(identifier: "Asia/Seoul")
-            return formatter.date(from: dateString)
-        }
+    private func dateFromISO(_ dateString: String) -> Date? {
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return iso.date(from: dateString) ?? ISO8601DateFormatter().date(from: dateString)
+    }
 }
