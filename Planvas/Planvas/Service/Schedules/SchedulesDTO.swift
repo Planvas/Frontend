@@ -98,18 +98,19 @@ struct DeleteSuccess: Decodable {
 struct ToDoListResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
-    let success: ToDoListSuccess?
+    let success: [ToDoListSuccess]?
 }
 
 struct ToDoListSuccess: Decodable {
-    let todos: [Todo]
-}
-
-struct Todo: Decodable {
     let id: Int
     let title: String
+    let type: String
     let category: TodoCategory
-    let completed: Bool
+    let point: Int
+    let eventColor: Int
+    let startAt: String
+    let endAt: String
+    let status: String
 }
 
 // MARK: - 할 일 완료
