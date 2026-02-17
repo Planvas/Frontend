@@ -52,6 +52,13 @@ struct ActivityCompleteAlertView: View {
         }
         .background(.white)
         .cornerRadius(20)
+        .task {
+            guard !viewModel.isGoalLoaded else { return }
+            do {
+                let goal = try await MyPageViewModel.getCurrentGoal()
+                viewModel.applyGoal(goal)
+            } catch { }
+        }
     }
 
     private var progressCard: some View {
@@ -74,55 +81,63 @@ struct ActivityCompleteAlertView: View {
                     .foregroundColor(.primary1)
             }
 
-            HStack{
-                Spacer()
-                Text("이번 기간 목표 \(viewModel.category) \(viewModel.goalPercent)% 중")
-                    .textStyle(.regular14)
-                    .foregroundColor(.black1)
-                Spacer()
-            }
+            if viewModel.isGoalLoaded {
+                HStack{
+                    Spacer()
+                    Text("이번 기간 목표 \(viewModel.category) \(viewModel.goalPercent)% 중")
+                        .textStyle(.regular14)
+                        .foregroundColor(.black1)
+                    Spacer()
+                }
 
-            HStack {
-                GeometryReader { geo in
-                    let fillWidth = geo.size.width * min(max(viewModel.progressRatio, 0), 1)
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 80)
-                            .fill(.ccc20)
-                            .frame(height: 25)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 100)
-                                    .stroke(Color.primary1, lineWidth: 0.5)
-                            )
-
-                        RoundedRectangle(cornerRadius: 80)
-                            .fill(
-                                LinearGradient(
-                                    colors: [.gradprimary1, .primary1],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
+                HStack {
+                    GeometryReader { geo in
+                        let fillWidth = geo.size.width * viewModel.progressRatio
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 80)
+                                .fill(.ccc20)
+                                .frame(height: 25)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 100)
+                                        .stroke(Color.primary1, lineWidth: 0.5)
                                 )
-                            )
-                            .frame(width: fillWidth, height: 25)
 
-                        Text("\(viewModel.currentPercent)%")
-                            .textStyle(.medium14)
-                            .foregroundColor(.white)
-                            .frame(width: fillWidth, alignment: .center)
+                            RoundedRectangle(cornerRadius: 80)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.gradprimary1, .primary1],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .frame(width: fillWidth, height: 25)
+
+                            Text("\(viewModel.displayCurrentPercent)%")
+                                .textStyle(.medium14)
+                                .foregroundColor(.white)
+                                .frame(width: fillWidth, alignment: .center)
+                        }
                     }
+                    .frame(height: 25)
+
+                    Text("\(viewModel.goalPercent)%")
+                        .textStyle(.medium14)
+                        .foregroundColor(.gray444)
+                }
+
+                Text("\(viewModel.displayCurrentPercent)% 달성!")
+                    .textStyle(.bold18)
+                    .foregroundColor(.black1)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            } else {
+                HStack {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
                 }
                 .frame(height: 25)
-
-                Text("\(viewModel.goalPercent)%")
-                    .textStyle(.medium14)
-                    .foregroundColor(.gray444)
+                .padding(.vertical, 8)
             }
-            
-            Text("\(viewModel.currentPercent)% 달성!")
-                .textStyle(.bold18)
-                .foregroundColor(.black1)
-                .frame(maxWidth: .infinity, alignment: .center)
-
-            
         }
         .padding(20)
         .background(.white)
@@ -135,10 +150,12 @@ struct ActivityCompleteAlertView: View {
 }
 
 #Preview {
-    ZStack {
+    let vm = ActivityEventSampleData.sampleCompleteAlertViewModel()
+    vm.applyGoal(GoalSuccessResponse.preview)
+    return ZStack {
         Color.black.opacity(0.4).ignoresSafeArea()
         ActivityCompleteAlertView(
-            viewModel: ActivityEventSampleData.sampleCompleteAlertViewModel(),
+            viewModel: vm,
             onConfirm: {},
             onDismiss: {}
         )

@@ -134,7 +134,7 @@ final class ActivityNetworkService: @unchecked Sendable {
             let tip: ActivityTip? = {
                 guard let tipMessage = dto.tipMessage, !tipMessage.isEmpty else { return nil }
                 let parsed = parseTip(tipMessage)
-                let label = (status == .caution) ? "주의" : "Tip"
+                let label = (status == .unavailable) ? "마감" : "주의"
 
                 return ActivityTip(label: label, tag: parsed.tag, message: parsed.message)
             }()
@@ -291,7 +291,7 @@ final class ActivityNetworkService: @unchecked Sendable {
             let tip: ActivityTip? = {
                 guard let tipMessage = dto.tipMessage, !tipMessage.isEmpty else { return nil }
                 let parsed = parseTip(tipMessage)
-                let label = (status == .caution) ? "주의" : "Tip"
+                let label = (status == .unavailable) ? "마감" : "주의"
                 return ActivityTip(label: label, tag: parsed.tag, message: parsed.message)
             }()
 

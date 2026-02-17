@@ -1,10 +1,11 @@
 import SwiftUI
 import Combine
+import GoogleSignIn
 
 struct MyPageView: View {
     @Environment(MyPageViewModel.self) private var viewModel
     @State private var showCalendarAlert = false
-    
+    @State private var syncViewModel = CalendarSyncViewModel() // 구글 캘린더 연동
     @Environment(NavigationRouter<MyPageRoute>.self) var router
     
     var body: some View {
@@ -28,26 +29,30 @@ struct MyPageView: View {
         }
         .overlay {
             if showCalendarAlert {
-                if viewModel.isCalendarConnected {
-                    CustomAlertView(
-                        title: "캘린더를 동기화하고\n새 일정을 불러올까요?",
-                        message: "현재 캘린더가 연동되어 있어요",
-                        primaryButtonTitle: "Google 캘린더 동기화",
-                        secondaryButtonTitle: "취소",
-                        primaryButtonAction: { showCalendarAlert = false },
-                        secondaryButtonAction: { showCalendarAlert = false }
-                    )
-                } else {
-                    CustomAlertView(
-                        title: "캘린더를 연동할까요?",
-                        message: "현재 캘린더가 연동되어 있지 않아요",
-                        messageColor: .primary1,
-                        primaryButtonTitle: "Google 캘린더 연동",
-                        secondaryButtonTitle: "취소",
-                        primaryButtonAction: { /* 연동 API 호출 */ showCalendarAlert = false },
-                        secondaryButtonAction: { showCalendarAlert = false }
-                    )
-                }
+                // 현재 연동 상태
+                let isConnected = viewModel.isCalendarConnected
+                
+                CustomAlertView(
+                    title: isConnected ? "캘린더를 동기화하고\n새 일정을 불러올까요?" : "캘린더를 연동할까요?",
+                    message: isConnected ? "현재 캘린더가 연동되어 있어요" : "현재 캘린더가 연동되어 있지 않아요",
+                    messageColor: isConnected ? .primary : .primary1,
+                    primaryButtonTitle: isConnected ? "Google 캘린더 동기화" : "Google 캘린더 연동",
+                    secondaryButtonTitle: "취소",
+                    primaryButtonAction: {
+                        Task {
+                            if isConnected {
+                                // 1. 이미 연동된 경우: 로그인 창 없이 서버 동기화만
+                                await syncViewModel.syncGoogleCalendar() // (extension 함수 호출)
+                            } else {
+                                // 2. 연동 안 된 경우: 연동 프로세스 진행
+                                syncViewModel.performGoogleCalendarConnect()
+                            }
+                            await viewModel.fetchMyPageData()
+                            showCalendarAlert = false
+                        }
+                    },
+                    secondaryButtonAction: { showCalendarAlert = false }
+                )
             }
         }
         .task {
