@@ -27,7 +27,7 @@ struct ToDoGroup: View {
                     )
             }
             
-            // 투두 아이템
+            // 투두 아이테
             ForEach(viewModel.todos) { todo in
                 ToDoItem(
                     todo: todo,
@@ -38,8 +38,7 @@ struct ToDoGroup: View {
             }
             
             Button(action:{
-                viewModel.addTodoViewModel = AddActivityViewModel()
-                viewModel.showAddTodo = true
+                viewModel.addTodoViewModel = TodoViewModel()
             }){
                 HStack(spacing: 8){
                     Image(systemName: "plus")
@@ -58,17 +57,13 @@ struct ToDoGroup: View {
                         .stroke(.ccc60, lineWidth: 1)
                 )
             }
-            .sheet(isPresented: $viewModel.showAddTodo) {
-                if let addVM = viewModel.addTodoViewModel {
-                    AddActivityView(
-                        viewModel: addVM,
-                        onSubmit: {
-                            Task { viewModel.AddTodo() }
-                        }
-                    )
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
-                }
+            .sheet(item: $viewModel.addTodoViewModel) { addVM in
+                AddTodoView(
+                    viewModel: addVM,
+                    onSubmit: {
+                        viewModel.addTodoViewModel = nil
+                    }
+                )
             }
         }
         .padding()
