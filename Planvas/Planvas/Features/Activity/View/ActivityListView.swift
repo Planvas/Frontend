@@ -20,6 +20,10 @@ struct ActivityListView: View {
     
     @State private var onlyAvailable: Bool = false
     @State private var showInterestEditSheet = false
+    
+    @State private var showRecommendHeader = true
+    @State private var lastDragTranslation: CGFloat = 0
+    private let recommendHeaderHeight: CGFloat = 65
 
     var body: some View {
         VStack(alignment: .center, spacing: 0) {
@@ -62,24 +66,30 @@ struct ActivityListView: View {
             await vm.onChangeTab(selectedActivityType, searchText: searchText)
         }
         .onChange(of: selectedActivityType) { _, newValue in
+            withAnimation(.easeOut(duration: 0.18)) { showRecommendHeader = true }
+            lastDragTranslation = 0
             Task { await vm.onChangeTab(newValue, searchText: searchText) }
         }
+
         .onChange(of: searchText) { _, newValue in
+            withAnimation(.easeOut(duration: 0.18)) { showRecommendHeader = true }
+            lastDragTranslation = 0
             Task {
-                await vm.resetAndFetch(
-                    tab: selectedActivityType,
-                    searchText: newValue,
-                    onlyAvailable: onlyAvailable
-                )
+                await vm.resetAndFetch(tab: selectedActivityType, searchText: newValue, onlyAvailable: onlyAvailable)
             }
         }
+
         .onChange(of: onlyAvailable) { _, newValue in
+            withAnimation(.easeOut(duration: 0.18)) { showRecommendHeader = true }
+            lastDragTranslation = 0
             Task {
-                await vm.resetAndFetch(
-                    tab: selectedActivityType,
-                    searchText: searchText,
-                    onlyAvailable: newValue
-                )
+                await vm.resetAndFetch(tab: selectedActivityType, searchText: searchText, onlyAvailable: newValue)
+            }
+        }
+        .onChange(of: vm.isLoading) { _, loading in
+            if loading {
+                showRecommendHeader = true
+                lastDragTranslation = 0
             }
         }
         .sheet(isPresented: $showActivitySheet) {
@@ -222,6 +232,11 @@ struct ActivityListView: View {
                     HStack(spacing: 8) {
                         ForEach(vm.categories) { category in
                             Button {
+                                withAnimation(.easeOut(duration: 0.18)) {
+                                    showRecommendHeader = true
+                                }
+                                lastDragTranslation = 0
+                                
                                 Task {
                                     await vm.selectCategory(category, tab: selectedActivityType, searchText: searchText)
                                 }
@@ -254,66 +269,33 @@ struct ActivityListView: View {
     
     // MARK: - 활동 리스트
     private var activityList: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // 추천 활동 그냥 텍스트
-            HStack {
-                HStack(spacing: 0) {
-                    Text(selectedActivityType )
-                        .textStyle(.bold25)
-                        .foregroundStyle(.primary1)
-                    
-                    Text(" 추천활동")
-                        .textStyle(.semibold25)
-                        .foregroundStyle(.black1)
-                }
-                
-                Spacer()
-            }
-            .padding(.bottom, 8)
-            .padding(.horizontal, 20)
-            
-            // 가능한 일정만 보기
-            HStack(spacing: 8) {
-                Spacer()
-                
-                Text("가능한 일정만 보기")
-                    .textStyle(.medium16)
-                    .foregroundStyle(.primary1)
-                
-                Toggle("", isOn: $onlyAvailable)
-                    .labelsHidden()
-                    .tint(.primary1)
-            }
-            .padding(.bottom, 12)
-            .padding(.horizontal, 20)
-            
-            // 리스트 컴포넌트들 스크롤
-            let filtered = vm.filteredActivities(
-                searchText: searchText,
-                onlyAvailable: onlyAvailable
-            )
+        let filtered = vm.filteredActivities(
+            searchText: searchText,
+            onlyAvailable: onlyAvailable
+        )
 
-            if filtered.isEmpty {
+        return ZStack(alignment: .top) {
+            ScrollView {
+                Spacer().frame(height: recommendHeaderHeight)
 
-                VStack(spacing: 8) {
-                    Spacer().frame(height: 63)
+                if filtered.isEmpty {
+                    VStack(spacing: 8) {
+                        Spacer().frame(height: 63)
 
-                    Text("검색 결과 없음")
-                        .textStyle(.semibold20)
-                        .foregroundStyle(.gray444)
+                        Text("검색 결과 없음")
+                            .textStyle(.semibold20)
+                            .foregroundStyle(.gray444)
 
-                    Text("검색어가 맞는지 다시 한 번 확인해주세요 ")
-                        .textStyle(.medium14)
-                        .foregroundStyle(.gray444)
-                    
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 20)
-                .padding(.bottom, 75)
+                        Text("검색어가 맞는지 다시 한 번 확인해주세요 ")
+                            .textStyle(.medium14)
+                            .foregroundStyle(.gray444)
 
-            } else {
-                ScrollView {
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 20)
+                    .padding(.bottom, 75)
+                } else {
                     LazyVStack(spacing: 8) {
                         ForEach(filtered) { item in
                             ActivityCardView(item: item)
@@ -336,9 +318,81 @@ struct ActivityListView: View {
                     .padding(.top, 20)
                     .padding(.bottom, 75)
                 }
-                .scrollIndicators(.hidden)
             }
+            .scrollIndicators(.hidden)
+            // 드래그 방향만으로 show/hide
+            .simultaneousGesture(
+                DragGesture()
+                    .onChanged { value in
+                        let dy = value.translation.height - lastDragTranslation
+                        lastDragTranslation = value.translation.height
+
+                        let threshold: CGFloat = 6
+
+                        // 아래→위로 드래그
+                        if dy < -threshold {
+                            if showRecommendHeader {
+                                withAnimation(.easeOut(duration: 0.18)) {
+                                    showRecommendHeader = false
+                                }
+                            }
+                        }
+                        // 위→아래로 드래그
+                        else if dy > threshold {
+                            if !showRecommendHeader {
+                                withAnimation(.easeOut(duration: 0.18)) {
+                                    showRecommendHeader = true
+                                }
+                            }
+                        }
+                    }
+                    .onEnded { _ in
+                        lastDragTranslation = 0
+                    }
+            )
+
+            // show 상태에 따라 숨김/등장
+            recommendHeader
+                .offset(y: showRecommendHeader ? 0 : -recommendHeaderHeight)
+                .opacity(showRecommendHeader ? 1 : 0)
+                .animation(.easeOut(duration: 0.18), value: showRecommendHeader)
         }
+    }
+    
+    // MARK: - ~ 추천활동, 토글 부분
+    private var recommendHeader: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                HStack(spacing: 0) {
+                    Text(selectedActivityType)
+                        .textStyle(.bold25)
+                        .foregroundStyle(.primary1)
+
+                    Text(" 추천활동")
+                        .textStyle(.semibold25)
+                        .foregroundStyle(.black1)
+                }
+                Spacer()
+            }
+            .padding(.bottom, 8)
+            .padding(.horizontal, 20)
+
+            HStack(spacing: 8) {
+                Spacer()
+
+                Text("가능한 일정만 보기")
+                    .textStyle(.medium16)
+                    .foregroundStyle(.primary1)
+
+                Toggle("", isOn: $onlyAvailable)
+                    .labelsHidden()
+                    .tint(.primary1)
+            }
+            .padding(.bottom, 12)
+            .padding(.horizontal, 20)
+        }
+        .frame(maxWidth: .infinity)
+        .background(.fff)
     }
     
     private var selectedInterestTitles: [String] {
