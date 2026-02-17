@@ -32,4 +32,16 @@ extension Date {
     func isToday() -> Bool {
         Calendar.current.isDateInToday(self)
     }
+    
+    func toTimeString() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: self)
+    }
+    
+    func toDateString() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: self)
+    }
 }

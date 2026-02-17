@@ -97,8 +97,9 @@ struct DeleteSuccess: Decodable {
 // MARK: - 할 일 추가
 struct AddTodoRequest: Encodable {
     let title: String
-    let category: TodoCategory
+    let category: String
     let point: Int
+    let eventColor: Int
     let startTime: String
     let endTime: String
 }
@@ -106,7 +107,7 @@ struct AddTodoRequest: Encodable {
 struct AddToDoResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
-    let success: [AddToDoSuccess]?
+    let success: AddToDoSuccess?
 }
 
 struct AddToDoSuccess: Decodable {
