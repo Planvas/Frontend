@@ -23,6 +23,7 @@ struct MainFlowView: View {
                 }
         }
         .environment(router)
+        .environment(CalendarViewModel())
     }
 }
 

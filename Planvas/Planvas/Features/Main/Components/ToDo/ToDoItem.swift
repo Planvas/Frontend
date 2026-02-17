@@ -11,6 +11,7 @@ import SwiftUI
 struct ToDoItem: View {
     let todo: ToDo
     let onToggle: () -> Void
+    let onTap: () -> Void
     
     var body: some View {
         // TODO: - 클릭 시 디테일 페이지 연결
@@ -93,6 +94,8 @@ struct ToDoItem: View {
                 }
                 .padding(.trailing, 15)
             }
+            .contentShape(Rectangle())
+            .onTapGesture { onTap() }
         }
     }
 }
