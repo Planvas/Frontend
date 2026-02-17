@@ -195,6 +195,14 @@ final class EventDetailViewModel: ActivitySettingsBindable {
         }
     }
     
+    /// GET /api/goals/current 응답(MyPageDTO.GoalSuccessResponse)으로 현재 달성률·목표 퍼센트 반영 (활동 수정 화면용)
+    func applyCurrentGoal(_ goal: GoalSuccessResponse) {
+        currentGrowthAchievement = goal.currentGrowthRatio ?? 0
+        currentRestAchievement = goal.currentRestRatio ?? 0
+        targetGrowthAchievement = goal.growthRatio ?? 40
+        targetRestAchievement = goal.restRatio ?? 60
+    }
+
     /// 특정 활동 타입이 선택되었는지 확인
     func isActivityTypeSelected(_ type: ActivityType) -> Bool {
         selectedActivityType == type
