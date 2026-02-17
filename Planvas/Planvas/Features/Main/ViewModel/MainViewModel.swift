@@ -134,6 +134,8 @@ class MainViewModel {
                                     let date = self.date(day.date)
                                     
                                     for schedule in day.schedules {
+                                        guard schedule.type != "TODO" else { continue }
+
                                         if var existing = groupedSchedules[schedule.id] {
                                             existing.dates.append(date)
                                             groupedSchedules[schedule.id] = existing

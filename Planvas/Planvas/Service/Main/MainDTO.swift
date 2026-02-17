@@ -65,14 +65,21 @@ struct ScheduleDTO: Decodable {
     let startTime: String
     let endTime: String
     let completed: Bool
+    let recurrenceRule: String?
 }
 
 // TodayTodo
 struct TodayTodo: Decodable {
     let todoId: Int
     let title: String
+    let type: String
     let category: TodoCategory
+    let point: Int
+    let color: Int
+    let startTime: String
+    let endTime: String
     let completed: Bool
+    let recurrenceRule: String?
 }
 
 // Recommendation
