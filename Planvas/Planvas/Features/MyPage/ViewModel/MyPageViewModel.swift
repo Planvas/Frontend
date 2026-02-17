@@ -86,7 +86,7 @@ class MyPageViewModel {
         }
     }
     
-    // MARK: - 현재 목표 조회
+    // MARK: - 현재 목표 조회 (마이페이지용 Combine)
     func fetchGoal() {
         self.goalErrorMessage = nil
         self.goalIsLoading = true
@@ -116,6 +116,33 @@ class MyPageViewModel {
                     }
                 })
             .store(in: &cancellable)
+    }
+
+    /// 현재 목표 조회 GET /api/goals/current (마이페이지 fetchGoal과 동일 API·DTO). 캘린더/활동 추가·완료 등에서 값만 쓸 때 사용.
+    static func getCurrentGoal() async throws -> GoalSuccessResponse {
+        let provider = APIManager.shared.createProvider(for: MyPageRouter.self)
+        let response: GoalResponse = try await withCheckedThrowingContinuation { continuation in
+            provider.request(.getCurrentGoal) { result in
+                switch result {
+                case .success(let response):
+                    do {
+                        let decoded = try JSONDecoder().decode(GoalResponse.self, from: response.data)
+                        continuation.resume(returning: decoded)
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+        if let error = response.error {
+            throw NSError(domain: "MyPage", code: 0, userInfo: [NSLocalizedDescriptionKey: error.reason])
+        }
+        guard let success = response.success else {
+            throw NSError(domain: "MyPage", code: 0, userInfo: [NSLocalizedDescriptionKey: "목표 정보 없음"])
+        }
+        return success
     }
     
     // MARK: - 내 정보 조회

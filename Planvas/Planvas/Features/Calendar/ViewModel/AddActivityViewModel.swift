@@ -20,6 +20,11 @@ final class AddActivityViewModel: ActivitySettingsBindable {
     var recommendedPoint: Int = 20
     var goalPercent: Int = 60
     var growthLabel: String = "성장"
+    /// API 목표 연동용. 성장/휴식 각각 현재·목표 퍼센트. 값이 없는 경우 임의로 40 60으로 설정. 
+    private(set) var currentGrowthPercent: Int = 0
+    private(set) var currentRestPercent: Int = 0
+    private(set) var goalGrowthPercent: Int = 40
+    private(set) var goalRestPercent: Int = 60
 
     private let calendar = Calendar.current
 
@@ -55,5 +60,31 @@ final class AddActivityViewModel: ActivitySettingsBindable {
         formatter.dateFormat = "M/d"
         formatter.locale = Locale(identifier: "ko_KR")
         targetPeriod = "\(formatter.string(from: startDate)) ~ \(formatter.string(from: endDate))"
+    }
+
+    /// GET /api/goals/current 응답(MyPageDTO.GoalSuccessResponse)으로 현재 달성률·목표 퍼센트 반영.
+    func applyCurrentGoal(_ goal: GoalSuccessResponse) {
+        currentGrowthPercent = goal.currentGrowthRatio ?? 0
+        currentRestPercent = goal.currentRestRatio ?? 0
+        goalGrowthPercent = goal.growthRatio ?? 40
+        goalRestPercent = goal.restRatio ?? 60
+        if growthLabel == "성장" {
+            currentAchievementPercent = goal.currentGrowthRatio ?? 0
+            goalPercent = goal.growthRatio ?? 40
+        } else {
+            currentAchievementPercent = goal.currentRestRatio ?? 0
+            goalPercent = goal.restRatio ?? 60
+        }
+    }
+
+    /// 성장/휴식 전환 시 표시 퍼센트 갱신
+    func syncDisplayPercentFromCategory() {
+        if growthLabel == "성장" {
+            currentAchievementPercent = currentGrowthPercent
+            goalPercent = goalGrowthPercent
+        } else {
+            currentAchievementPercent = currentRestPercent
+            goalPercent = goalRestPercent
+        }
     }
 }

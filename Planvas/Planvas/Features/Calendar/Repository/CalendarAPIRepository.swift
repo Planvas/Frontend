@@ -26,13 +26,17 @@ final class CalendarAPIRepository: CalendarRepositoryProtocol {
         try await networkService.getMonthCalendar(year: year, month: month)
     }
 
+    /// 캘린더에 표시할 일정 타입 (TODO·MANUAL은 홈 등에서만 사용)
+    private static let calendarDisplayTypes: Set<String> = ["FIXED", "ACTIVITY"]
+
     /// 특정 날짜의 일정 목록 조회 (날짜 셀 탭 시 호출)
-    /// - API: `GET /api/calendar/day?date=YYYY-MM-DD` → 응답 `todayTodos`를 `Event[]`로 매핑
+    /// - API: `GET /api/calendar/day?date=YYYY-MM-DD` → 응답 `todayTodos` 중 FIXED·ACTIVITY만 Event[]로 매핑
     /// - 사용처: 구간 새로고침 등. 목록/그리드용 일정은 월간+상세 API(refreshEvents)로 채움.
     func getEvents(for date: Date) async throws -> [Event] {
         let dateKey = dateKeyString(from: date)
         let dayDTO = try await networkService.getDayCalendar(date: dateKey)
-        return dayDTO.todayTodos.map { mapToEvent(item: $0, date: dayDTO.date) }
+        let calendarItems = dayDTO.todayTodos.filter { Self.calendarDisplayTypes.contains($0.type.uppercased()) }
+        return calendarItems.map { mapToEvent(item: $0, date: dayDTO.date) }
     }
 
     /// 일정 id로 단건 상세 조회 (GET /api/calendar/event/{id})

@@ -59,9 +59,24 @@ final class ActivityEventSummaryViewModel {
         self.deleteButtonTitle = deleteButtonTitle
     }
 
-    /// Event(활동일정)로부터 ViewModel 생성. category가 growth/rest일 때 해당 라벨 + activityPoint 사용.
-    /// progressMinPercent/goalPercent/currentPercent는 API 연동 전 기본값 사용.
-    /// daysUntil: 양수면 "D-N", 0이면 "D-day", 음수(지난 일정)면 "D+N" 형식.
+    /// GET /api/goals/current 응답(MyPageDTO.GoalSuccessResponse)으로 완료 모달용 현재/목표 퍼센트 반영.
+    func applyCurrentGoal(_ goal: GoalSuccessResponse, category: EventCategory) {
+        switch category {
+        case .growth:
+            progressMinPercent = 0
+            goalPercent = goal.growthRatio ?? 40
+            currentPercent = goal.currentGrowthRatio ?? 0
+        case .rest:
+            progressMinPercent = 0
+            goalPercent = goal.restRatio ?? 60
+            currentPercent = goal.currentRestRatio ?? 0
+        case .none:
+            goalPercent = goal.growthRatio ?? 40
+            currentPercent = goal.currentGrowthRatio ?? 0
+        }
+    }
+
+    /// Event(활동일정)로부터 ViewModel 생성. 화면 .task에서 applyCurrentGoal 호출로 달성률 연동.
     static func from(event: Event, daysUntil: Int?) -> ActivityEventSummaryViewModel {
         let label: String?
         if let d = daysUntil {
