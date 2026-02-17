@@ -85,7 +85,6 @@ class MainViewModel {
     }
     
     // MARK: - 할 일
-    var addTodoViewModel: TodoViewModel?
     var todos: [ToDo] = []
 
     // 체크 토글
