@@ -144,7 +144,8 @@ class MainViewModel {
                                                 id: schedule.id,
                                                 title: schedule.title,
                                                 color: schedule.color,
-                                                dates: [date]
+                                                dates: [date],
+                                                recurrenceRule: schedule.recurrenceRule
                                             )
                                         }
                                     }

@@ -20,7 +20,7 @@ struct Schedule: Identifiable {
     let title: String
     let color: Int
     var dates: [Date]
-    
+    let recurrenceRule: String?
     var type: ScheduleType {
         ScheduleType(rawValue: color) ?? .one
     }
