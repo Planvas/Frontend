@@ -1,19 +1,16 @@
+import Foundation
 struct PastReportResponse: Decodable {
     let resultType: String
     let error: PastReportErrorResponse?
-    let success: PastReportSuccessResponse?
+    let success: [PastReportSuccessResponse?]
 }
 
-struct PastReportSuccessResponse: Decodable {
-    let seasons: [Seasons?]
-    
-    struct Seasons: Decodable {
-        let goalId: Int
-        let title: String
-        let startDate: String
-        let endDate: String
-        let year: Int
-    }
+struct PastReportSuccessResponse: Decodable, Identifiable {
+    let id: Int
+    let title: String
+    let startDate: String
+    let endDate: String
+    let year: Int
 }
 
 struct PastReportErrorResponse: Decodable {
@@ -21,12 +18,16 @@ struct PastReportErrorResponse: Decodable {
     let data: String?
 }
 
-// MARK: - 날짜를 튜플로 가공해서 제공하기
-extension PastReportSuccessResponse.Seasons {
-    var startDateTuple: (year: String, month: String, day: String)? {
-        return startDate.toDateTuple()
+// MARK: - 서버 날짜를 Date()로 변환
+extension PastReportSuccessResponse {
+    var startDateObject: Date? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.date(from: startDate)
     }
-    var endDateTuple: (year: String, month: String, day: String)? {
-        return endDate.toDateTuple()
+    var endDateObject: Date? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.date(from: endDate)
     }
 }
