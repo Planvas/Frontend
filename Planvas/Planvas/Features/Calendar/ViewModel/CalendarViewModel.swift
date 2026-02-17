@@ -631,6 +631,8 @@ final class CalendarViewModel {
             sampleEvents = newSample
             let selectedKey = dateKeyString(from: selectedDate)
             selectedDateEvents = sampleEvents[selectedKey] ?? []
+            // 선택된 날(보통 오늘)은 일간 API로 한 번 더 조회해 시간 정보가 제대로 나오도록 수정
+            await loadEventsForDate(selectedDate)
         } catch {
             print("월간 캘린더 조회 실패: \(error)")
         }
