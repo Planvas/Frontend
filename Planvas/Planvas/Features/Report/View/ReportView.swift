@@ -14,7 +14,11 @@ struct ReportView: View {
                     Text(errorMessage)
                         .foregroundStyle(Color.red)
                 } else if let reportData = viewModel.reportData {
-                    HeaderSection(goal: reportData.goal)
+                    let startDate = viewModel.formatDate(dateString: reportData.goal.startDate)
+                    let endDate = viewModel.formatDate(dateString: reportData.goal.endDate)
+                    HeaderSection(
+                        title: reportData.goal.title,
+                        dateRange: "\(startDate)~\(endDate)")
                     
                     MainSection(
                         reportData: reportData,
