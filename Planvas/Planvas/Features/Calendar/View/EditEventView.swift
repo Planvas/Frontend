@@ -50,11 +50,9 @@ struct EditEventView: View {
                     repeatEndDateView
                 }
                 
-                // 활동치 설정 (FIXED 타입은 활동치 설정 불가)
-                if event.type == .activity {
-                    activitySettingsSection
-                        .padding(.vertical, 30)
-                }
+                // 활동치 설정 (고정 일정이면 꺼진 상태로 표시)
+                activitySettingsSection
+                    .padding(.vertical, 30)
                 
                 // 캘린더 컬러
                 CalendarColorPicker(

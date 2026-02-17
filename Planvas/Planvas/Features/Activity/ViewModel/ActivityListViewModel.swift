@@ -14,45 +14,44 @@ final class ActivityListViewModel {
     
     var activities: [ActivityCard] = []
     var isLoading: Bool = false
-    var selectedCategoryId: Int? = nil // 카테고리 ID 매핑 필요
-
-    // 현재 선택된 카테고리
-    var selectedCategory: String = "전체"
     
-    // 서버 DB와 맞춘 카테고리 ID 매핑
-    private let categoryMapping: [String: Int] = [
-        "공모전": 1, "학회/동아리": 2, "대외활동": 3, "어학/자격증": 4, "인턴십": 5, "교육/강연": 6
-    ]
+    var categories: [ActivityCategory] = []
+    var selectedCategoryId: Int? = nil
+    var selectedCategoryName: String = "전체"
+    
+    private var currentPage: Int = 0
+    private let pageSize: Int = 20
+    private var hasNext: Bool = true
+    var isFetchingMore: Bool = false
+    
+    var onlyAvailable: Bool = false
+    
+    // 탭 변경 시 카테고리부터 갱신하고 목록 재조회
+    func onChangeTab(_ tab: String, searchText: String) async {
+        let categoryEnum: TodoCategory = todoCategory(from: tab)
+        await fetchCategories(tab: categoryEnum)
 
-    // 카테고리 칩 리스트
-    let categoryChips: [String] = [
-        "전체", "공모전", "학회/동아리",
-        "대외활동", "어학/자격증", "인턴십", "교육/강연"
-    ]
+        // 기본값 "전체"
+        selectedCategoryName = categories.first(where: { $0.id == 0 })?.name ?? "전체"
+        selectedCategoryId = nil
 
-    // 카테고리 선택
-    func selectCategory(_ category: String, tab: String, searchText: String) async {
-        selectedCategory = category
-        selectedCategoryId = categoryMapping[category] // "전체"면 nil
-        
-        // 카테고리 변경 후 즉시 서버 호출
-        await fetchActivities(tab: tab, searchText: searchText)
+        await resetAndFetch(tab: tab, searchText: searchText, onlyAvailable: self.onlyAvailable)
     }
 
-    // 필터 함수
-    func fetchActivities(tab: String, searchText: String = "") async {
-        isLoading = true
-        let categoryEnum: TodoCategory = (tab == "성장") ? .growth : .rest
+    // 카테고리 선택
+    func selectCategory(_ category: ActivityCategory, tab: String, searchText: String) async {
+        selectedCategoryName = category.name
+        selectedCategoryId = (category.id == 0) ? nil : category.id
+        await resetAndFetch(tab: tab, searchText: searchText, onlyAvailable: self.onlyAvailable)
+    }
+    
+    func fetchCategories(tab: TodoCategory) async {
         do {
-            self.activities = try await service.getActivityList(
-                tab: categoryEnum,
-                categoryId: selectedCategoryId,
-                q: searchText.isEmpty ? nil : searchText
-            )
+            self.categories = try await service.getActivityCategories(tab: tab)
         } catch {
-            print("로드 실패: \(error)")
+            print("카테고리 로드 실패: \(error)")
+            self.categories = []
         }
-        isLoading = false
     }
 
     func filteredActivities(searchText: String, onlyAvailable: Bool) -> [ActivityCard] {
@@ -61,5 +60,119 @@ final class ActivityListViewModel {
             result = result.filter { $0.badgeText == "일정 가능" }
         }
         return result
+    }
+    
+    func resetAndFetch(tab: String, searchText: String = "", onlyAvailable: Bool) async {
+        self.onlyAvailable = onlyAvailable
+        currentPage = 0
+        hasNext = true
+        activities = []
+        await fetchFirstPage(tab: tab, searchText: searchText)
+    }
+    
+    private func fetchFirstPage(tab: String, searchText: String) async {
+        isLoading = true
+        defer { isLoading = false }
+
+        let categoryEnum: TodoCategory = todoCategory(from: tab)
+
+        do {
+            var pageToLoad = 0
+            var collected: [ActivityCard] = []
+            var latestPageData: ActivityListPage? = nil
+
+            let maxSkipPages = 10
+
+            while pageToLoad <= maxSkipPages {
+                let pageData = try await service.getActivityListPage(
+                    tab: categoryEnum,
+                    categoryId: selectedCategoryId,
+                    q: searchText.isEmpty ? nil : searchText,
+                    page: pageToLoad,
+                    size: pageSize,
+                    onlyAvailable: onlyAvailable
+                )
+
+                latestPageData = pageData
+
+                if !pageData.items.isEmpty {
+                    collected = pageData.items
+                    currentPage = pageData.page
+                    hasNext = pageData.hasNext
+                    activities = collected
+                    return
+                }
+
+                if !pageData.hasNext {
+                    currentPage = pageData.page
+                    hasNext = false
+                    activities = []
+                    return
+                }
+
+                pageToLoad += 1
+            }
+
+            currentPage = latestPageData?.page ?? 0
+            hasNext = latestPageData?.hasNext ?? false
+            activities = []
+
+        } catch {
+            print("첫 페이지 로드 실패: \(error)")
+        }
+    }
+    
+    func loadMoreIfNeeded(currentItem: ActivityCard, tab: String, searchText: String) async {
+        guard hasNext else { return }
+        guard !isFetchingMore else { return }
+
+        // 마지막 3개 근처에서 다음 페이지 요청
+        guard let idx = activities.firstIndex(where: { $0.activityId == currentItem.activityId }) else { return }
+        let thresholdIndex = max(activities.count - 3, 0)
+        guard idx >= thresholdIndex else { return }
+
+        isFetchingMore = true
+        defer { isFetchingMore = false }
+
+        let nextPage = currentPage + 1
+        let categoryEnum: TodoCategory = (tab == "성장") ? .growth : .rest
+
+        do {
+            var pageToLoad = nextPage
+            let maxSkipPages = nextPage + 10  // 안전장치
+
+            while pageToLoad <= maxSkipPages {
+                let pageData = try await service.getActivityListPage(
+                    tab: categoryEnum,
+                    categoryId: selectedCategoryId,
+                    q: searchText.isEmpty ? nil : searchText,
+                    page: pageToLoad,
+                    size: pageSize,
+                    onlyAvailable: onlyAvailable
+                )
+
+                if !pageData.items.isEmpty {
+                    activities.append(contentsOf: pageData.items)
+                    currentPage = pageData.page
+                    hasNext = pageData.hasNext
+                    return
+                }
+
+                if !pageData.hasNext {
+                    currentPage = pageData.page
+                    hasNext = false
+                    return
+                }
+
+                pageToLoad += 1
+            }
+
+        } catch {
+            print("추가 로드 실패: \(error)")
+        }
+    }
+    
+    private func todoCategory(from tab: String) -> TodoCategory {
+        tab == "성장" ? .growth : .rest
     }
 }

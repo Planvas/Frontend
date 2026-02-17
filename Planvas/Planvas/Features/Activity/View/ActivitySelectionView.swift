@@ -13,7 +13,7 @@ struct ActivitySelectionView: View {
     
     var body: some View {
         VStack (alignment: .center, spacing: 0) {
-            Spacer().frame(height: 45)
+            Spacer()
             
             Button {
                 selectedType = "성장"
@@ -32,14 +32,13 @@ struct ActivitySelectionView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .padding(.bottom, 20)
             
             // 구분선
             Rectangle()
                 .fill(.line)
                 .frame(height: 2)
                 .frame(maxWidth: .infinity)
-                .padding(.bottom, 20)
+                .padding(.vertical, 20)
             
             Button {
                 selectedType = "휴식"
@@ -58,12 +57,11 @@ struct ActivitySelectionView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .padding(.bottom, 20)
+            
+            Spacer()
             
         }
-        .ignoresSafeArea()
         .padding(.horizontal, 20)
-        .padding(.bottom, 75)
     }
 }
 

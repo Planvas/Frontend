@@ -11,7 +11,10 @@ import Moya
 struct GoalInfoSetupView: View {
     @Environment(GoalSetupViewModel.self) private var viewModel
     @Environment(LoginViewModel.self) private var loginVM
-    @Environment(NavigationRouter<OnboardingRoute>.self) private var router
+    
+    // 마이페이지 흐름인지 온보딩 흐름인지 알기 위해 두 라우터 모두 선언 (옵셔널)
+    @Environment(NavigationRouter<MyPageRoute>.self) private var myPageRouter: NavigationRouter<MyPageRoute>?
+    @Environment(NavigationRouter<OnboardingRoute>.self) private var onboardingRouter: NavigationRouter<OnboardingRoute>?
     
     @State private var fetchedUserName: String = ""
     @State private var didFetchName = false
@@ -58,7 +61,11 @@ struct GoalInfoSetupView: View {
                         print("설정 완료: \(viewModel.goalName), \(viewModel.formatDate(viewModel.startDate)) ~ \(viewModel.formatDate(viewModel.endDate))")
                         
                         // 목표 비율 설정 화면 이동
-                        router.push(.ratio)
+                        if let myPageRouter = myPageRouter {
+                            myPageRouter.push(.goalRatioInfo)
+                        } else if let onboardingRouter = onboardingRouter {
+                            onboardingRouter.push(.ratio)
+                        }
                     }
                     .padding(.horizontal, 20)
                     .padding(.bottom, 89)
@@ -144,10 +151,15 @@ struct GoalInfoSetupView: View {
 #Preview {
     let router = NavigationRouter<OnboardingRoute>()
     let goalVM = GoalSetupViewModel()
+    let loginVM = LoginViewModel()
+    let myPageRouter = NavigationRouter<MyPageRoute>()
 
     NavigationStack(path: .constant(router.path)) {
         GoalInfoSetupView()
             .environment(goalVM)
+            .environment(loginVM)
+            .environment(router)
+            .environment(myPageRouter)
     }
     .environment(router)
 }
