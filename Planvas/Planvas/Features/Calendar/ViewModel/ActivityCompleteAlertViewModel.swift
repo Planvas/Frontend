@@ -18,6 +18,10 @@ final class ActivityCompleteAlertViewModel {
     var goalPercent: Int
     var currentPercent: Int
     var confirmButtonTitle: String
+    /// PATCH /api/my-activities/{id}/complete 호출 시 사용
+    var myActivityId: Int?
+    /// 목표 API 적용 여부 (모달에서 getCurrentGoal 호출 후 true)
+    private(set) var isGoalLoaded: Bool = false
 
     init(
         title: String = "활동 완주, 정말 고생 많았어요!",
@@ -27,7 +31,8 @@ final class ActivityCompleteAlertViewModel {
         progressMinPercent: Int = 10,
         goalPercent: Int = 70,
         currentPercent: Int = 40,
-        confirmButtonTitle: String = "확인"
+        confirmButtonTitle: String = "확인",
+        myActivityId: Int? = nil
     ) {
         self.title = title
         self.subtitle = subtitle
@@ -37,10 +42,29 @@ final class ActivityCompleteAlertViewModel {
         self.goalPercent = goalPercent
         self.currentPercent = currentPercent
         self.confirmButtonTitle = confirmButtonTitle
+        self.myActivityId = myActivityId
+    }
+
+    /// 그리기/표시용: 목표를 넘어도 최대 목표치로만 표시
+    var displayCurrentPercent: Int {
+        min(currentPercent, goalPercent)
     }
 
     var progressRatio: CGFloat {
         guard goalPercent > progressMinPercent else { return 0 }
-        return CGFloat(currentPercent) / CGFloat(goalPercent)
+        return CGFloat(displayCurrentPercent) / CGFloat(goalPercent)
+    }
+
+    /// GET /api/goals/current 응답으로 목표·현재 달성률 반영 (모달 표시 시 API 호출 후 호출)
+    func applyGoal(_ goal: GoalSuccessResponse) {
+        progressMinPercent = 0
+        if category == "휴식" {
+            goalPercent = goal.restRatio ?? 60
+            currentPercent = goal.currentRestRatio ?? 0
+        } else {
+            goalPercent = goal.growthRatio ?? 40
+            currentPercent = goal.currentGrowthRatio ?? 0
+        }
+        isGoalLoaded = true
     }
 }

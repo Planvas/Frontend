@@ -94,9 +94,10 @@ struct ActivitySettingsSectionView<VM: ActivitySettingsBindable & Observable>: V
         GeometryReader { geometry in
             let totalW = geometry.size.width
             let goal = CGFloat(max(viewModel.goalPercent, 1))
-            let achievementRatio = CGFloat(viewModel.currentAchievementPercent) / goal
-            let activityRatio = CGFloat(viewModel.activityValue) / goal
-            let totalRatio = min(1.0, achievementRatio + activityRatio)
+            let cappedCurrent = min(viewModel.currentAchievementPercent, viewModel.goalPercent)
+            let achievementRatio = CGFloat(cappedCurrent) / goal
+            let totalDisplay = min(viewModel.currentAchievementPercent + viewModel.activityValue, viewModel.goalPercent)
+            let totalRatio = CGFloat(totalDisplay) / goal
             let filledWidth = totalW * totalRatio
             let w1 = totalW * achievementRatio
             let w2 = filledWidth - w1
@@ -125,7 +126,7 @@ struct ActivitySettingsSectionView<VM: ActivitySettingsBindable & Observable>: V
                     .frame(width: w1, height: 25)
 
                 HStack(spacing: 0) {
-                    Text("\(viewModel.currentAchievementPercent)%")
+                    Text("\(cappedCurrent)%")
                         .textStyle(.semibold14)
                         .foregroundColor(.white)
                         .padding(.leading, 10)
