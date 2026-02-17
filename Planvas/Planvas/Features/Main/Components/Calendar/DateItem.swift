@@ -23,13 +23,23 @@ struct DateItem: View {
             
             VStack{
                 // 날짜
-                Text("\(date.day)")
-                    .textStyle(.medium16)
-                    .foregroundColor(dateTextColor)
+                ZStack(alignment: .topTrailing) {
+
+                    Text("\(date.day)")
+                        .textStyle(.medium16)
+                        .foregroundColor(dateTextColor)
+
+                    if hasRecurringSchedule {
+                        Circle()
+                            .fill(.primary1)
+                            .frame(width: 5, height: 5)
+                            .offset(x: 6, y: -2)
+                    }
+                }
                 
                 // 일정 목록
                 VStack(spacing: 4) {
-                    ForEach(schedules) { schedule in
+                    ForEach(schedules.filter { $0.recurrenceRule == nil }) { schedule in
                         ScheduleItem(schedule: schedule, date: date)
                     }
                 }
@@ -71,6 +81,11 @@ struct DateItem: View {
                 Color.clear
             }
         }
+    }
+    
+    // 반복인지 확인
+    private var hasRecurringSchedule: Bool {
+        schedules.contains { $0.recurrenceRule != nil }
     }
 }
 

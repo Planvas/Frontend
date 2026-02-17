@@ -36,7 +36,11 @@ class MainViewModel {
     
     // MARK: - 위클리 캘린더
     var centerDate: Date = Date()
-    var selectedDate: Date = Date()
+    var selectedDate: Date = Date() {
+        didSet {
+            fetchTodoData(for: selectedDate)
+        }
+    }
     
     // 오늘 기준 7일 만들기
     var weekDates: [Date] {
@@ -67,25 +71,28 @@ class MainViewModel {
         return formatter.date(from: string)!
     }
     
-    // 일정 더미 데이터
+    // 일정 데이터
     var weeklySchedules: [Date: [Schedule]] = [:]
-    
-    init() {
-        weeklySchedules = [:]
-    }
     
     func schedules(for date: Date) -> [Schedule] {
         let key = Calendar.current.startOfDay(for: date)
         return weeklySchedules[key] ?? []
     }
-
-    // MARK: - 오늘의 할 일
-    var todayTodos: [ToDo] = []
     
+    init() {
+        weeklySchedules = [:]
+        fetchTodoData(for: selectedDate)
+    }
+    
+    // MARK: - 할 일
+    var todos: [ToDo] = []
+
     // 체크 토글
     func toggleTodo(_ todo: ToDo) {
-        guard let index = todayTodos.firstIndex(where: { $0.id == todo.id }) else { return }
-        todayTodos[index].isCompleted.toggle()
+        guard let index = todos.firstIndex(where: { $0.id == todo.id }) else { return }
+        
+        todos[index].isCompleted.toggle()
+        fetchTodoStatus(todoId: todo.id)
     }
     
     // MARK: - 오늘의 인기 성장 활동
@@ -94,6 +101,7 @@ class MainViewModel {
     // MARK: - 메인 페이지 API 연동 함수
     private let provider = APIManager.shared.createProvider(for: MainAPI.self)
     
+    // MARK: - 메인 페이지 데이터 조회
     func fetchMainData() {
         provider.request(.getMainData) { result in
             switch result {
@@ -120,11 +128,13 @@ class MainViewModel {
                             if let weekly = success.weeklySummary {
                                 var result: [Date: [Schedule]] = [:]
                                 var groupedSchedules: [Int: Schedule] = [:]
-
+                                
                                 for day in weekly.days {
                                     let date = self.date(day.date)
-
+                                    
                                     for schedule in day.schedules {
+                                        guard schedule.type != "TODO" else { continue }
+
                                         if var existing = groupedSchedules[schedule.id] {
                                             existing.dates.append(date)
                                             groupedSchedules[schedule.id] = existing
@@ -132,13 +142,13 @@ class MainViewModel {
                                             groupedSchedules[schedule.id] = Schedule(
                                                 id: schedule.id,
                                                 title: schedule.title,
-                                                type: ScheduleType(serverCategory: schedule.category),
-                                                dates: [date]
+                                                color: schedule.color,
+                                                dates: [date],
+                                                recurrenceRule: schedule.recurrenceRule
                                             )
                                         }
                                     }
                                 }
-
                                 // 날짜별로 다시 정리
                                 for schedule in groupedSchedules.values {
                                     for date in schedule.dates {
@@ -146,22 +156,6 @@ class MainViewModel {
                                     }
                                 }
                                 self.weeklySchedules = result
-                            }
-                            
-                            // 투두 데이터
-                            if let todos = success.todayTodos {
-                                self.todayTodos = todos.map {
-                                    ToDo(
-                                        typeColor: .calRed,
-                                        title: $0.title,
-                                        isFixed: false,
-                                        todoInfo: "",
-                                        startTime: "",
-                                        isCompleted: $0.completed
-                                    )
-                                }
-                            } else {
-                                self.todayTodos = []
                             }
                             
                             // 인기 활동 데이터
@@ -187,4 +181,79 @@ class MainViewModel {
             }
         }
     }
+    
+    // MARK: - 투두 조회
+    private let todoProvider = APIManager.shared.createProvider(for: SchedulesAPI.self)
+    
+    func fetchTodoData(for date: Date) {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.locale = Locale(identifier: "ko_KR")
+        let formattedDate = formatter.string(from: date)
+        
+        todoProvider.request(.getToDo(date: formattedDate)) { result in
+            switch result {
+            case .success(let response):
+                do {
+                    let decodedData = try JSONDecoder().decode(ToDoListResponse.self, from: response.data)
+                    DispatchQueue.main.async {
+                        if let success = decodedData.success {
+                            self.todos = success.map { todo in
+                                let startTime = self.formatTime(todo.startAt)
+                                let endTime = self.formatTime(todo.endAt)
+
+                                return ToDo(
+                                    id: todo.id,
+                                    typeColor: ScheduleType(rawValue: todo.eventColor) ?? .one,
+                                    title: todo.title,
+                                    isFixed: todo.type == "FIXED",
+                                    time: (startTime == "00:00" && endTime == "23:59")
+                                        ? ""
+                                        : "\(startTime) - \(endTime)",
+                                    point: todo.point == 0
+                                        ? ""
+                                        : "\(todo.category.displayText) +\(todo.point)",
+                                    isCompleted: todo.status == "DONE"
+                                )
+                            }
+                        }
+                    }
+                } catch {
+                    print("Todo 조회 디코더 오류: \(error)")
+                }
+            case .failure(let error):
+                print("Todo 조회 API 오류: \(error)")
+            }
+        }
+    }
+    
+    // 날짜 + 시간 -> 시간 (HH:mm) 변환 함수
+    func formatTime(_ isoString: String) -> String {
+        guard let timePart = isoString.split(separator: "T").last else {
+            return ""
+        }
+        return String(timePart.prefix(5))
+    }
+    
+    // MARK: - 투두 완료 상태 토글
+    func fetchTodoStatus(todoId: Int) {
+        todoProvider.request(.patchToDo(todoId: todoId)) { result in
+            switch result {
+            case .success(let response):
+                do {
+                    let decodedData = try JSONDecoder().decode(ToDoCompletedResponse.self, from: response.data)
+                    DispatchQueue.main.async {
+                        if decodedData.success != nil {
+                            print("투두 토글 성공")
+                        }
+                    }
+                } catch {
+                    print("todo 디코더 오류: \(error)")
+                }
+            case .failure(let error):
+                print("todo API 오류: \(error)")
+            }
+        }
+    }
+    
 }

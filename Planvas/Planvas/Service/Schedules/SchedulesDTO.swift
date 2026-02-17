@@ -98,25 +98,22 @@ struct DeleteSuccess: Decodable {
 struct ToDoListResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
-    let success: ToDoListSuccess?
+    let success: [ToDoListSuccess]?
 }
 
 struct ToDoListSuccess: Decodable {
-    let todos: [Todo]
-}
-
-struct Todo: Decodable {
     let id: Int
     let title: String
+    let type: String
     let category: TodoCategory
-    let completed: Bool
+    let point: Int
+    let eventColor: Int
+    let startAt: String
+    let endAt: String
+    let status: String
 }
 
 // MARK: - 할 일 완료
-struct ToDoCompletedRequestDTO: Encodable {
-    let completed: Bool
-}
-
 struct ToDoCompletedResponse: Decodable {
     let resultType: String
     let error: ErrorDTO?
@@ -124,7 +121,8 @@ struct ToDoCompletedResponse: Decodable {
 }
 
 struct ToDoCompletedSuccess: Decodable {
-    let todoId: Int
+    let id: Int
+    let status: String
 }
 
 // MARK: - 내 활동 생성
