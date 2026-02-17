@@ -21,6 +21,11 @@ struct ActivityEventSummaryView: View {
     /// 시트 닫은 뒤 상위에서 전체 화면 중앙에 완료 알림 띄울 때 사용
     var onCompleteRequested: ((ActivityCompleteAlertViewModel) -> Void)?
 
+    /// status DONE + type ACTIVITY 인 이미 완료된 활동일 때 true
+    private var isActivityCompleted: Bool {
+        event?.isCompleted == true
+    }
+
     private var targetPeriod: String? {
         let calendar = Calendar.current
         guard !calendar.isDate(viewModel.startDate, inSameDayAs: viewModel.endDate) else { return nil }
@@ -44,21 +49,26 @@ struct ActivityEventSummaryView: View {
                 )
                 .padding(.bottom, 10)
 
-                Text("완료하면 목표 균형에 반영돼요!")
-                    .textStyle(.regular14)
-                    .foregroundColor(.gray444)
-                    .multilineTextAlignment(.center)
+                if !isActivityCompleted {
+                    Text("완료하면 목표 균형에 반영돼요!")
+                        .textStyle(.regular14)
+                        .foregroundColor(.gray444)
+                        .multilineTextAlignment(.center)
+                }
 
                 PrimaryButton(title: viewModel.completeButtonTitle) {
                     let alertVM = ActivityCompleteAlertViewModel(
                         category: viewModel.activityPointLabel ?? "성장",
                         growthValue: viewModel.activityPoints ?? 20,
-                        progressMinPercent: viewModel.progressMinPercent ?? 10,
-                        goalPercent: viewModel.goalPercent ?? 60,
-                        currentPercent: viewModel.currentPercent ?? 40
+                        progressMinPercent: 0,
+                        goalPercent: 0,
+                        currentPercent: 0,
+                        myActivityId: event?.myActivityId
                     )
                     onCompleteRequested?(alertVM)
                 }
+                .disabled(isActivityCompleted)
+                .opacity(isActivityCompleted ? 0.5 : 1)
 
                 Button {
                     onDelete?()
@@ -74,6 +84,12 @@ struct ActivityEventSummaryView: View {
             .padding(.vertical, 10)
         }
         .background(.white)
+        .task {
+            do {
+                let goal = try await MyPageViewModel.getCurrentGoal()
+                viewModel.applyCurrentGoal(goal, category: event?.category ?? .none)
+            } catch { }
+        }
         .sheet(isPresented: $showEventDetailView) {
             if let event = event {
                 ActivityEventDetailView(
