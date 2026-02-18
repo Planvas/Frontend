@@ -67,7 +67,9 @@ struct ToDoGroup: View {
                         .stroke(.ccc60, lineWidth: 1)
                 )
             }
-            .sheet(isPresented: $viewModel.showTodoDetail) {
+            .sheet(isPresented: $viewModel.showTodoDetail, onDismiss: {
+                viewModel.fetchTodoData(for: viewModel.selectedDate)
+            }) {
                 if let event = calendarViewModel.loadedEventDetail {
                     EventSummaryView(
                         event: event,
