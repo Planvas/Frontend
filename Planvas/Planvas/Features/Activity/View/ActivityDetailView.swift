@@ -184,6 +184,7 @@ struct ActivityDetailView: View {
                 .foregroundStyle(.gray444)
                 .padding(.vertical, 12)
                 .padding(.horizontal, 13.5)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
                         .stroke(.ccc, lineWidth: 1)
