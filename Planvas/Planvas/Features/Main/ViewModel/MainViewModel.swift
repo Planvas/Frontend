@@ -258,7 +258,14 @@ class MainViewModel {
         let isoFormatter = ISO8601DateFormatter()
         isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         
-        guard let date = isoFormatter.date(from: isoString) else { return "" }
+        var date = isoFormatter.date(from: isoString)
+        if date == nil {
+            // 소수점 초가 없는 경우 재시도
+            let fallback = ISO8601DateFormatter()
+            fallback.formatOptions = [.withInternetDateTime]
+            date = fallback.date(from: isoString)
+        }
+        guard let date else { return "" }
         
         let outputFormatter = DateFormatter()
         outputFormatter.dateFormat = "HH:mm"
