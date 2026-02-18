@@ -104,7 +104,8 @@ struct ToDo: Identifiable {
     let title: String
     let isFixed: Bool
     let time: String
-    let point: String
+    let pointText: String   // UI용
+    let pointValue: Int     // 계산용
     var isCompleted: Bool
 }
 
