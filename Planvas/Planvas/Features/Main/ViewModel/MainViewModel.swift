@@ -116,6 +116,16 @@ class MainViewModel {
             } else {
                 restAchieved += point
             }
+            if point > 0 {
+                completeAlertViewModel = ActivityCompleteAlertViewModel(
+                    category: todos[index].category.displayText,
+                    growthValue: point,
+                    currentPercent: todos[index].category == .growth
+                        ? growthAchieved
+                        : restAchieved
+                )
+                showCompleteAlert = true
+            }
         }
         
         fetchTodoStatus(
@@ -126,6 +136,8 @@ class MainViewModel {
     }
     var showTodoDetail: Bool = false
     var showAddTodo: Bool = false
+    var showCompleteAlert: Bool = false
+    var completeAlertViewModel: ActivityCompleteAlertViewModel?
     
     // MARK: - 오늘의 인기 성장 활동
     var items: [ActivityItem] = []
