@@ -246,10 +246,17 @@ class MainViewModel {
     
     // 날짜 + 시간 -> 시간 (HH:mm) 변환 함수
     func formatTime(_ isoString: String) -> String {
-        guard let timePart = isoString.split(separator: "T").last else {
-            return ""
-        }
-        return String(timePart.prefix(5))
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        guard let date = isoFormatter.date(from: isoString) else { return "" }
+
+        let outputFormatter = DateFormatter()
+        outputFormatter.dateFormat = "HH:mm"
+        outputFormatter.timeZone = TimeZone.current
+        outputFormatter.locale = Locale(identifier: "ko_KR")
+
+        return outputFormatter.string(from: date)
     }
     
     // MARK: - 투두 완료 상태 토글
