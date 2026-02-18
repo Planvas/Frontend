@@ -173,17 +173,12 @@ final class EventDetailViewModel: ActivitySettingsBindable {
     
     // MARK: - Activity Value Methods
     
+    /// 활동 수정 화면에서는 목표치 초과 여부와 관계없이 자유롭게 조절 가능
     func incrementActivityValue() {
         if selectedActivityType == .growth {
-            // 목표 달성률을 초과하지 않도록 제한
-            if currentGrowthAchievement + growthValue + 10 <= targetGrowthAchievement {
-                growthValue += 10
-            }
+            growthValue += 10
         } else {
-            // 목표 달성률을 초과하지 않도록 제한
-            if currentRestAchievement + restValue + 10 <= targetRestAchievement {
-                restValue += 10
-            }
+            restValue += 10
         }
     }
     

@@ -112,7 +112,7 @@ struct ActivityCompleteAlertView: View {
                                 )
                                 .frame(width: fillWidth, height: 25)
 
-                            Text("\(viewModel.displayCurrentPercent)%")
+                            Text("\(viewModel.currentPercent)%")
                                 .textStyle(.medium14)
                                 .foregroundColor(.white)
                                 .frame(width: fillWidth, alignment: .center)
@@ -125,7 +125,7 @@ struct ActivityCompleteAlertView: View {
                         .foregroundColor(.gray444)
                 }
 
-                Text("\(viewModel.displayCurrentPercent)% 달성!")
+                Text("\(viewModel.currentPercent)% 달성!")
                     .textStyle(.bold18)
                     .foregroundColor(.black1)
                     .frame(maxWidth: .infinity, alignment: .center)
