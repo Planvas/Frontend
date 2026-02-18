@@ -20,34 +20,14 @@ struct ToDoItem: View {
                 RoundedRectangle(cornerRadius: 5)
                     .fill(todo.typeColor.color)
                     .frame(width: 3, height: 33)
-                    .padding(.trailing, 10)
+                    .padding(.trailing, 5)
                 
                 VStack(alignment: todo.time.isEmpty ? .center : .leading){
-                    HStack(spacing: 10){
-                        Text(todo.title)
-                            .textStyle(.regular18)
-                            .foregroundStyle(.black1)
-                            .strikethrough(todo.isCompleted)
-                        
-                        if todo.isFixed {
-                            Text("고정")
-                                .textStyle(.medium14)
-                                .foregroundStyle(.fff)
-                                .padding(.vertical, 2)
-                                .padding(.horizontal, 6)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .foregroundStyle(
-                                            LinearGradient(
-                                                gradient: Gradient(colors: [.subPurple, .primary1]),
-                                                startPoint: UnitPoint(x: -0.1, y: 0.2),
-                                                endPoint: UnitPoint(x: 0.8, y: 0.5)
-                                            )
-                                        )
-                                )
-                        }
-                    }
-                    .frame(height: 15)
+                    Text(todo.title)
+                        .textStyle(.regular18)
+                        .foregroundStyle(.black1)
+                        .strikethrough(todo.isCompleted)
+                    
                     if(!todo.time.isEmpty){
                         Text(todo.time)
                             .textStyle(.regular14)

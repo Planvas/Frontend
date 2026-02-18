@@ -84,6 +84,14 @@ class MainViewModel {
         fetchTodoData(for: selectedDate)
     }
     
+    var allSchedules: [Schedule] = []
+    // 주간 정렬 배열
+    var weeklyBarSchedules: [Schedule] {
+        allSchedules
+            .filter { $0.recurrenceRule == nil }
+            .sorted { $0.id < $1.id }
+    }
+    
     // MARK: - 할 일
     var todos: [ToDo] = []
     
@@ -108,6 +116,16 @@ class MainViewModel {
             } else {
                 restAchieved += point
             }
+            if point > 0 {
+                completeAlertViewModel = ActivityCompleteAlertViewModel(
+                    category: todos[index].category.displayText,
+                    growthValue: point,
+                    currentPercent: todos[index].category == .growth
+                        ? growthAchieved
+                        : restAchieved
+                )
+                showCompleteAlert = true
+            }
         }
         
         fetchTodoStatus(
@@ -118,6 +136,8 @@ class MainViewModel {
     }
     var showTodoDetail: Bool = false
     var showAddTodo: Bool = false
+    var showCompleteAlert: Bool = false
+    var completeAlertViewModel: ActivityCompleteAlertViewModel?
     
     // MARK: - 오늘의 인기 성장 활동
     var items: [ActivityItem] = []
@@ -162,14 +182,13 @@ class MainViewModel {
                                         if var existing = groupedSchedules[schedule.id] {
                                             existing.dates.append(date)
                                             groupedSchedules[schedule.id] = existing
-                                        } else {
-                                            groupedSchedules[schedule.id] = Schedule(
-                                                id: schedule.id,
-                                                title: schedule.title,
-                                                color: schedule.color,
-                                                dates: [date],
-                                                recurrenceRule: schedule.recurrenceRule
-                                            )
+                                        } else { groupedSchedules[schedule.id] = Schedule(
+                                            id: schedule.id,
+                                            title: schedule.title,
+                                            color: schedule.color,
+                                            dates: [date],
+                                            recurrenceRule: schedule.recurrenceRule
+                                        )
                                         }
                                     }
                                 }
@@ -180,6 +199,7 @@ class MainViewModel {
                                     }
                                 }
                                 self.weeklySchedules = result
+                                self.allSchedules = Array(groupedSchedules.values)
                             }
                             
                             // 인기 활동 데이터
@@ -258,19 +278,12 @@ class MainViewModel {
         let isoFormatter = ISO8601DateFormatter()
         isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         
-        var date = isoFormatter.date(from: isoString)
-        if date == nil {
-            // 소수점 초가 없는 경우 재시도
-            let fallback = ISO8601DateFormatter()
-            fallback.formatOptions = [.withInternetDateTime]
-            date = fallback.date(from: isoString)
-        }
-        guard let date else { return "" }
+        guard let date = isoFormatter.date(from: isoString) else { return "" }
         
         let outputFormatter = DateFormatter()
         outputFormatter.dateFormat = "HH:mm"
-        outputFormatter.timeZone = TimeZone.current
-        outputFormatter.locale = Locale(identifier: "ko_KR")
+        
+        outputFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         
         return outputFormatter.string(from: date)
     }
@@ -301,5 +314,4 @@ class MainViewModel {
             }
         }
     }
-    
 }

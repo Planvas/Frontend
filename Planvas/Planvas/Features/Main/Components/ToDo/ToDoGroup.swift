@@ -71,24 +71,17 @@ struct ToDoGroup: View {
                 viewModel.fetchTodoData(for: viewModel.selectedDate)
             }) {
                 if let event = calendarViewModel.loadedEventDetail {
-                    EventSummaryView(
+                    
+                    EditEventView(
                         event: event,
                         startDate: calendarViewModel.getStartDate(for: event),
                         endDate: calendarViewModel.getEndDate(for: event),
-                        daysUntil: calendarViewModel.getDaysUntil(for: event),
-                        onDelete: {
-                            calendarViewModel.deleteEvent(event)
-                            calendarViewModel.clearLoadedEventDetail()
-                            viewModel.showTodoDetail = false
-                        },
-                        onEdit: nil,
-                        onUpdateEvent: { updatedEvent in
+                        onSave: { updatedEvent in
                             calendarViewModel.updateEvent(updatedEvent)
                             calendarViewModel.clearLoadedEventDetail()
                             viewModel.showTodoDetail = false
                         }
                     )
-                    .presentationDetents([.medium])
                     .presentationDragIndicator(.visible)
                 }
             }

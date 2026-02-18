@@ -12,7 +12,8 @@ struct DateItem: View {
     let date: Date
     let isSelected: Bool
     @Binding var selectedDate: Date
-    let schedules: [Schedule]
+    let weeklyBarSchedules: [Schedule]
+    let recurringSchedules: [Schedule]
     
     var body: some View {
         VStack(spacing: 6) {
@@ -38,9 +39,16 @@ struct DateItem: View {
                 }
                 
                 // 일정 목록
-                VStack(spacing: 4) {
-                    ForEach(schedules.filter { $0.recurrenceRule == nil }) { schedule in
-                        ScheduleItem(schedule: schedule, date: date)
+                VStack(spacing: 0) {
+                    ForEach(weeklyBarSchedules) { schedule in
+                        Group {
+                            if schedule.dates.contains(Calendar.current.startOfDay(for: date)) {
+                                ScheduleItem(schedule: schedule, date: date)
+                            } else {
+                                Color.clear
+                            }
+                        }
+                        .frame(height: 15)
                     }
                 }
                 .clipped()
@@ -85,7 +93,9 @@ struct DateItem: View {
     
     // 반복인지 확인
     private var hasRecurringSchedule: Bool {
-        schedules.contains { $0.recurrenceRule != nil }
+        recurringSchedules.contains {
+            $0.dates.contains(Calendar.current.startOfDay(for: date))
+        }
     }
 }
 
