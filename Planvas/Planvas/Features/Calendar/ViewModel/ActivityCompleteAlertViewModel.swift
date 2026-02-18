@@ -45,14 +45,10 @@ final class ActivityCompleteAlertViewModel {
         self.myActivityId = myActivityId
     }
 
-    /// 그리기/표시용: 목표를 넘어도 최대 목표치로만 표시
-    var displayCurrentPercent: Int {
-        min(currentPercent, goalPercent)
-    }
-
+    /// 진행바 채움 비율. 목표 초과 시에도 바는 100%로 유지 (다 채워진 상태).
     var progressRatio: CGFloat {
-        guard goalPercent > progressMinPercent else { return 0 }
-        return CGFloat(displayCurrentPercent) / CGFloat(goalPercent)
+        guard goalPercent > 0 else { return 0 }
+        return min(CGFloat(currentPercent) / CGFloat(goalPercent), 1)
     }
 
     /// GET /api/goals/current 응답으로 목표·현재 달성률 반영 (모달 표시 시 API 호출 후 호출)
