@@ -24,6 +24,8 @@ struct ActivityListView: View {
     @State private var showRecommendHeader = true
     @State private var lastDragTranslation: CGFloat = 0
     private let recommendHeaderHeight: CGFloat = 65
+    
+    @State private var didInitialLoad = false
 
     var body: some View {
         VStack(alignment: .center, spacing: 0) {
@@ -63,6 +65,8 @@ struct ActivityListView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
         .task {
+            guard !didInitialLoad else { return }
+            didInitialLoad = true
             await vm.onChangeTab(selectedActivityType, searchText: searchText)
         }
         .onChange(of: selectedActivityType) { _, newValue in
