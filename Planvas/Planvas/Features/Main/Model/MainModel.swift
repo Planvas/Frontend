@@ -106,6 +106,7 @@ struct ToDo: Identifiable {
     let time: String
     let pointText: String   // UI용
     let pointValue: Int     // 계산용
+    let category: TodoCategory
     var isCompleted: Bool
 }
 

@@ -86,7 +86,7 @@ class MainViewModel {
     
     // MARK: - 할 일
     var todos: [ToDo] = []
-
+    
     // 체크 토글
     func toggleTodo(_ todo: ToDo) {
         guard let index = todos.firstIndex(where: { $0.id == todo.id }) else { return }
@@ -97,9 +97,17 @@ class MainViewModel {
         todos[index].isCompleted.toggle()
         
         if originalState {
-            growthAchieved -= point
+            if todos[index].category == .growth {
+                growthAchieved -= point
+            } else {
+                restAchieved -= point
+            }
         } else {
-            growthAchieved += point
+            if todos[index].category == .growth {
+                growthAchieved += point
+            } else {
+                restAchieved += point
+            }
         }
         
         fetchTodoStatus(
@@ -150,7 +158,7 @@ class MainViewModel {
                                     
                                     for schedule in day.schedules {
                                         guard schedule.type != "TODO" else { continue }
-
+                                        
                                         if var existing = groupedSchedules[schedule.id] {
                                             existing.dates.append(date)
                                             groupedSchedules[schedule.id] = existing
@@ -217,19 +225,20 @@ class MainViewModel {
                             self.todos = success.map { todo in
                                 let startTime = self.formatTime(todo.startAt)
                                 let endTime = self.formatTime(todo.endAt)
-
+                                
                                 return ToDo(
                                     id: todo.id,
                                     typeColor: ScheduleType(rawValue: todo.eventColor) ?? .one,
                                     title: todo.title,
                                     isFixed: todo.type == "FIXED",
                                     time: (startTime == "00:00" && endTime == "23:59")
-                                        ? ""
-                                        : "\(startTime) - \(endTime)",
+                                    ? ""
+                                    : "\(startTime) - \(endTime)",
                                     pointText: todo.point == 0
-                                        ? ""
-                                        : "\(todo.category.displayText) +\(todo.point)",
+                                    ? ""
+                                    : "\(todo.category.displayText) +\(todo.point)",
                                     pointValue: todo.point,
+                                    category: todo.category,
                                     isCompleted: todo.status == "DONE"
                                 )
                             }
@@ -248,14 +257,14 @@ class MainViewModel {
     func formatTime(_ isoString: String) -> String {
         let isoFormatter = ISO8601DateFormatter()
         isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
+        
         guard let date = isoFormatter.date(from: isoString) else { return "" }
-
+        
         let outputFormatter = DateFormatter()
         outputFormatter.dateFormat = "HH:mm"
         outputFormatter.timeZone = TimeZone.current
         outputFormatter.locale = Locale(identifier: "ko_KR")
-
+        
         return outputFormatter.string(from: date)
     }
     
