@@ -278,19 +278,12 @@ class MainViewModel {
         let isoFormatter = ISO8601DateFormatter()
         isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         
-        var date = isoFormatter.date(from: isoString)
-        if date == nil {
-            // 소수점 초가 없는 경우 재시도
-            let fallback = ISO8601DateFormatter()
-            fallback.formatOptions = [.withInternetDateTime]
-            date = fallback.date(from: isoString)
-        }
-        guard let date else { return "" }
+        guard let date = isoFormatter.date(from: isoString) else { return "" }
         
         let outputFormatter = DateFormatter()
         outputFormatter.dateFormat = "HH:mm"
-        outputFormatter.timeZone = TimeZone.current
-        outputFormatter.locale = Locale(identifier: "ko_KR")
+        
+        outputFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         
         return outputFormatter.string(from: date)
     }
