@@ -10,6 +10,8 @@ import SwiftUI
 // MARK: - 바디 / 투두 그룹
 struct ToDoGroup: View {
     @Bindable var viewModel: MainViewModel
+
+    @Environment(CalendarViewModel.self) private var calendarViewModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8){
@@ -28,17 +30,25 @@ struct ToDoGroup: View {
             }
             
             // 투두 아이템
-            ForEach(viewModel.todos) { todo in
+            ForEach(viewModel.todos, id: \.id) { todo in
                 ToDoItem(
                     todo: todo,
                     onToggle: {
                         viewModel.toggleTodo(todo)
+                    },
+                    onTap: {
+                        Task {
+                            await calendarViewModel.loadEventDetail(serverId: todo.id)
+                            if calendarViewModel.loadedEventDetail != nil {
+                                viewModel.showTodoDetail = true
+                            }
+                        }
                     }
                 )
             }
             
             Button(action:{
-                //TODO: - 투두 시트
+                viewModel.showAddTodo = true
             }){
                 HStack(spacing: 8){
                     Image(systemName: "plus")
@@ -57,7 +67,37 @@ struct ToDoGroup: View {
                         .stroke(.ccc60, lineWidth: 1)
                 )
             }
-//            .sheet
+            .sheet(isPresented: $viewModel.showTodoDetail) {
+                if let event = calendarViewModel.loadedEventDetail {
+                    EventSummaryView(
+                        event: event,
+                        startDate: calendarViewModel.getStartDate(for: event),
+                        endDate: calendarViewModel.getEndDate(for: event),
+                        daysUntil: calendarViewModel.getDaysUntil(for: event),
+                        onDelete: {
+                            calendarViewModel.deleteEvent(event)
+                            calendarViewModel.clearLoadedEventDetail()
+                            viewModel.showTodoDetail = false
+                        },
+                        onEdit: nil,
+                        onUpdateEvent: { updatedEvent in
+                            calendarViewModel.updateEvent(updatedEvent)
+                            calendarViewModel.clearLoadedEventDetail()
+                            viewModel.showTodoDetail = false
+                        }
+                    )
+                    .presentationDetents([.medium])
+                    .presentationDragIndicator(.visible)
+                }
+            }
+            .sheet(isPresented: $viewModel.showAddTodo, onDismiss: {
+                viewModel.fetchTodoData(for: viewModel.selectedDate)
+            }) {
+                AddTodoView(
+                    date: viewModel.selectedDate
+                )
+                .presentationDragIndicator(.visible)
+            }
         }
         .padding()
     }

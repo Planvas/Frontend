@@ -86,14 +86,38 @@ class MainViewModel {
     
     // MARK: - 할 일
     var todos: [ToDo] = []
-
+    
     // 체크 토글
     func toggleTodo(_ todo: ToDo) {
         guard let index = todos.firstIndex(where: { $0.id == todo.id }) else { return }
         
+        let originalState = todos[index].isCompleted
+        let point = todos[index].pointValue
+        // 낙관적 업데이트
         todos[index].isCompleted.toggle()
-        fetchTodoStatus(todoId: todo.id)
+        
+        if originalState {
+            if todos[index].category == .growth {
+                growthAchieved -= point
+            } else {
+                restAchieved -= point
+            }
+        } else {
+            if todos[index].category == .growth {
+                growthAchieved += point
+            } else {
+                restAchieved += point
+            }
+        }
+        
+        fetchTodoStatus(
+            todoId: todo.id,
+            originalState: originalState,
+            point: point
+        )
     }
+    var showTodoDetail: Bool = false
+    var showAddTodo: Bool = false
     
     // MARK: - 오늘의 인기 성장 활동
     var items: [ActivityItem] = []
@@ -134,7 +158,7 @@ class MainViewModel {
                                     
                                     for schedule in day.schedules {
                                         guard schedule.type != "TODO" else { continue }
-
+                                        
                                         if var existing = groupedSchedules[schedule.id] {
                                             existing.dates.append(date)
                                             groupedSchedules[schedule.id] = existing
@@ -201,18 +225,20 @@ class MainViewModel {
                             self.todos = success.map { todo in
                                 let startTime = self.formatTime(todo.startAt)
                                 let endTime = self.formatTime(todo.endAt)
-
+                                
                                 return ToDo(
                                     id: todo.id,
                                     typeColor: ScheduleType(rawValue: todo.eventColor) ?? .one,
                                     title: todo.title,
                                     isFixed: todo.type == "FIXED",
                                     time: (startTime == "00:00" && endTime == "23:59")
-                                        ? ""
-                                        : "\(startTime) - \(endTime)",
-                                    point: todo.point == 0
-                                        ? ""
-                                        : "\(todo.category.displayText) +\(todo.point)",
+                                    ? ""
+                                    : "\(startTime) - \(endTime)",
+                                    pointText: todo.point == 0
+                                    ? ""
+                                    : "\(todo.category.displayText) +\(todo.point)",
+                                    pointValue: todo.point,
+                                    category: todo.category,
                                     isCompleted: todo.status == "DONE"
                                 )
                             }
@@ -229,14 +255,28 @@ class MainViewModel {
     
     // 날짜 + 시간 -> 시간 (HH:mm) 변환 함수
     func formatTime(_ isoString: String) -> String {
-        guard let timePart = isoString.split(separator: "T").last else {
-            return ""
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        var date = isoFormatter.date(from: isoString)
+        if date == nil {
+            // 소수점 초가 없는 경우 재시도
+            let fallback = ISO8601DateFormatter()
+            fallback.formatOptions = [.withInternetDateTime]
+            date = fallback.date(from: isoString)
         }
-        return String(timePart.prefix(5))
+        guard let date else { return "" }
+        
+        let outputFormatter = DateFormatter()
+        outputFormatter.dateFormat = "HH:mm"
+        outputFormatter.timeZone = TimeZone.current
+        outputFormatter.locale = Locale(identifier: "ko_KR")
+        
+        return outputFormatter.string(from: date)
     }
     
     // MARK: - 투두 완료 상태 토글
-    func fetchTodoStatus(todoId: Int) {
+    func fetchTodoStatus(todoId: Int, originalState: Bool, point: Int) {
         todoProvider.request(.patchToDo(todoId: todoId)) { result in
             switch result {
             case .success(let response):
@@ -249,9 +289,15 @@ class MainViewModel {
                     }
                 } catch {
                     print("todo 디코더 오류: \(error)")
+                    if let index = self.todos.firstIndex(where: { $0.id == todoId }) {
+                        self.todos[index].isCompleted = originalState
+                    }
                 }
             case .failure(let error):
                 print("todo API 오류: \(error)")
+                if let index = self.todos.firstIndex(where: { $0.id == todoId }) {
+                    self.todos[index].isCompleted = originalState
+                }
             }
         }
     }
