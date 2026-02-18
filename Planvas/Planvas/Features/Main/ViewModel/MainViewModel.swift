@@ -84,6 +84,14 @@ class MainViewModel {
         fetchTodoData(for: selectedDate)
     }
     
+    var allSchedules: [Schedule] = []
+    // 주간 정렬 배열
+    var weeklyBarSchedules: [Schedule] {
+        allSchedules
+            .filter { $0.recurrenceRule == nil }
+            .sorted { $0.id < $1.id }
+    }
+    
     // MARK: - 할 일
     var todos: [ToDo] = []
     
@@ -162,14 +170,13 @@ class MainViewModel {
                                         if var existing = groupedSchedules[schedule.id] {
                                             existing.dates.append(date)
                                             groupedSchedules[schedule.id] = existing
-                                        } else {
-                                            groupedSchedules[schedule.id] = Schedule(
-                                                id: schedule.id,
-                                                title: schedule.title,
-                                                color: schedule.color,
-                                                dates: [date],
-                                                recurrenceRule: schedule.recurrenceRule
-                                            )
+                                        } else { groupedSchedules[schedule.id] = Schedule(
+                                            id: schedule.id,
+                                            title: schedule.title,
+                                            color: schedule.color,
+                                            dates: [date],
+                                            recurrenceRule: schedule.recurrenceRule
+                                        )
                                         }
                                     }
                                 }
@@ -180,6 +187,7 @@ class MainViewModel {
                                     }
                                 }
                                 self.weeklySchedules = result
+                                self.allSchedules = Array(groupedSchedules.values)
                             }
                             
                             // 인기 활동 데이터
@@ -301,5 +309,4 @@ class MainViewModel {
             }
         }
     }
-    
 }
