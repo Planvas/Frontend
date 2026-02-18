@@ -18,8 +18,8 @@ struct ActivityEventSummaryView: View {
     var onEdit: (() -> Void)?
     var onComplete: (() -> Void)?
     var onUpdateEvent: ((Event) -> Void)?
-    /// 시트 닫은 뒤 상위에서 전체 화면 중앙에 완료 알림 띄울 때 사용
-    var onCompleteRequested: ((ActivityCompleteAlertViewModel) -> Void)?
+    /// 시트 닫은 뒤 상위에서 완료 API 호출·목표 반영 후 완료 알림 띄울 때 사용 (활동 완료 버튼 탭 시 호출)
+    var onCompleteRequested: ((ActivityCompleteAlertViewModel) async -> Void)?
 
     /// status DONE + type ACTIVITY 인 이미 완료된 활동일 때 true
     private var isActivityCompleted: Bool {
@@ -65,7 +65,7 @@ struct ActivityEventSummaryView: View {
                         currentPercent: 0,
                         myActivityId: event?.myActivityId
                     )
-                    onCompleteRequested?(alertVM)
+                    Task { await onCompleteRequested?(alertVM) }
                 }
                 .disabled(isActivityCompleted)
                 .opacity(isActivityCompleted ? 0.5 : 1)
