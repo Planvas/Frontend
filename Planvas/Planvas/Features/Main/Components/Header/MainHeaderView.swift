@@ -85,7 +85,7 @@ struct MainHeaderView: View {
                     Circle()
                         .fill(Color.primary20)
                         .frame(width: 29, height: 29)
-                        .offset(x: 110 + (animate ? -4 : 4), y: -70 + (animate ? -4 : 4))
+                        .offset(x: 110 + (animate ? -2 : 2), y: -70 + (animate ? -3 : 3))
                         .animation(
                             .easeInOut(duration: 4.5)
                             .delay(0.3)
@@ -96,9 +96,9 @@ struct MainHeaderView: View {
                     Circle()
                         .fill(Color.primary20)
                         .frame(width: 19, height: 19)
-                        .offset(x: 165 + (animate ? -3 : 3), y: 10 + (animate ? 3 : -3))
+                        .offset(x: 165 + (animate ? 3 : -3), y: 15 + (animate ? 3 : -3))
                         .animation(
-                            .easeInOut(duration: 6)
+                            .easeInOut(duration: 4)
                             .delay(0.7)
                             .repeatForever(autoreverses: true),
                             value: animate
@@ -107,10 +107,10 @@ struct MainHeaderView: View {
                     Circle()
                         .fill(Color.primary50)
                         .frame(width: 99, height: 99)
-                        .offset(x: 210, y: -50 + (animate ? 8 : -8))
+                        .offset(x: 210, y: -50 + (animate ? 4 : -4))
                         .scaleEffect(animate ? 1.05 : 0.95)
                         .animation(
-                            .easeInOut(duration: 4)
+                            .easeInOut(duration: 8)
                             .repeatForever(autoreverses: true),
                             value: animate
                         )
