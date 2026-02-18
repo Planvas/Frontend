@@ -23,6 +23,8 @@ struct MainView: View {
                 )
                 .padding(.top, -220)
                 .padding(.bottom, 75)
+            
+            DisableScrollBounce() 
         }
         .ignoresSafeArea()
         .task{viewModel.fetchMainData()}
