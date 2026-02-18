@@ -87,6 +87,7 @@ class CartViewModel {
         let vm = AddActivityViewModel()
         vm.title = item.title
         vm.activityValue = item.point
+        vm.growthLabel = (item.category == .growth) ? "성장" : "휴식"
         
         // 옵셔널 값이기 때문에
         if let startStr = item.startDate {
