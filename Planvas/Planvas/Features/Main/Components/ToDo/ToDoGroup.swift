@@ -39,7 +39,9 @@ struct ToDoGroup: View {
                     onTap: {
                         Task {
                             await calendarViewModel.loadEventDetail(serverId: todo.id)
-                            viewModel.showTodoDetail = true
+                            if calendarViewModel.loadedEventDetail != nil {
+                                viewModel.showTodoDetail = true
+                            }
                         }
                     }
                 )
