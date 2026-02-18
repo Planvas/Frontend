@@ -95,12 +95,13 @@ struct ActivitySettingsSectionView<VM: ActivitySettingsBindable & Observable>: V
             let totalW = geometry.size.width
             let goal = CGFloat(max(viewModel.goalPercent, 1))
             let cappedCurrent = min(viewModel.currentAchievementPercent, viewModel.goalPercent)
-            let achievementRatio = CGFloat(cappedCurrent) / goal
-            let totalDisplay = min(viewModel.currentAchievementPercent + viewModel.activityValue, viewModel.goalPercent)
+            let isFull = viewModel.currentAchievementPercent >= viewModel.goalPercent
+            let achievementRatio: CGFloat = isFull ? 1 : CGFloat(cappedCurrent) / goal
+            let totalDisplay = isFull ? viewModel.goalPercent : min(viewModel.currentAchievementPercent + viewModel.activityValue, viewModel.goalPercent)
             let totalRatio = CGFloat(totalDisplay) / goal
-            let filledWidth = totalW * totalRatio
+            let filledWidth = totalW * min(totalRatio, 1)
             let w1 = totalW * achievementRatio
-            let w2 = filledWidth - w1
+            let w2 = max(0, filledWidth - w1)
 
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 80)
@@ -113,7 +114,7 @@ struct ActivitySettingsSectionView<VM: ActivitySettingsBindable & Observable>: V
 
                 RoundedRectangle(cornerRadius: 80)
                     .fill(.primary20)
-                    .frame(width: filledWidth + 6, height: 25)
+                    .frame(width: min(filledWidth + 6, totalW), height: 25)
 
                 RoundedRectangle(cornerRadius: 80)
                     .fill(
@@ -126,19 +127,13 @@ struct ActivitySettingsSectionView<VM: ActivitySettingsBindable & Observable>: V
                     .frame(width: w1, height: 25)
 
                 HStack(spacing: 0) {
-                    Text("\(cappedCurrent)%")
+                    Text("\(isFull ? viewModel.goalPercent : cappedCurrent)%")
                         .textStyle(.semibold14)
                         .foregroundColor(.white)
                         .padding(.leading, 10)
                         .frame(width: w1, alignment: .leading)
 
-                    Text(viewModel.addedPercentText)
-                        .textStyle(.semibold14)
-                        .foregroundColor(.primary1)
-                        .frame(width: w2, alignment: .center)
-                        .padding(.horizontal, 3)
-
-                    if totalRatio < 1.0 {
+                    if !isFull, totalRatio < 1.0 {
                         Text("\(viewModel.goalPercent)%")
                             .textStyle(.regular14)
                             .foregroundColor(.gray444)
@@ -148,6 +143,13 @@ struct ActivitySettingsSectionView<VM: ActivitySettingsBindable & Observable>: V
                     }
                 }
                 .frame(height: 25)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .overlay(alignment: .trailing) {
+                Text(viewModel.addedPercentText)
+                    .textStyle(.semibold14)
+                    .foregroundColor(.white)
+                    .padding(.trailing, 10)
             }
         }
         .frame(height: 25)

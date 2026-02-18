@@ -665,14 +665,16 @@ final class CalendarViewModel {
         loadedEventDetail = nil
     }
 
-    /// 활동 완료 처리 (PATCH /api/my-activities/{id}/complete) 후 캘린더 새로고침
-    func completeActivity(myActivityId: Int) async {
+    /// 활동 완료 처리 (PATCH /api/my-activities/{id}/complete) 후 캘린더 새로고침. 성공 시 응답(afterProgress 등) 반환.
+    func completeActivity(myActivityId: Int) async -> CompleteMyActivitySuccess? {
         do {
-            _ = try await schedulesService.patchActivityComplete(id: myActivityId)
+            let result = try await schedulesService.patchActivityComplete(id: myActivityId)
             await refreshEvents()
+            return result
         } catch {
             print("활동 완료 처리 실패: \(error)")
             await refreshEvents()
+            return nil
         }
     }
     

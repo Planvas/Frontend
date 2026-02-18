@@ -158,7 +158,13 @@ class ActivityDetailViewModel {
             showAddActivity = false
             addSuccessMessage = "일정에 추가되었어요"
         } catch {
-            addErrorMessage = (error as? ActivityAPIError)?.reason ?? error.localizedDescription
+            if let apiError = error as? ActivityAPIError {
+                addErrorMessage = apiError.reason
+            } else if error.localizedDescription.contains("409") {
+                addErrorMessage = "기존에 존재하는 일정과 겹칩니다."
+            } else {
+                addErrorMessage = error.localizedDescription
+            }
         }
     }
     
@@ -190,7 +196,7 @@ extension ActivityAPIError {
         switch self {
         case .serverFail(let reason): return reason
         case .invalidResponse: return "응답 형식 오류"
-        case .scheduleConflict(let r): return r ?? "일정이 충돌해 추가할 수 없어요"
+        case .scheduleConflict: return "기존에 존재하는 일정과 겹칩니다."
         case .activityNotFound(let r): return r ?? "해당 활동을 찾을 수 없어요"
         case .badRequest(let r): return r ?? "요청 값이 올바르지 않아요"
         }
