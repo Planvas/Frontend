@@ -28,6 +28,28 @@ struct MainView: View {
         }
         .ignoresSafeArea()
         .task{viewModel.fetchMainData()}
+        .overlay {
+            if viewModel.showCompleteAlert,
+               let alertVM = viewModel.completeAlertViewModel {
+                
+                ZStack {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+                        .onTapGesture { viewModel.showCompleteAlert = false }
+                    
+                    ActivityCompleteAlertView(
+                        viewModel: alertVM,
+                        onConfirm: {
+                            viewModel.showCompleteAlert = false
+                        },
+                        onDismiss: {
+                            viewModel.showCompleteAlert = false
+                        }
+                    )
+                    .padding(.horizontal, 24)
+                }
+            }
+        }
     }
 }  
 
