@@ -94,6 +94,26 @@ struct DeleteSuccess: Decodable {
     let message: String
 }
 
+// MARK: - 할 일 추가
+struct AddTodoRequest: Encodable {
+    let title: String
+    let category: String
+    let point: Int
+    let eventColor: Int
+    let startTime: String
+    let endTime: String
+}
+
+struct AddToDoResponse: Decodable {
+    let resultType: String
+    let error: ErrorDTO?
+    let success: AddToDoSuccess?
+}
+
+struct AddToDoSuccess: Decodable {
+    let id: Int
+}
+
 // MARK: - 할 일 조회
 struct ToDoListResponse: Decodable {
     let resultType: String

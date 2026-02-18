@@ -11,6 +11,7 @@ import SwiftUI
 struct ToDoItem: View {
     let todo: ToDo
     let onToggle: () -> Void
+    let onTap: () -> Void
     
     var body: some View {
         // TODO: - 클릭 시 디테일 페이지 연결
@@ -57,8 +58,8 @@ struct ToDoItem: View {
                 
                 Spacer()
                 
-                if !todo.point.isEmpty {
-                    Text(todo.point)
+                if !todo.pointText.isEmpty {
+                    Text(todo.pointText)
                         .textStyle(.regular14)
                         .foregroundStyle(.primary1)
                         .padding(.vertical, 2)
@@ -79,6 +80,8 @@ struct ToDoItem: View {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(todo.isCompleted ? .primary20 : .clear)
             )
+            .contentShape(Rectangle())
+            .onTapGesture { onTap() }
             
             HStack{
                 Spacer()
