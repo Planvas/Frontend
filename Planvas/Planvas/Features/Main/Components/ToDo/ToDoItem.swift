@@ -80,6 +80,8 @@ struct ToDoItem: View {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(todo.isCompleted ? .primary20 : .clear)
             )
+            .contentShape(Rectangle())
+            .onTapGesture { onTap() }
             
             HStack{
                 Spacer()
@@ -94,8 +96,6 @@ struct ToDoItem: View {
                 }
                 .padding(.trailing, 15)
             }
-            .contentShape(Rectangle())
-            .onTapGesture { onTap() }
         }
     }
 }
