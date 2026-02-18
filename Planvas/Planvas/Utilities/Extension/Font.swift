@@ -135,6 +135,12 @@ extension TextStyle {
         letterSpacing: nil
     )
     
+    static let semibold24 = TextStyle(
+        weight: .semibold,
+        size: 24,
+        letterSpacing: nil
+    )
+    
     static let semibold20 = TextStyle(
         weight: .semibold,
         size: 20,
@@ -227,6 +233,12 @@ extension TextStyle {
     )
     
     // regular
+    static let regular20 = TextStyle(
+        weight: .regular,
+        size: 20,
+        letterSpacing: nil
+    )
+    
     static let regular18 = TextStyle(
         weight: .regular,
         size: 18,
