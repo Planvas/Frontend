@@ -10,7 +10,7 @@ import SwiftUI
 // MARK: - 메인 헤더 그룹
 struct MainHeaderView: View {
     @Bindable var viewModel: MainViewModel
-    
+    @State private var animate = false
     var body: some View {
         VStack {
             VStack(alignment: .leading) {
@@ -63,27 +63,60 @@ struct MainHeaderView: View {
                     Circle()
                         .fill(Color.primary20)
                         .frame(width: 153, height: 153)
-                        .offset(x: -160, y: 70)
+                        .offset(x: -160, y: 70 + (animate ? -8 : 8))
+                        .animation(
+                            .easeInOut(duration: 3)
+                            .repeatForever(autoreverses: true),
+                            value: animate
+                        )
+
                     
                     Circle()
                         .fill(Color.primary20)
                         .frame(width: 22, height: 22)
-                        .offset(x: 0, y: 25)
+                        .offset(x: 0 + (animate ? -2 : 2), y: 25 + (animate ? -4 : 4))
+                        .animation(
+                            .easeInOut(duration: 4.5)
+                            .delay(0.6)
+                            .repeatForever(autoreverses: true),
+                            value: animate
+                        )
                     
                     Circle()
                         .fill(Color.primary20)
                         .frame(width: 29, height: 29)
-                        .offset(x: 110, y: -70)
+                        .offset(x: 110 + (animate ? -2 : 2), y: -70 + (animate ? -3 : 3))
+                        .animation(
+                            .easeInOut(duration: 4.5)
+                            .delay(0.3)
+                            .repeatForever(autoreverses: true),
+                            value: animate
+                        )
                     
                     Circle()
                         .fill(Color.primary20)
                         .frame(width: 19, height: 19)
-                        .offset(x: 165, y: 10)
+                        .offset(x: 165 + (animate ? 3 : -3), y: 15 + (animate ? 3 : -3))
+                        .animation(
+                            .easeInOut(duration: 4)
+                            .delay(0.7)
+                            .repeatForever(autoreverses: true),
+                            value: animate
+                        )
                     
                     Circle()
                         .fill(Color.primary50)
                         .frame(width: 99, height: 99)
-                        .offset(x: 210, y: -50)
+                        .offset(x: 210, y: -50 + (animate ? 4 : -4))
+                        .scaleEffect(animate ? 1.05 : 0.95)
+                        .animation(
+                            .easeInOut(duration: 8)
+                            .repeatForever(autoreverses: true),
+                            value: animate
+                        )
+
+                }.onAppear {
+                    animate = true
                 }
             )
             
