@@ -19,6 +19,10 @@ struct MainFlowView: View {
                         MainView()
                     case .activityDetail(let activityId):
                         ActivityDetailView(activityId: activityId)
+//                    case .onboarding:
+//                        OnboardingFlowView()
+                    case .finalReport(let goalId):
+                        ReportView(goalId: goalId)
                     }
                 }
         }
