@@ -87,9 +87,16 @@ struct CalendarView: View {
                                 viewModel.clearLoadedEventDetail()
                                 showEventDetail = false
                             },
-                            onCompleteRequested: { alertVM in
+                            onCompleteRequested: { (alertVM: ActivityCompleteAlertViewModel) async in
                                 viewModel.clearLoadedEventDetail()
                                 showEventDetail = false
+                                if let id = alertVM.myActivityId {
+                                    _ = await viewModel.completeActivity(myActivityId: id)
+                                    try? await Task.sleep(nanoseconds: 500_000_000)
+                                    if let goal = try? await MyPageViewModel.getCurrentGoal() {
+                                        alertVM.applyGoal(goal)
+                                    }
+                                }
                                 completeAlertViewModel = alertVM
                                 showCompleteAlert = true
                             }
@@ -138,12 +145,7 @@ struct CalendarView: View {
                     ActivityCompleteAlertView(
                         viewModel: alertVM,
                         onConfirm: {
-                            Task {
-                                if let id = alertVM.myActivityId {
-                                    await viewModel.completeActivity(myActivityId: id)
-                                }
-                                showCompleteAlert = false
-                            }
+                            showCompleteAlert = false
                         },
                         onDismiss: { showCompleteAlert = false }
                     )
