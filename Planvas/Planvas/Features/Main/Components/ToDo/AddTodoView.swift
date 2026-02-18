@@ -345,9 +345,3 @@ struct AddTodoView: View {
         }
     }
 }
-
-#Preview {
-    AddTodoView(
-        date: Date()
-    )
-}
