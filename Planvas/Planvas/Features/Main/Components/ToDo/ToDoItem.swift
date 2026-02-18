@@ -58,8 +58,8 @@ struct ToDoItem: View {
                 
                 Spacer()
                 
-                if !todo.point.isEmpty {
-                    Text(todo.point)
+                if !todo.pointText.isEmpty {
+                    Text(todo.pointText)
                         .textStyle(.regular14)
                         .foregroundStyle(.primary1)
                         .padding(.vertical, 2)

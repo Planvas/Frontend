@@ -91,8 +91,22 @@ class MainViewModel {
     func toggleTodo(_ todo: ToDo) {
         guard let index = todos.firstIndex(where: { $0.id == todo.id }) else { return }
         
+        let originalState = todos[index].isCompleted
+        let point = todos[index].pointValue
+        // 낙관적 업데이트
         todos[index].isCompleted.toggle()
-        fetchTodoStatus(todoId: todo.id)
+        
+        if originalState {
+            growthAchieved -= point
+        } else {
+            growthAchieved += point
+        }
+        
+        fetchTodoStatus(
+            todoId: todo.id,
+            originalState: originalState,
+            point: point
+        )
     }
     var showTodoDetail: Bool = false
     var showAddTodo: Bool = false
@@ -212,9 +226,10 @@ class MainViewModel {
                                     time: (startTime == "00:00" && endTime == "23:59")
                                         ? ""
                                         : "\(startTime) - \(endTime)",
-                                    point: todo.point == 0
+                                    pointText: todo.point == 0
                                         ? ""
                                         : "\(todo.category.displayText) +\(todo.point)",
+                                    pointValue: todo.point,
                                     isCompleted: todo.status == "DONE"
                                 )
                             }
@@ -238,7 +253,7 @@ class MainViewModel {
     }
     
     // MARK: - 투두 완료 상태 토글
-    func fetchTodoStatus(todoId: Int) {
+    func fetchTodoStatus(todoId: Int, originalState: Bool, point: Int) {
         todoProvider.request(.patchToDo(todoId: todoId)) { result in
             switch result {
             case .success(let response):
@@ -251,9 +266,15 @@ class MainViewModel {
                     }
                 } catch {
                     print("todo 디코더 오류: \(error)")
+                    if let index = self.todos.firstIndex(where: { $0.id == todoId }) {
+                        self.todos[index].isCompleted = originalState
+                    }
                 }
             case .failure(let error):
                 print("todo API 오류: \(error)")
+                if let index = self.todos.firstIndex(where: { $0.id == todoId }) {
+                    self.todos[index].isCompleted = originalState
+                }
             }
         }
     }
