@@ -5,20 +5,22 @@ struct ProfileView: View {
     @Environment(MyPageViewModel.self) private var viewModel
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 30) {
+        VStack(alignment: .leading, spacing: 48) {
             Image("logo")
             
-            HStack {
+            HStack(spacing: 16) {
                 Image("profile")
                 
-                VStack(alignment: .leading) {
+                VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Text(viewModel.userData?.name ?? "사용자")
-                            .textStyle(.semibold20)
+                            .textStyle(.semibold24)
+                            .foregroundStyle(.fff)
                         Text("님")
-                            .textStyle(.regular18)
+                            .textStyle(.regular20)
+                            .foregroundStyle(.fff)
                     }
-                    Text("밸런스 챌린저(임시)")
+                    Text("밸런스 챌린저")
                         .foregroundStyle(Color.white)
                         .padding(5)
                         .background(
