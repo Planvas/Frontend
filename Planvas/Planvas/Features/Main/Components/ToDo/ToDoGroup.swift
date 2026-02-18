@@ -90,9 +90,11 @@ struct ToDoGroup: View {
                     .presentationDragIndicator(.visible)
                 }
             }
-            .sheet(isPresented: $viewModel.showAddTodo) {
+            .sheet(isPresented: $viewModel.showAddTodo, onDismiss: {
+                viewModel.fetchTodoData(for: viewModel.selectedDate)
+            }) {
                 AddTodoView(
-                    date: viewModel.selectedDate,
+                    date: viewModel.selectedDate
                 )
                 .presentationDragIndicator(.visible)
             }
