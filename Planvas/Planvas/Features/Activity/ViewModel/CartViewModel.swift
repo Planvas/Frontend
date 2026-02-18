@@ -143,7 +143,7 @@ class CartViewModel {
             .sink(receiveCompletion: { [weak self] completion in
                 if case let .failure(error) = completion {
                     self?.errorMessage = "일정 추가 실패 \(error.localizedDescription)"
-                    self?.alertErrorMessage = "일정 추가를 실패했어요"
+                    self?.alertErrorMessage = "기존에 존재하는 일정과 겹칩니다."
                 }
             }, receiveValue: { [weak self] response in
                 if response.resultType == "SUCCESS" {
