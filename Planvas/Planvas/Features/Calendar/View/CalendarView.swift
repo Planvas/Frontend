@@ -20,7 +20,6 @@ struct CalendarView: View {
     @State private var showImportAlert = false
     @State private var showAddEvent = false
     @State private var selectedEvent: Event?
-    @State private var showEventDetail = false
     @State private var showCompleteAlert = false
     @State private var completeAlertViewModel: ActivityCompleteAlertViewModel?
     @State private var slideDirection: SlideDirection = .none
@@ -69,66 +68,67 @@ struct CalendarView: View {
             .presentationDetents([.large])
             .presentationDragIndicator(.visible)
         }
-        .sheet(isPresented: $showEventDetail) {
-            let event = viewModel.loadedEventDetail ?? selectedEvent
-            if let event {
-                Group {
-                    if !event.isFixed {
-                        ActivityEventSummaryView(
-                            viewModel: ActivityEventSummaryViewModel.from(event: event, daysUntil: viewModel.getDaysUntil(for: event)),
-                            event: event,
-                            onDelete: {
-                                viewModel.deleteEvent(event)
-                                viewModel.clearLoadedEventDetail()
-                                showEventDetail = false
-                            },
-                            onUpdateEvent: { updatedEvent in
-                                viewModel.updateEvent(updatedEvent)
-                                viewModel.clearLoadedEventDetail()
-                                showEventDetail = false
-                            },
-                            onCompleteRequested: { (alertVM: ActivityCompleteAlertViewModel) async in
-                                viewModel.clearLoadedEventDetail()
-                                showEventDetail = false
-                                if let id = alertVM.myActivityId {
-                                    _ = await viewModel.completeActivity(myActivityId: id)
-                                    try? await Task.sleep(nanoseconds: 500_000_000)
-                                    if let goal = try? await MyPageViewModel.getCurrentGoal() {
-                                        alertVM.applyGoal(goal)
-                                    }
+        .sheet(item: $selectedEvent) { event in
+            let currentEvent = viewModel.loadedEventDetail ?? event
+            Group {
+                if !currentEvent.isFixed {
+                    ActivityEventSummaryView(
+                        viewModel: ActivityEventSummaryViewModel.from(event: currentEvent, daysUntil: viewModel.getDaysUntil(for: currentEvent)),
+                        event: currentEvent,
+                        onDelete: {
+                            viewModel.deleteEvent(currentEvent)
+                            viewModel.clearLoadedEventDetail()
+                            selectedEvent = nil
+                        },
+                        onUpdateEvent: { updatedEvent in
+                            viewModel.updateEvent(updatedEvent)
+                            viewModel.clearLoadedEventDetail()
+                            selectedEvent = nil
+                        },
+                        onCompleteRequested: { (alertVM: ActivityCompleteAlertViewModel) async in
+                            viewModel.clearLoadedEventDetail()
+                            selectedEvent = nil
+                            if let id = alertVM.myActivityId {
+                                _ = await viewModel.completeActivity(myActivityId: id)
+                                try? await Task.sleep(nanoseconds: 500_000_000)
+                                if let goal = try? await MyPageViewModel.getCurrentGoal() {
+                                    alertVM.applyGoal(goal)
                                 }
-                                completeAlertViewModel = alertVM
-                                showCompleteAlert = true
                             }
-                        )
-                    } else {
-                        EventSummaryView(
-                            event: event,
-                            startDate: viewModel.getStartDate(for: event),
-                            endDate: viewModel.getEndDate(for: event),
-                            daysUntil: viewModel.getDaysUntil(for: event),
-                            onDelete: {
-                                viewModel.deleteEvent(event)
-                                viewModel.clearLoadedEventDetail()
-                                showEventDetail = false
-                            },
-                            onEdit: nil,
-                            onUpdateEvent: { updatedEvent in
-                                viewModel.updateEvent(updatedEvent)
-                                viewModel.clearLoadedEventDetail()
-                                showEventDetail = false
-                            }
-                        )
-                    }
+                            completeAlertViewModel = alertVM
+                            showCompleteAlert = true
+                        }
+                    )
+                } else {
+                    EventSummaryView(
+                        event: currentEvent,
+                        startDate: viewModel.getStartDate(for: currentEvent),
+                        endDate: viewModel.getEndDate(for: currentEvent),
+                        daysUntil: viewModel.getDaysUntil(for: currentEvent),
+                        onDelete: {
+                            viewModel.deleteEvent(currentEvent)
+                            viewModel.clearLoadedEventDetail()
+                            selectedEvent = nil
+                        },
+                        onEdit: nil,
+                        onUpdateEvent: { updatedEvent in
+                            viewModel.updateEvent(updatedEvent)
+                            viewModel.clearLoadedEventDetail()
+                            selectedEvent = nil
+                        }
+                    )
                 }
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
-                .task {
-                    if let id = event.fixedScheduleId ?? event.myActivityId {
-                        await viewModel.loadEventDetail(serverId: id)
-                    }
+            }
+            .presentationDetents([.medium])
+            .presentationDragIndicator(.visible)
+            .task {
+                if let id = event.fixedScheduleId ?? event.myActivityId {
+                    await viewModel.loadEventDetail(serverId: id)
                 }
-                .onDisappear { viewModel.clearLoadedEventDetail() }
+            }
+            .onDisappear {
+                viewModel.clearLoadedEventDetail()
+                selectedEvent = nil
             }
         }
         .overlay {
@@ -464,7 +464,6 @@ struct CalendarView: View {
     private func eventCardView(event: Event) -> some View {
         Button {
             selectedEvent = event
-            showEventDetail = true
         } label: {
             HStack(alignment: .center, spacing: 12) {
                 Rectangle()
