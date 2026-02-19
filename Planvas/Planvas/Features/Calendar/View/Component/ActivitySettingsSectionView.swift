@@ -145,11 +145,25 @@ struct ActivitySettingsSectionView<VM: ActivitySettingsBindable & Observable>: V
                 .frame(height: 25)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .overlay(alignment: .leading) {
+                if viewModel.currentAchievementPercent < viewModel.goalPercent, viewModel.activityValue != 0 {
+                    Color.clear
+                        .frame(width: filledWidth, height: 25)
+                        .overlay(alignment: .trailing) {
+                            Text(viewModel.addedPercentText)
+                                .textStyle(.semibold14)
+                                .foregroundColor(.primary1)
+                                .padding(.trailing, 10)
+                        }
+                }
+            }
             .overlay(alignment: .trailing) {
-                Text(viewModel.addedPercentText)
-                    .textStyle(.semibold14)
-                    .foregroundColor(.white)
-                    .padding(.trailing, 10)
+                if viewModel.currentAchievementPercent >= viewModel.goalPercent, viewModel.activityValue != 0 {
+                    Text(viewModel.addedPercentText)
+                        .textStyle(.semibold14)
+                        .foregroundColor(.white)
+                        .padding(.trailing, 10)
+                }
             }
         }
         .frame(height: 25)
