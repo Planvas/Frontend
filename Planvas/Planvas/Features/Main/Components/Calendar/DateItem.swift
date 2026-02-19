@@ -14,6 +14,21 @@ struct DateItem: View {
     @Binding var selectedDate: Date
     let weeklyBarSchedules: [Schedule]
     let recurringSchedules: [Schedule]
+    let slotAssignment: [Int: Int]
+    
+    // 이 날짜에 표시할 슬롯별 일정 (slot 0,1,2 순서, nil = 빈 슬롯)
+    private var slottedSchedules: [Int: Schedule] {
+        var result: [Int: Schedule] = [:]
+        let today = Calendar.current.startOfDay(for: date)
+
+        for schedule in weeklyBarSchedules {
+            guard schedule.dates.contains(today),
+                  let slot = slotAssignment[schedule.id],
+                  slot < 3 else { continue }
+            result[slot] = schedule
+        }
+        return result
+    }
     
     var body: some View {
         VStack(spacing: 6) {
@@ -40,9 +55,9 @@ struct DateItem: View {
                 
                 // 일정 목록
                 VStack(spacing: 0) {
-                    ForEach(weeklyBarSchedules) { schedule in
+                    ForEach(0..<3, id: \.self) { slot in
                         Group {
-                            if schedule.dates.contains(Calendar.current.startOfDay(for: date)) {
+                            if let schedule = slottedSchedules[slot] {
                                 ScheduleItem(schedule: schedule, date: date)
                             } else {
                                 Color.clear
