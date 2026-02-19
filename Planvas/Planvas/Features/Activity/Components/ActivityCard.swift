@@ -11,6 +11,7 @@ import Kingfisher
 struct ActivityCardView: View {
     @Environment(NavigationRouter<ActivityRoute>.self) var router
     let item: ActivityCard
+    let activityType: String   // "성장" or "휴식"
 
     var body: some View {
         Button{
@@ -54,7 +55,7 @@ struct ActivityCardView: View {
                     
                     VStack(alignment: .leading, spacing: 10) {
                         HStack(alignment: .top, spacing: 0) {
-                            Text("성장 +\(item.growth)")
+                            Text("\(activityType) +\(item.growth)")
                                 .textStyle(.semibold14)
                                 .foregroundStyle(.primary1)
                                 .padding(.top, 21)
@@ -156,7 +157,7 @@ struct ActivityCardView: View {
             dday: 299,
             title: "패스트 캠퍼스 2026 AI 대전환 오픈 세미나",
             tip: nil
-        )
+        ), activityType: "성장"
     )
     .environment(router)
     .padding()
