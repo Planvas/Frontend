@@ -3,6 +3,7 @@ import SwiftUI
 enum FlowContext {
     case onboarding
     case myPage
+    case main
 }
 
 struct FlowContextKey: EnvironmentKey {

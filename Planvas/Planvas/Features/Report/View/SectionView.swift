@@ -113,7 +113,8 @@ struct ImageSection: View {
 // MARK: - Button Section
 struct ButtonSection: View {
     let comment: String
-    @Environment(NavigationRouter<MyPageRoute>.self) var myPageRouter
+    @Environment(NavigationRouter<MyPageRoute>.self) private var myPageRouter: NavigationRouter<MyPageRoute>?
+     @Environment(NavigationRouter<MainRoute>.self) private var mainRouter: NavigationRouter<MainRoute>?
     
     var body: some View {
         VStack {
@@ -123,7 +124,11 @@ struct ButtonSection: View {
                 .padding()
             
             Button(action:{
-                myPageRouter.push(.activityPage)
+                if let myPageRouter {
+                    myPageRouter.push(.activityPage)
+                } else if let mainRouter {
+                    mainRouter.push(.activityPage) 
+                }
             }) {
                 Text("새로운 활동 탐색하기")
                     .textStyle(.semibold20)
@@ -142,7 +147,11 @@ struct ButtonSection: View {
                 title: "다음 목표 기간 설정하러 가기",
                 isDisabled: false,
                 action: {
-                    myPageRouter.push(.goalInfoSetup)
+                    if let myPageRouter {
+                        myPageRouter.push(.goalInfoSetup)
+                    } else if let mainRouter {
+                        mainRouter.push(.onboarding)
+                    }
                 }
             )
             .padding(.bottom, 40)

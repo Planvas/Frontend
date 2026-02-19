@@ -40,4 +40,5 @@ struct ReportView: View {
 #Preview {
     ReportView(goalId: 12)
         .environment(NavigationRouter<MyPageRoute>())
+        .environment(NavigationRouter<MainRoute>())
 }

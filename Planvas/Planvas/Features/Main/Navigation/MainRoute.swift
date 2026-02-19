@@ -10,6 +10,8 @@ import Foundation
 enum MainRoute: Hashable {
     case main
     case activityDetail(activityId: Int)
-//    case onboarding
+    case onboarding
+    case onboardingRatio
     case finalReport(goalId: Int)
+    case activityPage   
 }

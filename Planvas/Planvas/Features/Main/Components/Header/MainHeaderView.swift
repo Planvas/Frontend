@@ -180,7 +180,7 @@ struct MainHeaderView: View {
                     }
                     .frame(height: 420)
                     
-                    HeaderButtonGroup(goalSetting: viewModel.goalSetting)
+                    HeaderButtonGroup(goalSetting: viewModel.goalSetting, goalId: viewModel.goalId)
                         .padding(20)
                     
                     Spacer()
