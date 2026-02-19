@@ -315,15 +315,16 @@ struct GoalEditView: View {
                 .padding(.bottom, 10)
             
             VStack(alignment: .leading, spacing: 15) {
-                progressCapsule(
+                ProgressCapsuleView(
                     title: "성장",
-                    color: Color.green2,
+                    color: .green2,
                     actual: goal?.currentGrowthRatio ?? 0,
                     target: targetGrowth
                 )
-                progressCapsule(
+
+                ProgressCapsuleView(
                     title: "휴식",
-                    color: Color.blue1,
+                    color: .blue1,
                     actual: goal?.currentRestRatio ?? 0,
                     target: targetRest
                 )
@@ -338,46 +339,6 @@ struct GoalEditView: View {
                 .stroke(.ccc, lineWidth: 1)
         )
         .cornerRadius(10)
-    }
-    
-    @ViewBuilder
-    /// 성장/휴식 공통 캡슐 바
-    private func progressCapsule(title: String, color: Color, actual: Int, target: Int) -> some View {
-        var progress: CGFloat {
-            guard target > 0 else { return 0 }
-            return min(1.0, CGFloat(Double(actual) / Double(target)))
-        }
-        
-        VStack(alignment: .leading, spacing: 15) {
-            Text(title).textStyle(.semibold18)
-            Capsule()
-                .fill(.ccc20)
-                .overlay(alignment: .leading) {
-                    GeometryReader { geo in
-                        Capsule()
-                            .fill(color)
-                            .frame(width: geo.size.width * progress)
-                        
-                        Text("\(actual)%")  // 지금 얼만큼 채웠는지
-                            .textStyle(.medium18)
-                            .foregroundStyle(.fff50)
-                            .padding(.leading, 10)
-                            .opacity(progress > 0.1 ? 1 : 0) // 바가 너무 짧으면 텍스트 숨김
-                    }
-                }
-                .overlay(
-                    RoundedRectangle(cornerRadius: 85.54)
-                        .stroke(.ccc, lineWidth: 1)
-                )
-                .overlay(alignment: .trailing) {
-                    // 바 외부 우측 텍스트 (목표 수치)
-                    Text("\(target)%")
-                        .textStyle(.medium18)
-                        .foregroundStyle(.gray888)
-                        .padding(.trailing, 10)
-                }
-                .frame(height: 25)
-        }
     }
     
     // MARK: - 목표 비율 수정
@@ -549,10 +510,87 @@ struct GoalEditView: View {
     }
 }
 
-#Preview {
-    GoalEditView()
-        .environment(NavigationRouter<MyPageRoute>())
-        .environment(GoalSetupViewModel())
-        .environment(MyPageViewModel())
-        .environment(OnboardingViewModel(provider: MoyaProvider<OnboardingAPI>()))
+struct ProgressCapsuleView: View {
+    let title: String
+    let color: Color
+    let actual: Int
+    let target: Int
+
+    private var progress: CGFloat {
+        guard target > 0 else { return 0 }
+        return min(1.0, CGFloat(actual) / CGFloat(target))
+    }
+
+    var body: some View {
+        let height: CGFloat = 25
+        let minBarWidth: CGFloat = 10
+        let labelMinWidth: CGFloat = 44
+
+        VStack(alignment: .leading, spacing: 15) {
+            Text(title)
+                .textStyle(.semibold18)
+
+            GeometryReader { geo in
+                let total = geo.size.width
+                let rawWidth = total * progress
+                let barWidth = (actual > 0 && progress > 0) ? max(minBarWidth, rawWidth) : 0
+                let showInnerLabel = barWidth >= labelMinWidth
+
+                ZStack {
+                    // 배경
+                    Capsule()
+                        .fill(.ccc20)
+
+                    // 진행바도 Capsule
+                    HStack(spacing: 0) {
+                        Capsule()
+                            .fill(color)
+                            .frame(width: barWidth)
+                        Spacer(minLength: 0)
+                    }
+
+                    // 0%면 텍스트 안 보임
+                    if actual > 0 {
+                        HStack {
+                            Text("\(actual)%")
+                                .textStyle(.medium18)
+                                .foregroundStyle(showInnerLabel ? .fff50 : .gray888)
+                                .padding(.leading, 10)
+                            Spacer()
+                        }
+                    }
+
+                    // 목표 텍스트
+                    HStack {
+                        Spacer()
+                        Text("\(target)%")
+                            .textStyle(.medium18)
+                            .foregroundStyle(.gray888)
+                            .padding(.trailing, 10)
+                    }
+
+                    Capsule()
+                        .stroke(.ccc, lineWidth: 1)
+                }
+                // 전체를 캡슐로 마스크
+                .mask(Capsule())
+            }
+            .frame(height: height)
+        }
+    }
+}
+
+#Preview("Progress 1% UI") {
+    VStack(spacing: 24) {
+        ProgressCapsuleView(title: "성장", color: .green2, actual: 0, target: 100)
+        
+        ProgressCapsuleView(title: "성장", color: .green2, actual: 1, target: 100)
+        
+        ProgressCapsuleView(title: "성장", color: .green2, actual: 3, target: 100)
+        
+        ProgressCapsuleView(title: "휴식", color: .blue1, actual: 15, target: 100)
+
+        ProgressCapsuleView(title: "성장", color: .green2, actual: 100, target: 100)
+    }
+    .padding()
 }
