@@ -124,16 +124,13 @@ struct ButtonSection: View {
                 .padding()
             
             Button(action:{
-<<<<<<< HEAD
                 if let myPageRouter {
                     myPageRouter.push(.activityPage)
                 } else if let mainRouter {
                     mainRouter.push(.activityPage) 
                 }
-=======
                 UserDefaults.standard.set(2, forKey: "selectedTab")
                 myPageRouter.reset()
->>>>>>> 3da7f75d6a6603bf14904d77b40ca39534b42b1f
             }) {
                 Text("새로운 활동 탐색하기")
                     .textStyle(.semibold20)
