@@ -142,8 +142,8 @@ class CartViewModel {
             .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: { [weak self] completion in
                 if case let .failure(error) = completion {
-                    self?.errorMessage = "일정 추가 실패 \(error.localizedDescription)"
-                    self?.alertErrorMessage = "기존에 존재하는 일정과 겹칩니다."
+                    self?.errorMessage = "일정 추가 실패: \(error.localizedDescription)"
+                    self?.alertErrorMessage = self?.serverReason(from: error)
                 }
             }, receiveValue: { [weak self] response in
                 if response.resultType == "SUCCESS" {
@@ -153,5 +153,17 @@ class CartViewModel {
                 }
             })
             .store(in: &cancellable)
+    }
+}
+
+extension CartViewModel {
+    private func serverReason(from error: MoyaError) -> String {
+        if let response = error.response,
+           let json = try? JSONSerialization.jsonObject(with: response.data) as? [String: Any],
+           let errorDict = json["error"] as? [String: Any],
+           let reason = errorDict["reason"] as? String {
+            return reason
+        }
+        return "일정 추가에 실패했습니다. 다시 시도해 주세요."
     }
 }
