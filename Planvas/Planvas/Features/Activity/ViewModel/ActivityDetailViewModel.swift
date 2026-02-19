@@ -31,7 +31,14 @@ class ActivityDetailViewModel {
 
     var dDayText: String {
         guard let dDay = activity?.dDay else { return "" }
-        return "D-\(dDay)"
+        
+        if dDay > 0 {
+            return "D-\(dDay)"
+        } else if dDay < 0 {
+            return "D+\(abs(dDay))"
+        } else {
+            return "D-Day"
+        }
     }
 
     var date: String {
