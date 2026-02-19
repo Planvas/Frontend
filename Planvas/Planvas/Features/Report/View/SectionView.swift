@@ -130,7 +130,7 @@ struct ButtonSection: View {
                     mainRouter.push(.activityPage) 
                 }
                 UserDefaults.standard.set(2, forKey: "selectedTab")
-                myPageRouter.reset()
+                myPageRouter?.reset()
             }) {
                 Text("새로운 활동 탐색하기")
                     .textStyle(.semibold20)
