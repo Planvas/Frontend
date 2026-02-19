@@ -317,3 +317,44 @@ class MainViewModel {
         }
     }
 }
+
+struct ScheduleSlotAssigner {
+    /// schedules 배열을 받아 각 scheduleId -> slot(0,1,2) 딕셔너리를 반환
+    /// 여러 날에 걸친 일정도 동일한 슬롯 유지
+    static func assignSlots(for schedules: [Schedule]) -> [Int: Int] {
+        // 일정을 시작일 기준으로 정렬 (id 오름차순 fallback)
+        let sorted = schedules.sorted {
+            let lhsStart = $0.dates.min() ?? Date.distantPast
+            let rhsStart = $1.dates.min() ?? Date.distantPast
+            if lhsStart != rhsStart { return lhsStart < rhsStart }
+            return $0.id < $1.id
+        }
+
+        var slotAssignment: [Int: Int] = [:]
+        // 각 슬롯의 마지막 점유 날짜
+        var slotEndDate: [Int: Date] = [0: Date.distantPast, 1: Date.distantPast, 2: Date.distantPast]
+
+        for schedule in sorted {
+            guard let startDate = schedule.dates.min(),
+                  let endDate = schedule.dates.max() else { continue }
+
+            // 가능한 가장 낮은 슬롯 찾기
+            var assignedSlot: Int? = nil
+            for slot in 0..<3 {
+                if let slotEnd = slotEndDate[slot], slotEnd < startDate {
+                    assignedSlot = slot
+                    break
+                }
+            }
+            
+            // 3슬롯 모두 차있으면 할당 안 함 (표시 안 됨)
+            if let slot = assignedSlot {
+                slotAssignment[schedule.id] = slot
+                slotEndDate[slot] = endDate
+            }
+
+        }
+
+        return slotAssignment
+    }
+}

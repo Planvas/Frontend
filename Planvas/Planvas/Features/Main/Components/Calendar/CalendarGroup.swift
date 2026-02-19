@@ -11,6 +11,10 @@ import SwiftUI
 struct CalendarGroup: View {
     @Bindable var viewModel: MainViewModel
     
+    private var slotAssignment: [Int: Int] {
+        ScheduleSlotAssigner.assignSlots(for: viewModel.weeklyBarSchedules)
+    }
+    
     var body: some View {
         VStack(alignment: .leading){
             Text("이번 주")
@@ -41,7 +45,8 @@ struct CalendarGroup: View {
                             weeklyBarSchedules: viewModel.weeklyBarSchedules,
                             recurringSchedules: viewModel.allSchedules.filter {
                                 $0.recurrenceRule != nil && !$0.recurrenceRule!.isEmpty
-                            }
+                            },
+                            slotAssignment: slotAssignment
                         )
                     }
                 }
