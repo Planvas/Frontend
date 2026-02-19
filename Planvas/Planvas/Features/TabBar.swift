@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TabBar: View {
-    @State private var selectedTab = 0
+    @AppStorage("selectedTab") private var selectedTab = 0
     
     @AppStorage("shouldShowOnboardingSuccessSheet") private var shouldShowSheet: Bool = false
     @State private var showOnboardingSuccessSheet = false
