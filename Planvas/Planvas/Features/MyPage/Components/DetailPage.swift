@@ -71,7 +71,7 @@ struct DetailPage: View {
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color.white)
-                .shadow(color: .gray888.opacity(0.25), radius: 10, x: 2, y: 5)
+                .shadow(color: .gray888.opacity(0.25), radius: 5, x: 0, y: 2)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 20)

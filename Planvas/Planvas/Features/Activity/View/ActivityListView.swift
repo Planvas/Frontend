@@ -302,7 +302,7 @@ struct ActivityListView: View {
                 } else {
                     LazyVStack(spacing: 8) {
                         ForEach(filtered) { item in
-                            ActivityCardView(item: item)
+                            ActivityCardView(item: item, activityType: selectedActivityType)
                                 .onAppear {
                                     Task {
                                         await vm.loadMoreIfNeeded(

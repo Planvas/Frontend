@@ -44,10 +44,9 @@ final class AddActivityViewModel: ActivitySettingsBindable {
         "+\(activityValue)%"
     }
 
+    /// 목표 초과 제한 없이 활동치 자유롭게 조절
     func incrementActivityValue() {
-        // 목표치(currentAchievementPercent + activityValue)를 초과하지 않도록 제한
-        let maxAllowed = max(0, goalPercent - currentAchievementPercent)
-        activityValue = min(activityValue + 10, maxAllowed)
+        activityValue += 10
     }
 
     func decrementActivityValue() {

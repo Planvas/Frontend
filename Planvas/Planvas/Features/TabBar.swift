@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TabBar: View {
-    @State private var selectedTab = 0
+    @AppStorage("selectedTab") private var selectedTab = 0
     
     @AppStorage("shouldShowOnboardingSuccessSheet") private var shouldShowSheet: Bool = false
     @State private var showOnboardingSuccessSheet = false
@@ -31,6 +31,9 @@ struct TabBar: View {
         .accentColor(.primary1)
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            selectedTab = 0
+        }
         .task {
             try? await Task.sleep(nanoseconds: 50_000_000)
 
@@ -39,7 +42,6 @@ struct TabBar: View {
                 shouldShowSheet = false
             }
         }
-
         .sheet(isPresented: $showOnboardingSuccessSheet) {
             OnboardingSuccessView(
                 onGoActivityList: {
