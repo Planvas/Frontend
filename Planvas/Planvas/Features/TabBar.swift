@@ -31,6 +31,9 @@ struct TabBar: View {
         .accentColor(.primary1)
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            selectedTab = 0
+        }
         .task {
             try? await Task.sleep(nanoseconds: 50_000_000)
 
@@ -39,7 +42,6 @@ struct TabBar: View {
                 shouldShowSheet = false
             }
         }
-
         .sheet(isPresented: $showOnboardingSuccessSheet) {
             OnboardingSuccessView(
                 onGoActivityList: {
