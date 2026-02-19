@@ -127,7 +127,7 @@ struct ActivitySettingsSectionView<VM: ActivitySettingsBindable & Observable>: V
                     .frame(width: w1, height: 25)
 
                 HStack(spacing: 0) {
-                    Text("\(isFull ? viewModel.goalPercent : cappedCurrent)%")
+                    Text("\(viewModel.currentAchievementPercent)%")
                         .textStyle(.semibold14)
                         .foregroundColor(.white)
                         .padding(.leading, 10)
