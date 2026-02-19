@@ -33,7 +33,7 @@ struct MyPageFlowView: View {
                     case .loginPage:
                         LoginView()
                     case .activityPage:
-                        ActivityView()
+                        ActivityListView()
                     case .goalInfoSetup:
                         GoalInfoSetupView()
                     case .goalRatioInfo:
