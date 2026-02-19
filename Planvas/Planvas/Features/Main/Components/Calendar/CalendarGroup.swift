@@ -39,7 +39,9 @@ struct CalendarGroup: View {
                             isSelected: viewModel.selectedDate == date,
                             selectedDate: $viewModel.selectedDate,
                             weeklyBarSchedules: viewModel.weeklyBarSchedules,
-                            recurringSchedules: viewModel.allSchedules.filter { $0.recurrenceRule != "" }
+                            recurringSchedules: viewModel.allSchedules.filter {
+                                $0.recurrenceRule != nil && !$0.recurrenceRule!.isEmpty
+                            }
                         )
                     }
                 }

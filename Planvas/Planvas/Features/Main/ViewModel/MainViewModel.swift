@@ -89,7 +89,7 @@ class MainViewModel {
     // 주간 정렬 배열
     var weeklyBarSchedules: [Schedule] {
         allSchedules
-            .filter { $0.recurrenceRule == "" }
+            .filter { $0.recurrenceRule == nil || $0.recurrenceRule?.isEmpty == true }
             .sorted { $0.id < $1.id }
     }
     
