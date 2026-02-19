@@ -27,6 +27,7 @@ class MainViewModel {
     }
     
     // MARK: - 현재 목표 정보
+    var goalId: Int = 0
     var goalTitle: String = ""
     var dDay: String = ""
     var growthRatio: Int = 0
@@ -158,6 +159,7 @@ class MainViewModel {
                             self.username = success.userName
                             self.goalSetting = success.goalStatus
                             if let goal = success.currentGoal {
+                                self.goalId = goal.goalId
                                 self.goalTitle = goal.title
                                 self.dDay = goal.dDay
                                 self.growthRatio = goal.growthRatio

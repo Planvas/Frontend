@@ -15,6 +15,7 @@ struct GoalInfoSetupView: View {
     // 마이페이지 흐름인지 온보딩 흐름인지 알기 위해 두 라우터 모두 선언 (옵셔널)
     @Environment(NavigationRouter<MyPageRoute>.self) private var myPageRouter: NavigationRouter<MyPageRoute>?
     @Environment(NavigationRouter<OnboardingRoute>.self) private var onboardingRouter: NavigationRouter<OnboardingRoute>?
+    @Environment(NavigationRouter<MainRoute>.self) private var mainRouter: NavigationRouter<MainRoute>?
     
     @State private var fetchedUserName: String = ""
     @State private var didFetchName = false
@@ -61,9 +62,11 @@ struct GoalInfoSetupView: View {
                         print("설정 완료: \(viewModel.goalName), \(viewModel.formatDate(viewModel.startDate)) ~ \(viewModel.formatDate(viewModel.endDate))")
                         
                         // 목표 비율 설정 화면 이동
-                        if let myPageRouter = myPageRouter {
+                        if let myPageRouter {
                             myPageRouter.push(.goalRatioInfo)
-                        } else if let onboardingRouter = onboardingRouter {
+                        } else if let mainRouter {
+                            mainRouter.push(.onboardingRatio)
+                        } else if let onboardingRouter {
                             onboardingRouter.push(.ratio)
                         }
                     }
@@ -153,6 +156,7 @@ struct GoalInfoSetupView: View {
     let goalVM = GoalSetupViewModel()
     let loginVM = LoginViewModel()
     let myPageRouter = NavigationRouter<MyPageRoute>()
+    let MainRouter = NavigationRouter<MainRoute>()
 
     NavigationStack(path: .constant(router.path)) {
         GoalInfoSetupView()
@@ -160,6 +164,7 @@ struct GoalInfoSetupView: View {
             .environment(loginVM)
             .environment(router)
             .environment(myPageRouter)
+            .environment(MainRouter)
     }
     .environment(router)
 }

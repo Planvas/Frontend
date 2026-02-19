@@ -14,6 +14,7 @@ struct GoalRatioSetupView: View {
     @Environment(\.flowContext) private var flowContext
     @Environment(NavigationRouter<MyPageRoute>.self) private var myPageRouter: NavigationRouter<MyPageRoute>?
     @Environment(NavigationRouter<OnboardingRoute>.self) private var onboardingRouter: NavigationRouter<OnboardingRoute>?
+    @Environment(NavigationRouter<MainRoute>.self) private var mainRouter: NavigationRouter<MainRoute>?
     @Environment(\.dismiss) private var dismiss
 
     // 토글 상태를 위한 @State 변수 추가
@@ -79,6 +80,15 @@ struct GoalRatioSetupView: View {
                                 targetRestRatio: vm.restPercent
                             )
                             myPageRouter?.reset()
+                        case .main:
+                            onboardingVM.createGoal(
+                                title: vm.goalName,
+                                startDate: startStr,
+                                endDate: endStr,
+                                targetGrowthRatio: vm.growthPercent,
+                                targetRestRatio: vm.restPercent
+                            )
+                            mainRouter?.reset()
                         }
                         
                         // 목표 이름, 기간, 비율 저장 API 연동 삭제

@@ -9,17 +9,16 @@ import SwiftUI
 
 // MARK: - 헤더 / 버튼 그룹
 struct HeaderButtonGroup: View {
-    @Environment(RootRouter.self) private var rootRouter
+    @Environment(NavigationRouter<MainRoute>.self) var router
     let goalSetting: GoalSetting
-//    let goalId: goalId
-    //TODO: - 목표 종료 시 버튼 클릭 후 최종 리포트 이동 (백엔드 수정 필요)
+    let goalId: Int
+    
     var body: some View {
         VStack{
             Button {
-                    goalSetting == .ENDED
-                    ?    ( rootRouter.root = .onboarding)
-//                    router.push(.finalReport(goalId: goalId))
-                    :     (rootRouter.root = .onboarding)
+                goalSetting == .ENDED
+                ?  router.push(.finalReport(goalId: goalId))
+                : router.push(.onboarding)
             } label: {
                 Text(
                     goalSetting == .ENDED
