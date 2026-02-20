@@ -277,16 +277,34 @@ class MainViewModel {
     
     // 날짜 + 시간 -> 시간 (HH:mm) 변환 함수
     func formatTime(_ isoString: String) -> String {
+        if isoString.isEmpty { return "-" }
+        
+        // 1. ISO8601 형식 시도 (T와 .000이 있는 경우 - 상세 조회용)
         let isoFormatter = ISO8601DateFormatter()
         isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         
-        guard let date = isoFormatter.date(from: isoString) else { return "" }
+        if let date = isoFormatter.date(from: isoString) {
+            return dateToHHmm(date)
+        }
         
+        // 2. 일반 날짜 형식 시도 (공백이 있는 "2026-02-20 15:00:00" - 목록 조회용)
+        let normalFormatter = DateFormatter()
+        normalFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        normalFormatter.timeZone = TimeZone(identifier: "Asia/Seoul")
+        
+        if let date = normalFormatter.date(from: isoString) {
+            return dateToHHmm(date)
+        }
+        
+        print("DEBUG: 모든 포맷 변환 실패 - \(isoString)")
+        return "-"
+    }
+
+    // 공통 변환 로직
+    private func dateToHHmm(_ date: Date) -> String {
         let outputFormatter = DateFormatter()
         outputFormatter.dateFormat = "HH:mm"
-        
-        outputFormatter.timeZone = TimeZone(secondsFromGMT: 0)
-        
+        outputFormatter.timeZone = TimeZone.current
         return outputFormatter.string(from: date)
     }
     
